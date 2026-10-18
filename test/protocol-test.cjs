@@ -21,7 +21,13 @@ const fake = http.createServer((req, res) => {
     const p = JSON.parse(b || '{}')
     if (req.url === '/v1/models') {
       res.setHeader('content-type', 'application/json')
-      return res.end(JSON.stringify({ data: [{ id: 'test-model', pricing: { prompt: '0', completion: '0' } }] }))
+      // ⚠ 必须把 config 里声明的两个模型都列出来：启动同步完成后会触发一次目录重扫，
+      //   若这里只列 test-model，池子会被重扫结果覆盖成 1 个，"路由组去重"用例就变成
+      //   cands2=1 稳定失败（本机网络慢、同步晚到，所以一直是侥幸绿）。
+      return res.end(JSON.stringify({ data: [
+        { id: 'test-model', pricing: { prompt: '0', completion: '0' } },
+        { id: 'tool-model', pricing: { prompt: '0', completion: '0' } },
+      ] }))
     }
     // 夹具: 工具调用(2026-10-17 加, 给 /v1/responses 用) —— OpenAI 形态, 网关要把它
     // 翻成 Responses 的独立 output_item(function_call), 而不是塞进 message.content。

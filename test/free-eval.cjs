@@ -191,6 +191,11 @@ const UP_PORT = 8803
 function buildSandbox() {
   freshSandbox(SB)
   fs.mkdirSync(SB, { recursive: true })
+  // .sandbox 标记：让 server.mjs 跳过启动时的白名单同步。
+  // ⚠ 不打这个标记时，后台同步会在几秒内重建 hosts 并写盘，把下面注入的 127.0.0.1 条目冲掉 ——
+  //   本机网络慢（同步 11s 才回来）测试先跑完，一直是"侥幸绿"；CI 里 DNS 秒失败、同步 1s 内完成，
+  //   于是"白名单层"用例稳定变红。测试不该和后台同步抢文件。
+  fs.writeFileSync(path.join(SB, '.sandbox'), '')
   fs.copyFileSync(path.join(ROOT, 'server.mjs'), path.join(SB, 'server.mjs'))
   // 白名单：真表 + 一条指向假上游的注入条目 —— 让"白名单层"的判定与落盘也能离线验证。
   // fetched_at 置为当下，避免 refreshCatalog 触发一次注定失败的上游同步。

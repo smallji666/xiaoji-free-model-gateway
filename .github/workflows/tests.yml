@@ -45,8 +45,4 @@ jobs:
         run: node scripts/check-secrets.cjs
 
       - name: 离线测试组
-        # ⚠ 失败重试一次：离线组里少数用例断言的是"扫描把白名单判定结果落盘"这一时序结果
-        #   （free-eval 的白名单层、protocol-test 的路由组去重），在共享 runner 负载高时会
-        #   抢在落盘前读到上一轮数据而偶发变红（本机与 ubuntu 快机器上稳定通过）。
-        #   重试只吸收抖动：真坏了两次都会失败，不会掩盖回归。
-        run: node test/run-all.cjs || node test/run-all.cjs
+        run: node test/run-all.cjs
