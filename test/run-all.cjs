@@ -43,12 +43,18 @@
  *     表现为"上一个套件的残留进程占着端口 → 下一个套件的网关绑不上 → 请求打到别人的假上游 → 404"，
  *     而且只在整组连跑时偶发。已全部重排到互不重叠的区间。
  */
-const { spawn } = require('node:child_process')
+const { spawn, execFileSync } = require('node:child_process')
 const fs = require('node:fs')
 const path = require('node:path')
 
 const HERE = __dirname
 const ROOT = (() => { let d = path.dirname(HERE); for (let i = 0; i < 6; i++) { if (fs.existsSync(path.join(d, 'server.mjs'))) return d; d = path.dirname(d) } return path.join(HERE, '..') })()
+
+// 新克隆没有 config.json（它含明文 Key，被 .gitignore 排除），而部分离线套件要读它。
+// 先补一份最小配置，否则刚 clone 的人看到的是"测试全红"，实际只是少了份配置。
+try {
+  execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'init-config.cjs')], { stdio: 'ignore' })
+} catch { /* 失败不阻断：真缺配置时对应套件会自己报错 */ }
 
 // 每套超时（毫秒）。对冲测试要等 12s 的慢家，batch 类要起网关再等就绪，给足余量。
 const TIMEOUT_MS = 240000
