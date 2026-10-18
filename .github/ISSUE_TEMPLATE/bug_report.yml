@@ -1,0 +1,82 @@
+name: Bug 报告
+description: 网关行为不符合预期 / 报错 / 判定错误
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠ **提交前请确认**：粘贴的日志与配置里**不要带明文 API Key**。
+        `config.json` 里的各家 Key 是明文存储的 —— 贴之前请把 `gsk_...`、`sk-...` 这类值删掉。
+        网关 Key 本身也是敏感信息，`/api/state` 只回掩码，请照它的口径贴。
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: 来自 `GET /healthz` 的 `version` 字段，或 `package.json` 的 version
+      placeholder: 1.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: 运行环境
+      description: 操作系统 + Node 版本（`node -v`）
+      placeholder: Windows 11 / Node 22.22.2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 问题出在哪一块
+      options:
+        - 路由 / 回退（auto 选错家、老是失败）
+        - 免费判定（把收费模型判成免费，或反之）
+        - 某个协议的接入（OpenAI / Anthropic / Gemini / Ollama）
+        - 仪表盘（页面/交互）
+        - 启动 / 停止 / 日志
+        - 其它
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: 现象与期望
+      description: 实际发生了什么、你期望发生什么
+    validations:
+      required: true
+
+  - type: textarea
+    id: requestid
+    attributes:
+      label: 请求 ID（如果与某次调用有关）
+      description: |
+        每个响应都带 `x-request-id`（8 位 hex），错误响应体里也有 `request_id`。
+        拿它就能精确定位那一次调用的全部候选记录：
+        `curl "http://localhost:8787/api/usage?id=<请求ID>"`
+      placeholder: a1b2c3d4
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      placeholder: |
+        1. 接入 XX 家，勾选 XX 模型
+        2. 用 auto 发一条带 tools 的请求
+        3. 得到 502
+    validations:
+      required: true
+
+  - type: textarea
+    id: diag
+    attributes:
+      label: 诊断信息
+      description: |
+        贴这些能大幅加快定位（**记得去掉 Key**）：
+        - `curl "http://localhost:8787/healthz?deep=1"`
+        - `curl "http://localhost:8787/api/route?ask=你的一句话&tools=1"`
+        - 相关时段的 `logs/xiaoji.log` 片段
+      render: text

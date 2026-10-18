@@ -1,0 +1,64 @@
+# ── 隐私 / 运行时状态（绝对不能提交）──
+# ⚠ config.json 里是各家厂商的明文 API Key。公开仓库被爬虫扫到是分钟级的事，泄漏不可逆。
+# ⚠ 2026-10-04 修了一个真缺口：早先只列了 .prev / .corrupt. / .import-bak. / .pre-migrate.，
+#   而实际存在一个 `config.json.backup-<时间戳>` 走的是 **.backup.** 命名 —— 不匹配任何一条，
+#   于是它（含 7 个明文 Key + gatewayKey）会被原样提交。现用 `config.json*` 一把兜住所有派生文件。
+#   首启自动生成、无需示例文件；配置形状见 config.example.json（那份是**不含任何真实 Key** 的文档）。
+config.json*
+gateway.pid
+logs/
+metrics.json*
+usage_log.json*
+free_catalog.json*
+promo_state.json*
+
+# ⚠ free_whitelist.json **不要**加进这里 —— 它不含隐私（只有厂商域名与模型名），
+#   提交它能显著改善首启体验（否则首次启动要等一轮 6 小时节奏的同步）。
+#   见 README「文件一览」。
+
+# ── 分发产物（给别人的包，体积大且可随时重生成）──
+dist/
+
+# ── AI 工具目录（含私人工作笔记）──
+# ⚠ 测试套件原在此目录下（.workbuddy-ai/testinst/），已于 2026-10-08 迁到 test/，
+#   所以现在可以整目录忽略。
+.workbuddy-ai/
+
+# ── 测试沙箱产物 ──
+# 跑一次 `node test/run-all.cjs` 就会在 test/ 下生成这些：沙箱目录（内含 server.mjs 副本与
+# 各类状态文件）、日志、截图、临时源快照。它们**绝不能提交**（体积大，且部分含本机状态）。
+# 清理：`node test/sb-util.cjs --clean`
+test/sb*/
+test/logs/
+test/shots/
+test/tmp-src/
+# ⚠ 2026-10-17：以下三条原为**精确路径**，管不到嵌套沙箱 —— `test/hedge/` 里那份 413KB 的
+#   `server.mjs` 副本 + `dashboard.html` 就是这样漏进待提交清单的。改成通配。
+#   （`test/hedge/*.cjs` 是真正的测试脚本，必须继续提交，所以不能整目录忽略。）
+test/**/.sandbox
+test/_dashjs.js
+test/**/server.mjs
+test/**/dashboard.html
+test/**/*.json
+test/**/*.pid
+test/**/*.log
+test/**/*.prev
+test/**/*.tmp
+# ⚠ 上面两条通配会连"将来可能需要的 JSON 夹具"一起忽略 —— 若某天要提交 test/ 下的固定夹具，
+#   用 `!test/<路径>` 显式放行（放在本段末尾，否定的规则必须后出现才生效）。
+
+# ── 运行时自动备份 ──
+# ⚠ `loadConfig` 每次写盘都会生成 `<文件>.prev`（本机恢复源，与 config.json* 同类）。
+#   有了 git 之后恢复能力由版本控制承担，这些备份不必进仓库。
+#   ⚠ 文件本身仍留在磁盘上、**不许删**（它是 config 损坏时唯一的恢复源）。
+*.prev*
+
+# ── 本地调试截图 ──
+# 跑截图脚本会在 test/ 根下留一堆 png（test/shot-*.png 等），属于本地产物。
+test/*.png
+
+# ── 其他 ──
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

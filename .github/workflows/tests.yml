@@ -1,0 +1,48 @@
+name: tests
+
+# 只跑**离线组**：假上游 + 纯函数 + 本地文件，不需要任何厂商 Key、不需要代理、不碰外网。
+# 这是把整套离线回归变成"回归保护"而不是"自娱自乐"的关键一步 ——
+# 本机跑不了的（真实上游 / Edge 浏览器版面）留在 test/run-all.cjs 的 local 与 online 组，由开发者手动跑。
+# ⚠ 这里刻意**不写具体项数**：项数会随白名单数据与新增用例浮动（CI 没有目录扫描结果，
+#   `model-type-check` 会优雅跳过），钉死一个数字就得每次改文档。权威项数以实际输出为准。
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+# 同一分支的新提交取消旧跑（省额度，也避免旧结果混淆）
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: offline · node${{ matrix.node }} · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 声明支持的最低版本 + 当前 LTS + 最新，三档都在 Linux 上验一遍
+          - { os: ubuntu-latest, node: 18 }
+          - { os: ubuntu-latest, node: 20 }
+          - { os: ubuntu-latest, node: 22 }
+          # 跨平台：Windows / macOS 各验一遍（Windows 是本项目的主力平台）
+          - { os: windows-latest, node: 22 }
+          - { os: macos-latest, node: 22 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: 语法检查（server.mjs + dashboard.html 的每个 <script>）
+        run: node --check server.mjs && node test/syncheck.cjs dashboard.html
+
+      - name: 密钥闸门（防明文 Key 被提交）
+        run: node scripts/check-secrets.cjs
+
+      - name: 离线测试组
+        run: node test/run-all.cjs

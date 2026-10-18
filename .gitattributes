@@ -1,0 +1,7 @@
+# 行尾钉死。
+# ⚠ 不写这个，git 的 core.autocrlf 会在 clone/checkout 时改写行尾 —— 别人拿到的
+# 小鸡开关.bat 会变成 LF，cmd 解析就可能出错（这个坑本机已经踩过一次：bat 曾被
+# 静默改成 LF，179 行全漂）。
+* text=auto eol=lf
+*.bat text eol=crlf
+*.vbs text eol=crlf

@@ -1,0 +1,40 @@
+{
+  "name": "xiaoji-free-model-gateway",
+  "version": "1.1.0",
+  "private": true,
+  "description": "本地免费大模型聚合网关：把各家免费大模型 API 聚合成一个 OpenAI 兼容端点 + 一个统一 Key，支持 auto 自动路由与失败回退。零依赖，单文件。",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "win32",
+    "darwin",
+    "linux"
+  ],
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node test/run-all.cjs",
+    "test:all": "node test/run-all.cjs --all",
+    "test:local": "node test/run-all.cjs --local",
+    "test:online": "node test/run-all.cjs --online",
+    "test:list": "node test/run-all.cjs --list",
+    "check": "node --check server.mjs && node test/syncheck.cjs dashboard.html",
+    "secrets": "node scripts/check-secrets.cjs",
+    "dist": "node scripts/make-dist.cjs"
+  },
+  "keywords": [
+    "llm",
+    "gateway",
+    "openai-compatible",
+    "free",
+    "proxy",
+    "router",
+    "anthropic",
+    "gemini",
+    "ollama",
+    "zero-dependency"
+  ]
+}

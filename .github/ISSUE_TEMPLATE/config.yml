@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 先读 README（含免费判定四层规则、路由与容错、已知局限）
+    url: https://github.com/OWNER/xiaoji-free-model-gateway/blob/main/README.md
+    about: 大部分"为什么它判成免费/收费""为什么回退了"都能在这里找到答案
+  - name: 排查一次具体请求
+    url: https://github.com/OWNER/xiaoji-free-model-gateway/blob/main/docs/api.md
+    about: 用请求 ID 反查候选轨迹、用 /api/route 解释排序、用 /api/why 解释判定

