@@ -1667,6 +1667,129 @@ function payloadChars(payload) {
   return chars
 }
 
+// ── 上下文降级: 请求比池里所有模型都大时, 裁一段历史再发, 而不是直接说"模型不在池里" ──
+// 背景(2026-10-23): 免费池的窗口普遍很小(8k~32k), 而 agent 客户端会把整段历史原样发过来。
+// 这时链上每个候选都被 modelCtxTooBig 挡掉 -> 链空 -> 报"模型不在任何已启用供应商的可用池里"。
+// 用户看到的是"池里明明有模型, 网关却说没有", 完全看不出病因是"太大" —— 而这本来是**能答**的:
+// 丢掉中段历史、留下 system + 最近几轮, 模型照样接得上话。
+//
+// 三条硬约束(每一条都是"不做就会更糟"):
+//   ① **system 全留**。删掉系统提示 = 模型不再遵守指令, 比报错更糟(它会自信地乱答)。
+//   ② **tools 不裁**。工具定义是能力声明, 裁掉一半 = 客户端以为能调、上游看不到。所以先把
+//      tools 的额度扣掉, 扣完不够就**放弃裁剪**(返回 null, 调用方走原来的报错)。
+//   ③ **role:"tool" 必须带着它的 assistant.tool_calls 一起留**。孤立的一条 tool 消息在
+//      OpenAI 协议里非法, 上游回 400 —— 那只是把"太大"换成了另一个错误。
+//
+// ⚠ 只保留**开头连续的** system 消息, 中间的 system 当普通历史处理: 把中间的系统提示提到队首
+//   会改变语义(它可能是某个阶段的临时指令), 而"重排消息"这种改动是最难被发现的那种。
+// ⚠ 只裁字符串 content; 多模态数组里截 text part, image_url 原样保留(它只是一条 URL, 占不了多少,
+//   删掉图片等于把用户的问题换掉了)。
+const COMPACT_RATIO = 0.7   // 裁到"实测撞墙规模"的 70%: 与 modelCtxTooBig 的 0.8 同思路, 留余量
+const COMPACT_MARK = (n) => `\n…[网关已省略 ${n} 字符以适配模型上下文窗口]…\n`
+
+function msgChars(m) {
+  const c = m && m.content
+  if (typeof c === 'string') return c.length
+  if (Array.isArray(c)) { try { return JSON.stringify(c).length } catch { return 0 } }
+  return 0
+}
+
+// 把一段 content 压到 max 字符以内, 返回 [新content, 省下的字符数]。
+// 字符串保留头 60% + 尾 40%: 开头通常定调("你是…"), 结尾通常是紧邻的指令, 中段是最可丢的。
+function clipContent(c, max) {
+  if (typeof c === 'string') {
+    if (c.length <= max) return [c, 0]
+    const head = Math.floor(max * 0.6)
+    const tail = Math.max(0, max - head)
+    const cut = c.length - head - tail
+    const s = c.slice(0, head) + COMPACT_MARK(cut) + (tail ? c.slice(-tail) : '')
+    return [s, c.length - s.length]
+  }
+  if (Array.isArray(c)) {
+    // 只截 text part(从最长的开始); image_url 等原样保留
+    const parts = c.map((p) => (p && typeof p === 'object' ? { ...p } : p))
+    const idx = parts.map((p, i) => [p && p.type === 'text' && typeof p.text === 'string' ? p.text.length : 0, i])
+      .filter(([n]) => n > 0).sort((a, b) => b[0] - a[0])
+    let over = 0
+    try { over = JSON.stringify(c).length - max } catch { return [c, 0] }
+    if (over <= 0) return [c, 0]
+    const before = JSON.stringify(c).length
+    for (const [, i] of idx) {
+      if (over <= 0) break
+      const t = parts[i].text
+      const keep = Math.max(120, t.length - over)
+      const head = Math.floor(keep * 0.6)
+      const tail = Math.max(0, keep - head)
+      const nt = t.slice(0, head) + COMPACT_MARK(t.length - head - tail) + (tail ? t.slice(-tail) : '')
+      over -= t.length - nt.length
+      parts[i].text = nt
+    }
+    const after = JSON.stringify(parts).length
+    return [parts, Math.max(0, before - after)]
+  }
+  return [c, 0]
+}
+
+// 把 payload 裁到 budget 字符以内。裁不动(或裁了也没省下多少)返回 null。
+// 返回 { payload, before, after, dropped, truncated } —— dropped 是丢掉的历史条数。
+function compactPayload(payload, budget) {
+  if (!payload || !Array.isArray(payload.messages)) return null
+  if (!(budget > 0)) return null
+  const before = payloadChars(payload)
+  if (before <= budget) return null            // 本来就不用裁
+  const msgs = payload.messages
+  const isSys = (m) => m && (m.role === 'system' || m.role === 'developer')
+
+  // tools 先占额度 —— 裁不动就放弃(见上面约束②)
+  let fixed = 0
+  const tl = payload.tools || payload.functions
+  if (Array.isArray(tl) && tl.length) {
+    try { fixed += JSON.stringify(tl).length } catch { return null }
+  }
+  if (fixed >= budget * 0.9) return null
+
+  // 开头连续的 system 全留; 单条超长时截它内部(不删条)
+  let sysEnd = 0
+  while (sysEnd < msgs.length && isSys(msgs[sysEnd])) sysEnd++
+  const sys = msgs.slice(0, sysEnd).map((m) => ({ ...m }))
+  let truncated = 0
+  let sysChars = sys.reduce((n, m) => n + msgChars(m), 0)
+  const sysBudget = Math.floor(budget * 0.5) - fixed
+  if (sysChars > sysBudget && sysBudget > 0) {
+    let over = sysChars - sysBudget
+    const order = sys.map((m, i) => [msgChars(m), i]).sort((a, b) => b[0] - a[0])
+    for (const [len, i] of order) {
+      if (over <= 0) break
+      const [c, saved] = clipContent(sys[i].content, Math.max(200, len - over))
+      if (saved > 0) { sys[i].content = c; over -= saved; truncated++ }
+    }
+    sysChars = sys.reduce((n, m) => n + msgChars(m), 0)
+  }
+
+  // 历史: 从尾部往前保留, 直到额度用完
+  const hist = msgs.slice(sysEnd)
+  const remain = budget - fixed - sysChars
+  if (remain <= 0) return null
+  let used = 0
+  let start = hist.length
+  while (start > 0) {
+    const len = msgChars(hist[start - 1])
+    if (used + len > remain) break
+    used += len
+    start--
+  }
+  if (start >= hist.length) return null        // 一条都放不下 -> 预算算错了, 别硬裁
+  // 起点不能落在 role:"tool" 上(见约束③): 往前吞到它的 assistant.tool_calls 为止
+  while (start > 0 && hist[start] && hist[start].role === 'tool') start--
+
+  const kept = [...sys, ...hist.slice(start)]
+  const out = { ...payload, messages: kept }
+  const after = payloadChars(out)
+  // 没省下多少(<5%) 或仍超预算 -> 放弃, 让调用方走原来的路径(宁可漏裁, 不可裁了个半吊子)
+  if (after >= before * 0.95 || after > budget) return null
+  return { payload: out, before, after, dropped: hist.length - (hist.length - start), truncated }
+}
+
 // ── 请求分档: 一个"带 30 个工具定义的多轮 agent 请求"和一句闲聊, 需要的模型完全不同 ──
 // 返回值是"这道题至少需要几档的模型"; 它有两个消费者, **两个都只做降权, 不做硬过滤** ——
 // 硬过滤会让池子小的厂商直接空链, 而"排在后面"最差也只是慢一点, 不会拿不到答案:
@@ -2375,7 +2498,10 @@ for (const p of CFG.providers) {
 // ⚠ 为什么 watch **目录**而不是 watch 文件: writeJsonAtomic 是"写 .tmp → 备份 → rename",
 //   rename 之后原文件对象已经被换掉, 直接 watch 文件在 Windows 上从此收不到事件
 //   (表现为"热重载只在第一次管用")。watch 目录 + 按文件名过滤才是稳的。
-const CFG_PURE_KEYS = ['proxy', 'maxConcurrent', 'auth', 'gatewayKey', 'aliases', 'groups']
+const CFG_PURE_KEYS = ['proxy', 'maxConcurrent', 'auth', 'gatewayKey', 'aliases', 'groups',
+  // 2026-10-23: 两个"出问题要能立刻关掉"的开关 —— 它们必须支持热重载, 否则关掉要重启网关,
+  // 而重启会丢冷却/拉黑这些运行时状态(等于把防扣费防线重置回出厂), 代价比开关本身大得多。
+  'coalesce', 'retryOnRateLimit']
 // 外部改动留痕（2026-10-17）：热重载只合并纯配置键，以前合并完只打一行服务端日志 ——
 // 用户在编辑器里改了什么、有没有被忽略，界面上完全看不出来。记最后一批改动给仪表盘显示。
 let CFG_DRIFT = null
@@ -2987,7 +3113,11 @@ function forward(provider, payload, timeoutMs = 90000, apiKey, holder) {  return
     // 必须快速失败换下一家, 而不是让用户干等满 90 秒。非流式要等整段生成完才发头, 不额外设限。
     // 非流式原来直接拿 timeoutMs(90s) 当首字节超时 —— 上游"连得上但不回"时要干等满 90 秒才回退,
     // 用户侧完全不可接受。收到响应头后 headTimer 就被清除了, 所以收紧它不影响正文生成时长。
-    const headMs = payload.stream ? 15000 : Math.min(timeoutMs, 45000)
+    // 流式的 15 秒可由调用方按"该模型的实测 TTFB + 链上还有没有退路"收紧(见 adaptiveHeadMs),
+    // 通过 holder.headMs 传进来 —— 不改签名, 因为 forward 的调用点有 5 处。
+    const headMs = payload.stream
+      ? (Number(holder && holder.headMs) > 0 ? Number(holder.headMs) : 15000)
+      : Math.min(timeoutMs, 45000)
     // 流式空闲超时: 响应头到达后不再按总时长截断, 改看"多久没有新数据"
     const STREAM_IDLE_MS = 60000
     const t0 = Date.now()
@@ -3262,6 +3392,15 @@ const OVERLOAD_RE = /overload|model is busy|high demand|no (available )?capacity
 // `request too large` 是 Groq 的措辞(实测 openai/gpt-oss-20b/120b 每次都撞), 不加进来会被
 // 归到 'other' 只冷却 90s, 下一条消息立刻再撞一遍 —— 和上下文超限其实是同一类"本轮用不了"。
 const CTX_RE = /reduce the length|context length|maximum context|too many tokens|context window|input length and.*exceed|request too large/i
+// ── "这个模型不给你用" ≠ "你的 Key 失效" ──
+// 免费池里有一类很常见的 401/403: 模型**本身**限定在特定客户端/付费档里, 与 Key 好坏无关。
+// 实测(usage_log 2026-10-23): `thinkingmachines/inkling:free is only available on agentic harnesses`。
+// 误判成 auth 的代价很大 —— auth 会冷却**整个 Key 10 分钟**, 同家其它本来能用的模型一起被连累
+// (一家里 17 个模型, 一个模型的门槛把 16 个正常模型踢出池子 10 分钟)。这类应该只算"这个模型不可用",
+// 走 retired 通道(拉黑该模型 + 每天复审), 不碰 Key。
+// ⚠ 正则刻意写得**窄**: 只认"明确说了模型/场景限定"的措辞。宁可漏判(退回 auth)也不要错判 ——
+//   把真正的 Key 失效当模型问题, 会让一把坏 Key 一直留在轮换里。
+const MODEL_SCOPE_RE = /only available (on|for|via|to|in)\b|not available (for|on|in) (your|this|the)|isn'?t available (on|for)|requires? (a |an )?(paid|pro|enterprise|business|subscription|upgraded?) ?(plan|tier|account|subscription)?|not (enabled|included|supported) (for|in|on) (your|this)|restricted to (specific|particular|selected)|unsupported (client|harness|platform|surface)/i
 
 // 上游错误分类器: 同一种 HTTP 状态可能对应完全不同的病因, 必须看正文
 // billing/retired -> 拉黑+复审 | quota -> 冷却到重置 | overloaded -> 短冷却 | 其余按状态码
@@ -3276,6 +3415,9 @@ function classifyUpstreamError(status, text) {
   //   **413** + `Request too large`(实测 2026-10-05), 只写 400 会让它掉进 'other'(仅冷却 90s),
   //   下一条大请求立刻再撞一遍。归类到 ctxtoolong 才拿到该有的长冷却 + 容量记忆(见 markFail)。
   if ((status === 400 || status === 413 || status === 422) && CTX_RE.test(t)) return 'ctxtoolong'
+  // ⚠ 顺序有意义: "模型限定"必须排在 auth 之前判 —— 这类响应的状态码正是 401/403,
+  //   先判 auth 就永远轮不到它(见 MODEL_SCOPE_RE 的说明)。
+  if ((status === 401 || status === 403) && MODEL_SCOPE_RE.test(t)) return 'retired'
   if (status === 0) return 'network'
   if (status === 401 || status === 403) return 'auth'
   if (status === 404) return 'notfound'
@@ -3284,18 +3426,38 @@ function classifyUpstreamError(status, text) {
   return 'other'
 }
 
+// 额度"每天零点重置"用的是**厂商自己的时区**, 不是我们猜的那个。
+// 旧实现一律按 UTC+8(国内厂商口径)算 —— 对 openrouter 就是错 8 小时: 它的 free-models-per-day
+// 按 **UTC 零点** 重置, 于是额度早就回来了, 我们还在冷却(实测 usage_log 里 40 条
+// `free-models-per-day` 全来自它, 最多白等 8 小时)。
+// ⚠ 只登记**确知**的厂商; 认不出时按 UTC+8 —— 宁可晚一点恢复, 也不要早回来再撞一次
+//   (早回来 = 一条必然失败的请求 + 重新冷却到下一个零点, 比多等更糟)。
+// ⚠ 判据同时看 host 与 id/name: 生产里 name 就是厂商名, 而测试只能把 base_url 指向本地假上游,
+//   两条都要, 否则这段逻辑永远测不到(本项目"测不到的分支等于没写"的老坑)。
+const QUOTA_RESET_TZ = [
+  { re: /openrouter/i, hours: 0 },
+]
+function quotaResetOffsetHours(p) {
+  if (!p) return 8
+  let host = ''
+  try { host = new URL(normalizeBaseUrl(p.base_url || '')).hostname } catch {}
+  const key = `${host} ${p.id || ''} ${p.name || ''}`
+  for (const x of QUOTA_RESET_TZ) if (x.re.test(key)) return x.hours
+  return 8
+}
 // 额度类冷却时长: 按"何时自动重置"计算, 到点自然恢复, 无需人工
-function quotaCooldownMs(text, retryAfterSec) {
+function quotaCooldownMs(text, retryAfterSec, p) {
   if (retryAfterSec > 0) return Math.min(retryAfterSec * 1000, 26 * 3600000)
   const now = Date.now()
-  const local = new Date(now + 8 * 3600000) // 按 UTC+8(国内厂商口径)算"明天零点"
+  const off = quotaResetOffsetHours(p) * 3600000
+  const local = new Date(now + off) // 按该厂商口径算"当地明天零点"
   if (/monthly|每月|包月/i.test(text)) return 24 * 3600000 // 月额度太长, 先冷却一天, 复审机制兜底
   if (/daily|per[ -]?day|每天|今日|day/i.test(text)) {
-    const nextMidnight = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() + 1) - 8 * 3600000
+    const nextMidnight = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate() + 1) - off
     return Math.min(nextMidnight + 120000 - now, 25 * 3600000) // +2 分钟缓冲
   }
   if (/hourly|per[ -]?hour|每小时|小时/i.test(text)) {
-    const nextHour = (Math.floor(local.getTime() / 3600000) + 1) * 3600000 - 8 * 3600000
+    const nextHour = (Math.floor(local.getTime() / 3600000) + 1) * 3600000 - off
     return Math.min(nextHour + 60000 - now, 2 * 3600000)
   }
   return 3600000 // 无法判断周期 -> 默认 1 小时
@@ -3515,10 +3677,13 @@ function pickChain(model, payload) {
       // 带图请求: 实测确知不支持图片的模型直接跳过(与 tools 同一道闸门, 见 modelVisionBlocked)。
       // 名字无视觉信号的模型**不在这里跳** —— 那只降档(见 rankOf), 池子小时仍要能拿到答案。
       if (wantsVision && modelVisionBlocked(p, m)) continue
-      // 容量闸门: 实测这个模型吃不下"这么大的请求"(撞过 413/request too large) -> 直接跳过,
-      // 省下一次必然失败的往返。判据只针对**本次规模相当或更大**的请求, 小请求照常试它。
-      if (modelCtxTooBig(p, m, reqChars)) continue
-      chain.push({ ref: p, model: m })
+      // 容量闸门: 实测这个模型吃不下"这么大的请求"(撞过 413/request too large)。
+      // ⚠ 2026-10-23 由**硬跳过**改成**标记后降档**(见下方 ctxTight): 硬跳过的后果是
+      //   "池里每个模型都嫌大" -> 链直接空 -> 报"模型不在可用池里", 而那既不是事实
+      //   (模型在池里)、也没告诉用户病因(太大)。降档同样省掉那次必然失败的往返
+      //   (它排到最后, 前面的候选成功就不试它), 但池子小时仍能拿到答案。
+      if (modelCtxTooBig(p, m, reqChars)) chain.push({ ref: p, model: m, ctxTight: true })
+      else chain.push({ ref: p, model: m })
     }
     // 粘性会话: 上次同对话用过的"供应商|模型"。
     // ⚠ 这里只**记录**, 提升动作放到综合排序之后做(见本函数末尾) ——
@@ -3559,7 +3724,14 @@ function pickChain(model, payload) {
   // 为每个候选分配可用 Key(多 Key 轮换); 全 Key 冷却的候选标记 keyIdx=-1
   // ⚠ 免 Key(anon)厂商 keyIdx 恒为 -1 —— 但那是"不需要 Key", 不是"没有可用 Key",
   //   所以下面 bad() 的 keyIdx<0 硬门槛必须对它放行, 否则 OVH/Kilo 永远排在第 2 档(等于不进池)。
-  for (const x of chain) { x.anon = isAnonProvider(x.ref); x.keyIdx = x.anon ? 0 : pickKeyIdx(x.ref, now) }
+  for (const x of chain) {
+    x.anon = isAnonProvider(x.ref); x.keyIdx = x.anon ? 0 : pickKeyIdx(x.ref, now)
+    // 上下文容量闸门**统一在这里补** —— 三个分支(auto / 路由组 / 显式)都要认这条实测结论。
+    // 以前只有 auto 分支查 modelCtxTooBig, 于是"用户显式点名 groq/xxx"时学到的 ctxLimit 白学:
+    // 每次照样发过去撞 413, 白等一个完整往返, 然后又把同一条结论重写一遍。
+    // auto 分支已经标过(它要区分"标记"与"不标记"), 这里只补漏。
+    if (x.ctxTight === undefined) x.ctxTight = modelCtxTooBig(x.ref, x.model, reqChars)
+  }
   // ── 排序: 加权综合分, 不是"逐键淘汰" ──
   // 这套路由已经因为"单个指标定生死"踩了三次坑:
   //   ① 只看延迟        -> 永远选中最快但最弱的小模型(ministral-3b 排在 gemini-3.x-flash 前面);
@@ -3705,6 +3877,9 @@ function pickChain(model, payload) {
     if (recentlyDown(x)) why.push('recently_down')
     if (visionMismatch(x)) why.push('vision_mismatch')
     if (tierShort(x)) why.push('tier_short')
+    // 实测吃不下这么大的请求 -> 不领跑(与上面几条同一取舍: 只降档, 不排除)。
+    // 理由见 pickChain 里 auto 分支那段: 排除会让"全都嫌大"直接变成空链。
+    if (x.ctxTight) why.push('ctx_tight')
     return { rank: why.length ? 1 : 0, why }
   }
   const rankOf = (x) => rankInfo(x).rank
@@ -3771,17 +3946,69 @@ function pickChain(model, payload) {
   }
   chain._reqTier = reqTier
   chain._task = task
+  // "全链都嫌大"的计数 —— attemptChain 用它决定要不要走上下文降级(裁一段重发)。
+  // 挂在数组上而不是靠调用方再算一遍: 判据只写一份, 否则展示/决策会悄悄分叉(本项目的老坑)。
+  chain._ctxTight = chain.reduce((n, x) => n + (x.ctxTight ? 1 : 0), 0)
   return chain
 }
 
 // 选择该供应商当前可用的 Key(第一个既没被人工停用、也不在冷却中的); 全不可用返回 -1
+// 多 Key 轮转: 在**可用**的 Key 里挑"最久没用过"的那把(从没用过的最优先)。
+// ⚠ 旧实现是 `for i: if 可用 return i` —— 也就是**永远用第 0 把**, 第 2 把要等第 1 把被冷却
+//   或人工停用才轮到。而免费池的瓶颈恰恰是**每把 Key 各自的每日 / RPM 额度**: 配了 3 把却只用 1 把,
+//   等于把 3 份额度当成 1 份花, 而且切换点是"第 1 把已经被限流(429)"—— 那次请求已经白费了。
+//   one-api 的渠道轮询、LiteLLM 的 deployment 负载均衡解决的都是这件事。
+// 为什么用 lastUsed(LRU) 而不是取模轮转: 严格轮转在"某把 Key 一直 429"时会照样把请求送过去;
+//   而 LRU + keyCooling 跳过 = 冷却中的自动让位, 剩下的按最久未用排, 效果等价于轮转,
+//   且不需要维护额外游标(游标重启后会归零, 反而集中打第一把)。
+// 单 Key 供应商行为完全不变(只有一把可选), 所以这条改动对绝大多数用户是零感知的。
 function pickKeyIdx(p, now) {
   const keys = providerKeys(p)
+  let best = -1
+  let bestTs = Infinity
   for (let i = 0; i < keys.length; i++) {
     if (p.keyDisabled && p.keyDisabled[i]) continue   // 人工停用: 优先级高于冷却, 连试都不试
-    if (!keyCooling(p, i, now)) return i
+    if (keyCooling(p, i, now)) continue
+    const st = (p.keyStats && p.keyStats[i]) || null
+    // 从没用过 -> 0(最优先); 记的是 ISO 串, 解析失败也按 0 处理(宁可先试它, 不要把它饿死)
+    const ts = (st && st.lastUsed) ? (Date.parse(st.lastUsed) || 0) : 0
+    if (ts < bestTs) { bestTs = ts; best = i }
   }
-  return -1
+  return best
+}
+
+// 连续失败退避: 第 1 次给 base, 之后每次翻倍, 封顶 cap。
+// 为什么要有: 固定冷却只挡得住"刚才抖了一下"。一个真过载/真坏掉的模型冷却到期后**准时**回到竞争
+//   队列, 于是每 base 秒被选中一次、白等一个完整往返、再冷却 —— 循环到天荒地老。实测(usage_log
+//   2026-10-23): `gemini/gemini-3.8-flash` 13 次调用 10 次"过载"、全程 0% 成功;
+//   `mistral/mistral-medium-3-5` 15 次里 13 次限流, 也是 0%。
+// 为什么只对**连续**失败生效(markOk 一次清零): 单点判据不能定结果 —— 一次抖动必须还是 base,
+//   否则偶发抖动会被放大成"这模型被踢出池子", 与"宁可漏判"相反。
+// ⚠ 这是一条**冷却**, 不是拉黑: 到期照样回到候选链, 一次成功立刻恢复。
+function streakBackoffMs(p, modelId, base, cap) {
+  const streak = (p.failStreak && p.failStreak[modelId]) || 1
+  return Math.min(base * Math.pow(2, Math.min(streak - 1, 5)), cap)
+}
+// 退避到第 3 次才值得说一声: 前两次是"抖了一下", 第 3 次起才是"这模型真的有问题",
+// 而这种"悄悄变慢"正是本项目最难查的一类问题(请求不报错, 只是越来越慢)。
+function noteBackoff(p, modelId, ms) {
+  const streak = (p.failStreak && p.failStreak[modelId]) || 1
+  if (streak >= 3) console.warn(`[backoff] ${p.name}/${modelId} 连续失败 ${streak} 次, 冷却 ${Math.round(ms / 60000)} 分钟`)
+}
+
+// ── "代理没开"不是厂商的问题 ──
+// 病因在本机(代理没启动/端口不对), 修法是"把代理打开", 与厂商、Key、模型都无关。
+// 旧行为把它当 network: **整家冷却 90 秒** —— 于是用户打开代理后还要再等 90 秒才能用,
+// 而界面上没有任何东西解释为什么(实测 usage_log 里 6 次 `ECONNREFUSED 127.0.0.1:10808`)。
+// 现在只冷却 5 秒(足够挡住同一次请求里的重复尝试), 且**不动** downUntil / failStreak / 质量统计:
+// 一次代理没开不该把模型降级 30 分钟, 也不该算进"这模型不行"。
+// 只认**确定性**的"连不上本机端口": ECONNREFUSED 是"那个端口上没人听"的铁证(代理没启动/端口写错)。
+// 刻意**不收** ETIMEDOUT / ECONNRESET —— 它们也可能是目标站点自己挂了, 那种情况该按 network 正常
+// 冷却 90 秒并降级。宁可漏判(退回 network), 也不要把真故障当成本机代理问题而放过。
+const PROXY_DOWN_RE = /ECONNREFUSED|EHOSTUNREACH|ENETUNREACH|socket hang up/i
+function isProxyDown(p, status, bodyText) {
+  if (status !== 0 || !p || !p.needs_proxy || !CFG.proxy) return false
+  return PROXY_DOWN_RE.test(String(bodyText || ''))
 }
 
 // opts.real === true 表示"真实用户请求": 只有真实流量才进质量/可用性统计。
@@ -3793,6 +4020,17 @@ function markFail(p, status, modelId, retryAfterSec, keyIdx = -1, bodyText, opts
   p.modelCooldown = p.modelCooldown || {}
   p.keyCooldown = p.keyCooldown || {}
   p.blocked = p.blocked || {}
+  // 代理不通要排在**所有**统计之前: 它不是这家的问题, 任何"记账"都会冤枉它(见 isProxyDown)。
+  if (isProxyDown(p, status, bodyText)) {
+    p.cooldownUntil = Date.now() + 5000
+    p.lastError = `${new Date().toISOString()} [${modelId}] 代理 ${CFG.proxy} 连不上 —— 先把代理打开再重试(与厂商无关, 5 秒后即可)`
+    saveConfig()
+    return
+  }
+  // 模型级**连续**失败计数(一次成功就清零, 见 markOk)。用来给"反复失败的模型"做退避,
+  // 见下方 5xx 分支的说明。跨模型独立计数: 一家有 17 个模型, 不能因为一个坏了就整家退避。
+  p.failStreak = p.failStreak || {}
+  p.failStreak[modelId] = (p.failStreak[modelId] || 0) + 1
   const kind = classifyUpstreamError(status, bodyText)
   const now = new Date().toISOString()
   // 逐 Key 统计: 放在最前面, 让"某把 Key 一直在失败"能被单独看见 ——
@@ -3874,16 +4112,20 @@ function markFail(p, status, modelId, retryAfterSec, keyIdx = -1, bodyText, opts
   }
   if (kind === 'quota') {
     // 免费额度用完 -> 只冷却该模型到"重置时间", 绝不拉黑(明天又是好汉)
-    const ms = quotaCooldownMs(bodyText || '', retryAfterSec)
+    const ms = quotaCooldownMs(bodyText || '', retryAfterSec, p)
     p.modelCooldown[modelId] = Date.now() + ms
     p.lastError = `${now} [${modelId}] 额度已用完, 冷却 ${Math.round(ms / 60000)} 分钟后自动恢复`
     saveConfig()
     return
   }
   if (kind === 'overloaded') {
-    // 模型过载 -> 短冷却 60s, 马上换链上下一家
-    p.modelCooldown[modelId] = Date.now() + 60000
-    p.lastError = `${now} [${modelId}] 上游过载, 60s 后重试`
+    // 模型过载 -> 短冷却 60s, 马上换链上下一家。
+    // ⚠ 但**连续**过载要升级: 60s 固定冷却意味着一个真过载的模型每分钟被选中一次、白等一个往返
+    //   (实测 `gemini/gemini-3.8-flash`: 13 次调用 10 次过载, 0% 成功)。60→120→240→480→600(封顶)。
+    const ms = streakBackoffMs(p, modelId, 60000, 600000)
+    p.modelCooldown[modelId] = Date.now() + ms
+    p.lastError = `${now} [${modelId}] 上游过载, ${Math.round(ms / 1000)}s 后重试`
+    noteBackoff(p, modelId, ms)
     saveConfig()
     return
   }
@@ -3916,8 +4158,10 @@ function markFail(p, status, modelId, retryAfterSec, keyIdx = -1, bodyText, opts
       : (retryAfterSec ? Math.min(retryAfterSec * 1000, 600000) : 90000)
     p.modelCooldown[modelId] = Date.now() + ms
   } else {
-    // 5xx/其他 = 该模型冷却 90 秒
-    p.modelCooldown[modelId] = Date.now() + 90000
+    // 5xx/其他 = 该模型冷却 90 秒 —— 但**连续**失败要退避(曲线见 streakBackoffMs 的说明)。
+    const backoff = streakBackoffMs(p, modelId, 90000, 720000)
+    p.modelCooldown[modelId] = Date.now() + backoff
+    noteBackoff(p, modelId, backoff)
   }
   saveConfig()
 }
@@ -3929,6 +4173,9 @@ function markOk(p, modelId, keyIdx = -1, opts = {}) {
   if (opts.real) pushQuality(p, 2, modelId)
   // 真的调通了 → 立刻恢复领跑资格(不必等 RECENT_DOWN_MS 到期)。
   if (modelId && p.downUntil) delete p.downUntil[modelId]
+  // 同理清掉连续失败计数: 退避只针对"连续"失败, 中间成功一次就说明它现在好着呢。
+  // 不清的话, 一个模型偶尔抖两下就会一路背到 12 分钟冷却, 那是"宁可错杀"的反面。
+  if (modelId && p.failStreak) delete p.failStreak[modelId]
   // rpmCap 自愈: 学习值原来是"棘轮"—— 只在撞 429 时按当时的 60s 请求数写入, 之后**只降不升**。
   // 后果(实测 2026-09-18): openrouter/sensenova 被锁在 1, 意味着"60 秒内发过 1 个请求"就算已限流,
   // 这两个厂商共 29 个候选因此几乎永久降权, 池子里三分之一的名额形同虚设。
@@ -4797,6 +5044,16 @@ function setSourceHeaders(res, r) {
     // 这次用的是路由组时也标出来: 组名本身不说明"实际是谁答的", 但能说明"候选是被收窄过的",
     // 排查"为什么老是这几个模型"时这一步最省时间。
     if (r.group) res.setHeader('x-xiaoji-group', r.group)
+    // 这次为了塞进模型窗口裁过历史 —— 客户端/用户看到"模型忘了我前面说的"时,
+    // 这是唯一能查到原因的入口(仪表盘只记日志, 用户不会去看)。
+    // 值保持纯 ASCII: `2msg;45000->12000c` = 丢了 2 条历史, 规模从 45000 字符压到 12000。
+    if (r.compacted) {
+      const c = r.compacted
+      res.setHeader('x-xiaoji-compacted', `${c.dropped}msg;${c.before}->${c.after}c`)
+    }
+    // 这次的结果是**复用**了一个同时在飞的相同请求（没有真的打上游）—— 排查"为什么配额消耗比
+    // 请求数少"时, 这个头是唯一能解释的入口。
+    if (r.coalesced) res.setHeader('x-xiaoji-coalesced', '1')
   } catch {}
 }
 function hookClientAbort(res, up, pname, model, ctx) {
@@ -4923,6 +5180,43 @@ const HEDGE_MAX = 2          // 最多同时 2 个候选在飞
 const HEDGE_FAST_MS = 1500   // "已知很快"的判定阈值
 const HEDGE_MIN_MS = 1200    // 已确知领跑者很慢时, 提前到这个窗口并行, 别白等满 3s
 const SLOW_LEAD_MS = 6000    // 平均延迟超过它 = 确知很慢
+
+// ── 首字节超时: "有退路才敢早放弃" ──
+// 背景(2026-10-23 实测 usage_log): 11 次失败是"上游 15s 内未返回响应头" —— 每次白等满 15 秒。
+// 15 秒是个**兜底值**, 对交互式网关偏长; 但直接调小会把"慢但活着"的模型误杀成失败, 更糟。
+// 判据只用一个信号: 这个模型**自己的**实测 TTFB(modelLat, 模型级而非供应商级 ——
+//   同家模型速度能差一个数量级)。常态 200ms 的模型等它 15 秒, 等于等 75 倍。
+// 两道安全阀:
+//   ① **只在链上还有没试过的候选时才收紧**。它是最后一个候选时保持 15 秒 ——
+//      早放弃只会把"慢一点但能答"变成"报错", 而没有任何人接手。
+//   ② 下限 6 秒、且至少 3 个样本才启用。宁可多等几秒, 也不要因为一次网络抖动就误杀。
+const HEAD_TIMEOUT_MS = 15000
+const HEAD_TIMEOUT_MIN_MS = 6000
+const HEAD_SLOW_FACTOR = 5      // 超过自己常态的 5 倍 = 这次真的不对劲
+const HEAD_SAMPLE_MIN = 3       // 样本不足不启用(单次采样不能定生死)
+function adaptiveHeadMs(p, modelId, hasFallback) {
+  if (!hasFallback) return HEAD_TIMEOUT_MS
+  const n = (modelId && p.modelLatN && p.modelLatN[modelId]) || 0
+  const ms = (modelId && p.modelLat && p.modelLat[modelId]) || 0
+  if (n < HEAD_SAMPLE_MIN || !ms) return HEAD_TIMEOUT_MS
+  return Math.min(HEAD_TIMEOUT_MS, Math.max(HEAD_TIMEOUT_MIN_MS, Math.round(ms * HEAD_SLOW_FACTOR)))
+}
+
+// ── 限流兜底: 全链都栽在"限流"上时, 等一小会儿重排一次 ──
+// 免费池最难受的时刻不是"某家限流"(换一家就行), 而是**全池同时限流** —— 客户端直接看到 502。
+// 而这类失败里有很大一部分是"再等 2 秒就好了": RPM 窗口是滑动的, 上游回的 `Retry-After`
+// 通常只有 1~10 秒。markFail 已经把 `Retry-After` 记进 modelCooldown 了(见那里的说明),
+// 所以"还要等多久"是一个**已知量**, 不必猜。
+//
+// ⚠ 判据刻意保守(四道闸门全过才等), 因为多等几秒是用户可感知的代价:
+//   ① 只等 **≤5 秒** 的; 没给 `Retry-After` 时 markFail 默认 90 秒冷却, 天然被排除 ——
+//      这条同时挡住了"日额度用完"(冷却到明天)和"网络不通"(不设 modelCooldown);
+//   ② **链上每个候选**都必须在窗口内恢复(只要有一个还得等很久, 等这一轮就没意义);
+//   ③ 只重试 **一次**, 且重试期间客户端断开立刻放弃;
+//   ④ 流式请求也适用 —— 重试发生在"还没拿到上游响应头"时, 响应头一个字节都还没发出去。
+// 开关: `config.json` 里 `"retryOnRateLimit": false` 可整条关掉。
+const RETRY_WAIT_MAX = 5000
+
 
 // 领跑者是否"已知很快"(据此跳过对冲)。
 // ⚠ 判据必须**两个信号同时成立**: 最近一次实测快(recency) **且** 平均延迟也不慢(aggregate)。
@@ -5114,7 +5408,9 @@ async function attemptChain(model, payload, ctx) {
   // 本次请求的规模 —— 只用于"上游回'请求太大'时把它记进 ctxLimit"(见 markFail)。
   // ⚠ 与 pickChain 里那个 reqChars 用**同一个函数**算, 两处口径必须一致: 记录时按 A 口径、
   //   跳过时按 B 口径, 就会出现"记了却从不跳过"或"跳过一个其实能用的"。
-  const reqChars = payloadChars(payload)
+  // ⚠ 用 let: 上下文降级裁剪之后规模会变小, 之后记进 ctxLimit 的必须是**实际发出去的规模**,
+  //   否则会记下一个比真实更大的数, 把该模型多挡掉一段(判据被自己的补救措施污染)。
+  let reqChars = payloadChars(payload)
   // 别名解析(与 pickChain 内同一个函数、同样只解析一层, 幂等)。错误信息必须用**解析后的目标**,
   // 否则用户看到"模型 gpt-4o 不在池里"会一头雾水 —— 他明明把 gpt-4o 指到了 auto。
   const target = resolveAlias(model)
@@ -5122,7 +5418,26 @@ async function attemptChain(model, payload, ctx) {
   // 目标是不是路由组 —— 只用于把"空链"的报错说清楚: 组空链几乎总是"成员名写错了/成员全被隔离了",
   // 而默认那句"不在任何已启用供应商的可用池里"会让用户以为整站挂了。
   const grp = resolveGroup(target)
-  const chain = pickChain(model, payload)
+  let chain = pickChain(model, payload)
+  // ── 上下文降级: 全链都"实测吃不下这么大" ──
+  // 走到这里说明: 池里每个候选都被自己的 ctxLimit 判过"这轮太大"。以前这是死路 ——
+  // 硬跳过把它们全剔掉 -> 链空 -> 报"模型不在可用池里"(病因完全看不出来)。
+  // 现在先按**最小的那个实测撞墙规模**裁一段历史再重排一次: 裁成功 = 请求能答;
+  // 裁不动(裁完仍超 / tools 就占满了 / 没有实测数据)就保持原链去打 —— 最坏也只是原来那样。
+  // ⚠ 只在"**全部**候选都嫌大"时裁: 只要链上还有一个能吃下的, 就该用那个, 不该擅自改用户的消息。
+  let compactInfo = null
+  if (chain.length && chain._ctxTight === chain.length) {
+    const limits = chain.map((x) => modelCtxLimit(x.ref, x.model)).filter((n) => n > 0)
+    const budget = limits.length ? Math.floor(Math.min(...limits) * COMPACT_RATIO) : 0
+    const c = compactPayload(payload, budget)
+    if (c) {
+      payload = c.payload
+      compactInfo = c
+      reqChars = c.after
+      chain = pickChain(model, payload)
+      console.log(`[compact] ${ctx && ctx.id} 全链嫌大, 已裁至 ${c.before}→${c.after} 字符（丢 ${c.dropped} 条历史, 截断 ${c.truncated} 条）`)
+    }
+  }
   if (!chain.length) {
     STATS.fail++
     // "一家都没配" 和 "配了但这个模型用不了" 必须分开说: 混成同一句会让用户以为整站挂了,
@@ -5186,6 +5501,9 @@ async function attemptChain(model, payload, ctx) {
     tried++
     if (tried > 1) STATS.fallbacks++
     rateTrack(p.id)
+    // 首字节超时按"该模型实测 TTFB + 链上还有没有退路"收紧(见 adaptiveHeadMs)。
+    // 放在 forward 之前算: 此刻 cursor 已经越过当前候选, cursor < chain.length 即"还有退路"。
+    st.headMs = adaptiveHeadMs(p, item.model, cursor < chain.length)
     const promise = forward(p, out, 90000, keys[ki], st).then(async (up) => {
       st.up = up
       // 配额头采集(见 recordQuota 的说明)。放在**最前面**: 429 的响应头(remaining=0)
@@ -5271,9 +5589,16 @@ async function attemptChain(model, payload, ctx) {
     }).catch((e) => {
       // 被我们主动取消的候选不算它的错: 不记失败、不冷却、不拉黑 —— 否则对冲会"惩罚"无辜的供应商
       if (st.cancelled) return { skip: `${p.name}/${item.model}: 已被更快的候选抢先` }
-      markFail(p, 0, item.model, 0, -1, '', { real: true, tools: wantsTools, vision: wantsVision, chars: reqChars })
+      // 把错误正文带上: markFail 要用它判"是不是本机代理不通"(见 isProxyDown) ——
+      // 不传的话那条分支永远进不去, 又变成"整家冷却 90 秒"。
+      markFail(p, 0, item.model, 0, -1, e.message, { real: true, tools: wantsTools, vision: wantsVision, chars: reqChars })
       STATS.candidateFail++
-      recordUsage(p.name, item.model, false, `${KIND_CN.network} · ${e.message}`.slice(0, 200), EX({ status: 0, ms: Date.now() - tCand }))
+      // 代理不通单独给一句人话: "连不上厂商（网络不通或代理没开）· connect ECONNREFUSED 127.0.0.1:10808"
+      // 让用户要自己把两件事串起来才看得懂, 而修法只有一种 —— 把代理打开。
+      const why = isProxyDown(p, 0, e.message)
+        ? `本机代理连不上（${CFG.proxy}），先把代理打开再重试 · ${e.message}`
+        : `${KIND_CN.network} · ${e.message}`
+      recordUsage(p.name, item.model, false, why.slice(0, 200), EX({ status: 0, ms: Date.now() - tCand }))
       // 超时/连不上 -> 整家本轮不再试(见上方 skipProv 说明)
       if (/超时|卡死|timeout|ECONN|ENOTFOUND|socket|aborted|网络/i.test(String(e.message))) skipProv.add(p.id)
       return { fail: `${p.name}/${item.model}: ${e.message}` }
@@ -5284,6 +5609,40 @@ async function attemptChain(model, payload, ctx) {
   const inflight = []
   let cursor = 0
   const push = () => { if (cursor >= chain.length) return false; inflight.push(launch(chain[cursor++])); return true }
+
+  // ── 限流兜底: 一轮跑完还是全败时, 判断"再等几秒有没有意义"(判据见 RETRY_WAIT_MAX) ──
+  // 返回要等的毫秒数; 0 = 不值得等(直接按原样报错)。
+  // ⚠ 要求**链上每个候选**都有冷却且都在窗口内恢复 —— 只要有一个还得等很久(日额度/网络),
+  //   等这一轮就是纯浪费用户时间, 不如立刻把真实错误告诉他。
+  const retryWaitMs = () => {
+    if (CFG.retryOnRateLimit === false) return 0
+    if (!chain.length) return 0
+    const t = Date.now()
+    let soonest = Infinity
+    for (const x of chain) {
+      const cd = (x.ref.modelCooldown && x.ref.modelCooldown[x.model]) || 0
+      if (cd <= t) return 0                    // 没有限流冷却 -> 这次失败不是"等一会儿就好"
+      const wait = cd - t
+      if (wait > RETRY_WAIT_MAX) return 0      // 有一个要等太久 -> 整轮不值得等
+      if (wait < soonest) soonest = wait
+    }
+    return Number.isFinite(soonest) ? Math.max(soonest, 300) : 0
+  }
+  // 可中断的等待: 客户端在等上游时断开, 必须立刻放弃(否则会白等满 5 秒再回一个没人要的错误)
+  const waitAbortable = async (ms) => {
+    const t0 = Date.now()
+    while (Date.now() - t0 < ms) {
+      if (ctx && ctx.req && ctx.req.__aborted) return true
+      await new Promise((r) => setTimeout(r, 100))
+    }
+    return !!(ctx && ctx.req && ctx.req.__aborted)
+  }
+
+  // 最多两轮: 第 2 轮只可能是"限流兜底"(见下方), 不会无限重试。
+  for (let round = 0; round < 2; round++) {
+  cursor = 0
+  inflight.length = 0
+  skipProv.clear()      // 上一轮的"整家跳过"结论对重试那一轮不成立(它可能只是刚才限流)
 
   while (true) {
     // 客户端已断开: 不再开新候选, 并把在飞的都**硬掐**(hard) —— 结果没人要, 继续跑只是烧额度
@@ -5311,8 +5670,29 @@ async function attemptChain(model, payload, ctx) {
     for (const x of inflight) x.cancel()       // 赢了: 取消所有还在飞的候选
     // target/alias/attempts 只用于**响应头**(告诉调用方这次实际走了谁、回退过几次),
     // 不参与任何路由判断 —— 与 ctx 同一条原则: 记录与决策解耦。
-    return { up: r.up, provider: r.provider, model: r.model, chain, target, alias: target !== model ? model : null, group: grp ? target : null, attempts: attempts.length }
+    // compacted: 本次是否为了塞进模型窗口裁过历史。交给 setSourceHeaders 下发成响应头 ——
+    // 用户看到"模型怎么忘了我前面说的", 得能在响应里找到原因, 而不是去猜。
+    return { up: r.up, provider: r.provider, model: r.model, chain, target, alias: target !== model ? model : null, group: grp ? target : null, attempts: attempts.length, compacted: compactInfo }
   }
+
+  // 本轮全败。第 1 轮先问一句"再等几秒有没有意义"(见 retryWaitMs 的四道闸门);
+  // 值得等就重排一次候选链再来一轮, 否则直接按原样报错。
+  if (round === 0) {
+    const wait = retryWaitMs()
+    if (wait) {
+      const secs = Math.round(wait / 100) / 10
+      console.log(`[retry] ${ctx && ctx.id} 全链限流, ${secs}s 后重排一次（上游 Retry-After 给的就是这么短）`)
+      const aborted = await waitAbortable(wait)
+      if (!aborted) {
+        // 冷却已到期 -> 重排后这些候选回到健康档。仍然走同一套 pickChain, 不另写一套调度。
+        chain = pickChain(model, payload)
+        if (chain.length) continue
+      }
+    }
+  }
+  break
+  }   // for (round)
+
   STATS.fail++
   // 注意: Math.min(...[]) = Infinity 且 Infinity 是 truthy, || 0 兜不住 —— 会让
   // new Date(Infinity).toISOString() 抛 RangeError, 502 错误响应反而发不出去(客户端干等)。
@@ -5321,6 +5701,77 @@ async function attemptChain(model, payload, ctx) {
   const e = new Error(`链上 ${chain.length} 个候选全部失败`)
   e.status = 502; e.code = 'all_upstream_failed'; e.attempts = attempts; e.retryAt = retryAt
   throw e
+}
+
+// ── 并发合并(coalesce): 同一个请求正在飞的时候, 再来一个一模一样的, 就等它, 不重复打上游 ──
+// 为什么值得做: 免费池的瓶颈是配额(RPM/RPD), 不是钱。agent 客户端重试、用户连点、多个客户端
+// 同时问同一句 —— 这些**完全相同**的请求并发打出去, 每一发都真实消耗一次额度, 而答案本该一样。
+//
+// 边界(每一条都是"不做就会出问题"):
+//   ① **只合并非流式**。流式要把一条上游流 tee 给多个 res, 而流式热路径在本项目历史上出过三次
+//      事故(挂死 / 保活挂错响应 / 未定义常量)。省配额不值得拿它冒险 —— 非流式的正文在
+//      attemptChain 里已经读完了, 复制的成本几乎为零。
+//   ② **key 必须覆盖整个 payload**(稳定序列化后 sha1), 不能用 stickyHash 那种"取前 200 字符"的
+//      粗哈希 —— 那会把"同一句话但换了模型/温度/工具"的请求错并成一个, 是**给出错误答案**级别的 bug。
+//   ③ 合并的那次**失败时自己重跑一遍**。别人的失败不该连坐: 同样的请求它自己走一遍路由,
+//      可能选到另一家就成功了(顶多多花一次配额, 正确性优先)。
+//   ④ 每个等待者拿到的是**独立的响应流副本**, 不共享可读流 —— 共享的话第一个消费者读空,
+//      第二个就永远等不到数据(这类 bug 表现为"偶发空白回答", 极难查)。
+// 开关: `config.json` 里 `"coalesce": false` 可整条关掉。
+const COALESCE_INFLIGHT = new Map()
+const COALESCE_MAX = 64          // 兜底上限: 正常情况下 Map 里只有"正在飞的那几个"
+
+function payloadKey(payload) {
+  try {
+    // 稳定序列化: 递归按 key 排序。同一个请求换个字段顺序不该算出两个 key —— 那会让合并永远不命中。
+    const norm = (v) => {
+      if (Array.isArray(v)) return v.map(norm)
+      if (v && typeof v === 'object') {
+        const o = {}
+        for (const k of Object.keys(v).sort()) o[k] = norm(v[k])
+        return o
+      }
+      return v
+    }
+    return crypto.createHash('sha1').update(JSON.stringify(norm(payload))).digest('hex')
+  } catch { return null }
+}
+
+// 造一份独立的响应流副本。非流式时正文已在 up.__body 里(attemptChain 读完并校验过),
+// 所以这里不需要 tee —— 直接把那段字符串重新灌进一个新的 PassThrough。
+function cloneUp(up) {
+  const s = new PassThrough()
+  s.statusCode = up.statusCode
+  s.headers = up.headers
+  s.__ttfb = up.__ttfb
+  s.__body = up.__body
+  s.end(up.__body === undefined ? '' : up.__body)
+  return s
+}
+
+async function coalesceRun(key, fn) {
+  if (!key || CFG.coalesce === false) return fn()
+  const hit = COALESCE_INFLIGHT.get(key)
+  if (hit) {
+    try {
+      const r = await hit
+      // ⚠ 正文必须**确实已经读完**才能复用。正常路径下非流式的 __body 一定存在
+      //   （attemptChain 在返回前就读完并校验过），但"复用别人的结果"是一条新路径，
+      //   而它一旦拿到 undefined，下游就会给客户端一个**空回答**——那种 bug 表现为
+      //   "偶发空白"，极难查。宁可多一次判断：拿不到正文就自己重跑一遍（多花一次配额，
+      //   但绝不给出空白回答）。
+      if (!r || !r.up || r.up.__body === undefined) return fn()
+      STATS.coalesced = (STATS.coalesced || 0) + 1
+      return { ...r, up: cloneUp(r.up), coalesced: true }
+    } catch {
+      // 合并的那次失败了 -> 自己老老实实走一遍(见上面边界③)
+      return fn()
+    }
+  }
+  if (COALESCE_INFLIGHT.size >= COALESCE_MAX) return fn()   // 兜底: 异常堆积时不影响正常服务
+  const p = fn()
+  COALESCE_INFLIGHT.set(key, p)
+  try { return await p } finally { COALESCE_INFLIGHT.delete(key) }
 }
 
 async function handleChat(req, res, user, bodyStr) {
@@ -5335,7 +5786,13 @@ async function handleChat(req, res, user, bodyStr) {
   const t0 = Date.now()   // 用于估算输出耗时(= 总耗时 - 首字节延迟) -> 学输出吞吐
   STATS.requests++
   let r
-  try { r = await attemptChain(model, payload, ctx) }
+  try {
+    // 非流式才合并（见 coalesceRun 的边界①）；流式走原路径，一个字节都不变。
+    // ⚠ key 用**归一化之前的** payload 算：两个客户端若连私有字段都一样，才算"同一个请求"。
+    r = payload.stream
+      ? await attemptChain(model, payload, ctx)
+      : await coalesceRun(payloadKey(payload), () => attemptChain(model, payload, ctx))
+  }
   catch (e) {
     // 客户端在等上游时断开 -> 记 abort, 不是失败。否则"用户点了停止"会被算进模型成功率,
     // 免费池里最慢的那几家会被反复冤枉(与流式路径的 abort/fail 口径保持一致)。
@@ -5392,13 +5849,16 @@ async function handleChat(req, res, user, bodyStr) {
     // 非流式正文已在 attemptChain 里读过并校验(见 chatBodyProblem), 这里直接用
     const text = (up.__body !== undefined) ? up.__body : await readBody(up, 4 * 1024 * 1024)
     const n = countTokensFromJSON(text)
-    STATS.tokens += n
+    // 合并来的结果**没有真的消耗上游 token**, 也不能再采一次吞吐:
+    // 同一个响应采样两次会把 EMA 往"这一次的速度"上多拉一遍, 而 EMA 的更新权重只有 0.4,
+    // 被重复采样污染后要好几轮才冲掉(与 recordThroughput 那段注释同一条理由)。
+    if (!r.coalesced) STATS.tokens += n
     // 非流式: usage.completion_tokens 是上游给的精确值 —— 注意不能拿 countTokensFromJSON 的
     // total_tokens 去算吞吐, 它含 prompt, 会把"输入很长"误判成"输出很快"。取不到就放弃这次采样,
     // 不猜(猜出来的数字会污染 EMA, 而 EMA 只有 0.4 的更新权重, 污染后要好几轮才冲掉)。
     let comp = 0, ptok = 0
     try { const u = JSON.parse(text).usage || {}; comp = u.completion_tokens || 0; ptok = u.prompt_tokens || 0 } catch {}
-    recordThroughput(r.provider, comp, Date.now() - t0 - (up.__ttfb || 0), r.model)
+    if (!r.coalesced) recordThroughput(r.provider, comp, Date.now() - t0 - (up.__ttfb || 0), r.model)
     recordMetrics(!res.__clientGone, Date.now() - ctx.t0, up.__ttfb, ptok, comp, pname)
     if (!res.destroyed) res.end(text)
   }

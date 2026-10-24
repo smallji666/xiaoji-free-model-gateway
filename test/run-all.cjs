@@ -37,6 +37,11 @@
  *   8815 gw             probe-route
  *   8816 gw             sb-build（默认沙箱）
  *   8817 gw / 8818 up   quota-reload-check
+ *   8819 gw / 8820 up   ctx-compact-check
+ *   8823 gw / 8824 up   coalesce-retry-check
+ *   8825 gw / 8826 up   fail-scope-check
+ *   8827 gw / 8828 up   fail-path-check（8829/8830 是它**故意不监听**的死端口）
+ *   8831 gw / 8832 up   key-rotate-check
  *   9300+ 随机          shotseg
  *   ⚠ 历史上这批端口有 5 处冲突（hedge 的 8792/8793/8794 撞 gate-check 与 batch1/batch4，
  *     以及 why/probe 共用 8799、stale 撞 batch3、sb-build 撞 protocol 的假上游）。
@@ -77,6 +82,11 @@ const GROUPS = {
     ['promo-page-check.cjs', '整页活动判定'],
     ['hedge/hedge-check.cjs', '对冲请求量化回归'],
     ['quota-reload-check.cjs', '配额头采集 + config 热重载'],
+    ['ctx-compact-check.cjs', '上下文降级（超窗裁历史重发）'],
+    ['coalesce-retry-check.cjs', '并发合并 + 限流兜底重试'],
+    ['fail-scope-check.cjs', '失败归类范围 + 连续失败退避'],
+    ['fail-path-check.cjs', '额度重置时区 / 代理不通 / 首字节超时'],
+    ['key-rotate-check.cjs', '多 Key 轮转（LRU）'],
     ['startup-files-check.cjs', '启动入口不变式（CRLF/ASCII/gitattributes）'],
   ],
   local: [

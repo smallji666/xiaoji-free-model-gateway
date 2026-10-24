@@ -51,6 +51,10 @@
 真要重开这件事，前提是先有一条"标称窗口 vs 实测拒收规模"的实测对照数据（证明前者能纠正后者的
 误判），而不是先写代码。
 
+> **2026-10-23 补**：这条的结论没变，但论据更强了 —— `ctxLimit` 现在不只是"预筛掉"，还会在
+> **全链都嫌大**时触发降级裁剪（按实测撞墙规模的 70% 裁历史重发，见 CHANGELOG 1.2.0）。
+> 也就是说"筛掉"这个动作本身已经不产生 404 了，`context_length` 那套标称值能带来的额外收益更少。
+
 ### 4. `openapi.yaml` —— **已评估，暂不做**（2026-10-09）
 
 原设想的收益是"能被 Swagger UI 渲染、能让客户端自动生成 SDK"。评估后发现这两条对本项目都不成立：
@@ -93,6 +97,25 @@
 真要重开，建议的路径是**从新文件开始**：先给 `test/` 下的脚本（它们小、独立、不跑在生产里）
 加 `// @ts-check` 跑通，再逐步往 `server.mjs` 的核心数据结构（provider / payload / 候选链 item）
 推进。前提是先有 CI 步骤，而不是靠人记得跑。
+
+## 同类项目对照（2026-10-25）
+
+> 一次横向盘点：把 [one-api](https://github.com/songquanpeng/one-api)、
+> [LiteLLM](https://github.com/BerriAI/litellm) 的核心机制逐条对着看，确认"哪些已经对齐、
+> 哪些是定位不同、哪些值得再想"。目的不是追平功能数量，而是**避免下次把同一件事重新研究一遍**。
+
+| 机制 | 谁在做 | 本项目的对应 | 结论 |
+|---|---|---|---|
+| 多渠道 / 多 Key 轮询 | one-api 渠道、LiteLLM deployment 负载均衡 | `pickKeyIdx()` | **本轮才真正对齐**。旧实现是"从下标 0 找第一把没冷却的"= 永远用第 0 把，多 Key 的额度一直是闲着的（见 CHANGELOG 1.2.1） |
+| 熔断：连续失败 N 次进冷却 | LiteLLM `allowed_fails` + `cooldown_time` | `failStreak` + `modelCooldown` | 已对齐，且更细：本项目按**连续**次数翻倍退避、成功一次立刻清零；LiteLLM 是固定时长 |
+| fallbacks 回退链 | LiteLLM `fallbacks` | `pickChain()` 候选链 | 已对齐。差别是 LiteLLM 靠**手写静态链**，本项目按实时评分/延迟/冷却**动态排** —— 免费池里静态链第二天就过期 |
+| 上下文超窗降级 | LiteLLM `context_window_fallbacks` | `ctxLimit` + `compactPayload` | 本项目更强：判据是"上游真实拒收过的最小规模"（含账号级限额），不是模型标称窗口；超窗时裁历史重发而不是换模型 |
+| 重试与退避 | LiteLLM `num_retries` / `retry_after` | `retryOnRateLimit` | 已对齐。差别是本项目**只在"已知多久能恢复"时等**（全池同时限流、`Retry-After` ≤5s），其余立刻换家 |
+| 响应缓存 / 语义缓存 | Portkey、LiteLLM `cache` | 只有 `coalesce`（同请求在飞时合并） | **不学**。① agent 客户端的 payload 几乎不会逐字节相同（system 里常带时间/会话 id），精确缓存命中率极低；② 语义缓存要 embedding，与零依赖冲突；③ 免费模型 `temperature` 普遍 >0，把上一次的答案当本次结果返回，属于**给出错误答案**级别的问题 —— 省一次配额不值这个价 |
+| 多租户 / 计费 / 令牌分组 | one-api 的主业 | 单个网关 Key | 定位不同：本项目是**本机自用**的聚合层，不做分发与计费 |
+| 请求日志与用量统计 | LiteLLM 日志回调 | `usage_log.json` + `/api/usage` | 已够用，且刻意不落**完整对话正文**（隐私取向，见 SECURITY.md） |
+
+一句话结论：**韧性机制（轮询/熔断/回退/降级/重试）已经对齐，剩下的差异都是定位不同，不是欠账。**
 
 ## 设计边界（明确不做）
 

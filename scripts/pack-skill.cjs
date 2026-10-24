@@ -18,6 +18,7 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const zlib = require('node:zlib')
+const { SECRET_RES, PERSONAL_RES, FORBIDDEN_NAME } = require('./publish-rules.cjs')
 
 const ROOT = path.resolve(__dirname, '..')
 const SKILL = path.join(os.homedir(), '.workbuddy-ai', 'skills', 'xiaoji-free-model-gateway')
@@ -31,30 +32,7 @@ const LIST_ONLY = process.argv.includes('--list')
 const SKIP_FILE = /\.(prev|log|pid|tmp)$|^\.DS_Store$/i
 const SKIP_DIR = new Set(['shots', 'logs', 'node_modules', '__pycache__'])
 
-// ── 自检规则（与 scripts/sync-skill-dist.cjs 保持同一口径）──
-const SECRET_RES = [
-  ['网关统一 Key', /freegw-[0-9a-f]{32}/],
-  ['Groq Key', /gsk_[A-Za-z0-9]{20,}/],
-  ['OpenRouter Key', /sk-or-v1-[A-Za-z0-9]{20,}/],
-  ['Anthropic Key', /sk-ant-[A-Za-z0-9_-]{20,}/],
-  ['Google Key', /AIza[A-Za-z0-9_-]{30,}/],
-  ['OpenAI Key', /sk-(?:proj-)?[A-Za-z0-9_-]{40,}/],
-  ['HuggingFace Key', /hf_[A-Za-z0-9]{30,}/],
-  ['NVIDIA Key', /nvapi-[A-Za-z0-9_-]{30,}/],
-  ['Cerebras Key', /csk-[A-Za-z0-9]{30,}/],
-]
-const PERSONAL_RES = [
-  // 动态取当前机器的用户名：写死某个名字只对一台机器有效，换人/换机就形同虚设
-  ['本机用户名', new RegExp(os.userInfo().username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')],
-  ['个人化归属措辞', /用户原话|用户明确要求|用户说|用户反馈|用户要求|用户问|起因\(用户\)|按你的要求/],
-  ['旧测试目录名', /\.workbuddy-ai[\\/]testinst/],
-]
-// 兜底：这些文件名出现在包里就是出事了
-const FORBIDDEN_NAME = [
-  /^config\.json/i, /\.prev$/i, /\.corrupt\./i, /\.import-bak\./i,
-  /^gateway\.pid$/i, /^logs?$/i, /^metrics\.json/i, /^usage_log\.json/i,
-  /^promo_state\.json/i, /^free_catalog\.json/i, /^server\.log/i,
-]
+// ── 自检规则见 scripts/publish-rules.cjs（唯一判据来源，不在本文件重复定义）──
 
 function walk(dir, base, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -162,8 +140,8 @@ function main() {
     if (buf.includes(0)) continue
     const text = buf.toString('utf8')
     for (const [name, re] of SECRET_RES) {
-      const m = text.match(re)
-      if (m) problems.push(`${rel}  ← 命中密钥「${name}」: ${m[0].slice(0, 10)}…`)
+      // ⚠ 只报特征名，绝不回显命中原文 —— 这个脚本的输出常被贴进 Issue / 发布说明
+      if (re.test(text)) problems.push(`${rel}  ← 命中密钥「${name}」`)
     }
     for (const [name, re] of PERSONAL_RES) {
       if (re.test(text)) problems.push(`${rel}  ← 命中个人信息「${name}」`)

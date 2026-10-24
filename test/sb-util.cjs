@@ -91,6 +91,9 @@ const VOLATILE_KEYS = [
   // 测试窗口里变动。漏了它就是 modelQ 那个坑的翻版: gate-check / batch4 报"生产 config.json
   // 被触碰"的**假失败**(见 modelQ 那条注释)。
   'quota',
+  // failStreak(2026-10-23 加): 模型级**连续**失败计数, 用来做冷却退避。每次失败写、每次成功删 ——
+  // 必然在测试窗口里变动。漏了它就是 modelQ / quota 那两次假失败的翻版。
+  'failStreak',
 ]
 
 function stableConfigView(configPath) {
@@ -120,7 +123,9 @@ function stableConfigView(configPath) {
 // ⚠ 同样**不递归删目录** —— 只删明确认识的文件，并且逐文件 unlink（不触发 safe-delete 守卫）。
 // ⚠ 这份清单是"新增一个沙箱就要补一行"的典型，漏一行就永远清不到。
 //   2026-09-26 实测漏了 sb-feat → 它的 server.mjs 副本(329KB)在里面躺了一天。
-//   加新沙箱时**同时改这里和上面 resetSandboxDir 的调用方**。
+//   **2026-10-25 起它只是兜底**：cleanTestArtifacts() 会动态扫描 `test/sb-*` 目录，
+//   新增沙箱不再需要登记（这份清单漏了五次，见清理函数的注释）。留在这里是为了
+//   万一将来某个沙箱目录不叫 sb-* 时还能被清到。
 const CLEAN_DIRS = ['sb-main', 'sb-gate', 'sb-corrupt', 'sb-conflict', 'sb-feat',
   'sb2-main', 'sb3-main', 'sb4-a', 'sb4-b',
   // 2026-10-06 补: 本轮新增的沙箱一个都没在这份清单里 —— 照旧例(漏 sb-feat 那次)一次补齐。
@@ -134,6 +139,15 @@ const CLEAN_DIRS = ['sb-main', 'sb-gate', 'sb-corrupt', 'sb-conflict', 'sb-feat'
   // 2026-10-09 补: quota-reload-check 的沙箱。新套件**第一次跑就会在这里留一份**
   //   server.mjs 副本(329KB) + config.json + 日志 —— 不登记就是又一次"漏一行"。
   'sb-quota',
+  // 2026-10-23 补: ctx-compact-check 的沙箱。同一笔账 —— 新套件第一次跑就在这里留一份
+  //   server.mjs 副本 + config.json + 日志, 不登记就永远清不到。
+  'sb-ctx',
+  // 2026-10-23 补: coalesce-retry-check 的沙箱（同一个「漏一行」的坑, 见上面几条）。
+  'sb-coal',
+  // 2026-10-23 补: fail-scope-check 的沙箱。同一笔账 —— 不登记就永远清不到。
+  'sb-scope',
+  // 2026-10-23 补: fail-path-check 的沙箱（同上）。
+  'sb-path',
   // logs/ 与 shots/ 是 test/ 顶层的产物（protocol-test 的网关日志、shotseg 的截图），
   // 同样得登记，否则清不掉。
   'logs', 'shots',
@@ -205,7 +219,21 @@ function cleanTestArtifacts() {
       else rm(fp)
     }
   }
-  for (const d of CLEAN_DIRS) {
+  // ⚠ CLEAN_DIRS 是"新增一个沙箱就得补一行"的清单，历史上漏过 4 次（sb-feat / sb-why /
+  //   sb-route / sb-eval，每次都是跑完才发现目录还躺着几百 KB 的 server.mjs 副本）。
+  //   2026-10-25 实测又漏了 sb-dbg / sb-shot / sb-snap —— 同一个人、同一个坑、第五次。
+  //   所以这里改成**动态发现**：`test/` 下凡是 `sb-*` 开头的**目录**都算沙箱，一律清理。
+  //   CLEAN_DIRS 保留下来只作为"历史已知"的兜底（万一某天目录名不再以 sb- 开头）。
+  //   注意必须过滤 isDirectory —— `sb-util.cjs` / `sb-build.cjs` 是源码，前缀同样匹配。
+  const dirs = new Set(CLEAN_DIRS)
+  try {
+    for (const f of fs.readdirSync(here)) {
+      if (!/^sb[-_]/i.test(f)) continue
+      const fp = path.join(here, f)
+      try { if (fs.statSync(fp).isDirectory()) dirs.add(f) } catch {}
+    }
+  } catch {}
+  for (const d of dirs) {
     const dir = path.join(here, d)
     if (!fs.existsSync(dir)) continue
     sweepDeep(dir)

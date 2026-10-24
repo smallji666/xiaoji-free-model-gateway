@@ -98,6 +98,18 @@ docker run -d --name xiaoji \
   分层冷却、模型级质量统计、按实测首字节与吞吐排序、粘性会话。
   **路由组**：一个名字 = 一组候选（`local-only` / `vision` / 省钱组），组名当模型名用，组内照样故障转移。
   → [细节](docs/routing.md)
+- **失败不会越拖越慢** —— 一个真坏的模型不会每 90 秒被选中一次、白等一个往返：连续失败按
+  90→180→360→720 秒退避（过载是 60→…→600），成功一次立刻清零。首字节超时也按模型**自己的**
+  常态收紧到 6 秒级 —— 但只在链上还有别的候选时才敢提前放弃，最后一个候选仍等满 15 秒。
+  额度冷却到**厂商自己的**重置时间（`openrouter` 是 UTC 零点）；代理没开只冷却 5 秒，
+  因为病因在本机、打开代理就该立刻能用。
+- **请求太大不会直接失败** —— 免费池窗口普遍只有 8k~32k，而 agent 客户端会把整段历史原样发过来。
+  这时网关**裁一段历史重发**（留 `system` + 最近几轮，`tools` 定义一律不裁），而不是回一个
+  病因错误的"模型不在池里"；裁过的响应带 `x-xiaoji-compacted` 说明丢了多少条。
+  容量不足的候选只**降档**不排除，池子小时照样能拿到答案。
+- **省着用额度** —— 一模一样的非流式请求并发时只打一次上游（`coalesce`，响应带
+  `x-xiaoji-coalesced`）；全池同时限流且上游说"再等几秒"时，等这一小会儿重试一次
+  （`retryOnRateLimit`），而不是直接甩 502。两个都能在 `config.json` 里一键关掉，保存即生效。
 - **五协议原生接入** —— `/v1/chat/completions`、`/v1/responses`（Codex CLI 用的 Responses API）、
   `/v1/messages`（Anthropic）、`/v1beta/models/<model>:generateContent`（Gemini）、`/api/chat`（Ollama）。
   同一个网关 Key，自动与 OpenAI 格式互转，**共用同一条路由链**。
@@ -118,6 +130,7 @@ docker run -d --name xiaoji \
 | 路由、对冲、冷却、容错规则 | [docs/routing.md](docs/routing.md) |
 | 接口与文件一览 | [docs/api.md](docs/api.md) |
 | 测试台（怎么跑、怎么加） | [docs/testing.md](docs/testing.md) |
+| 打成 WorkBuddy 技能包并上架 | [docs/publishing.md](docs/publishing.md) |
 | 安全说明与已知局限 | [docs/security.md](docs/security.md) |
 | 变更记录 / 路线图 / 贡献指南 / 安全策略 | [CHANGELOG.md](CHANGELOG.md) · [ROADMAP.md](ROADMAP.md) · [CONTRIBUTING.md](CONTRIBUTING.md) · [SECURITY.md](SECURITY.md) |
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+'use strict'
 /*
  * sync-skill-dist.cjs —— 把项目**当前**源码同步进技能包。
  *
@@ -7,46 +8,50 @@
  *   实测已经落后两个版本，而 SKILL.md 里却写着新功能，**描述与产物不一致**，比不同步更糟。
  *   这和"要人工补录才会动的列表 = 死列表"是同一个病。
  *
- * 同步三块：
- *   ① 网关源码（server.mjs / dashboard.html / 启动脚本 / README）
- *   ② 开发侧测试台（test/ → assets/gateway/test/）
- *   ③ 出包前自检（密钥 + 个人信息特征），命中即整体拒绝，不写任何一个文件
+ * 同步什么：
+ *   ① 网关运行所需的最小集（server.mjs / dashboard.html / 白名单 / 启动脚本 / logo）
+ *   ② package.json（**只取白名单字段**，版本号跟着项目走，不手抄）
+ *   ③ 开发侧测试台（`--with-tests` 才带，默认不带：18MB，且部署者用不上）
  *
- * 同步时会做两类改写（**只作用于技能包副本，不动项目源文件**）：
- *   · 路径自适应：测试脚本改用"逐级上找 server.mjs"定位项目根，包内包外同一份代码都能跑
- *   · 去个人信息：本机用户名 / 内部目录名 / 个人化归属措辞
+ * 出包前自检：密钥 + 个人信息，命中即整体拒绝，不写任何一个文件。
+ * 去敏改写只作用于技能包副本，不动项目源文件。
  *
- * 用法：node scripts/sync-skill-dist.cjs [--check]
- *   --check  只做自检与清单报告，不写盘
+ * 用法：
+ *   node scripts/sync-skill-dist.cjs            同步（默认不带测试台）
+ *   node scripts/sync-skill-dist.cjs --check    只自检与列清单，不写盘
+ *   node scripts/sync-skill-dist.cjs --with-tests  连测试台一起同步
  */
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
+const { SECRET_RES, PERSONAL_RES, SANITIZE } = require('./publish-rules.cjs')
 
 const ROOT = path.join(__dirname, '..')
 const SKILL = path.join(os.homedir(), '.workbuddy-ai', 'skills', 'xiaoji-free-model-gateway')
 const GATEWAY_DST = path.join(SKILL, 'assets', 'gateway')
-const TEST_SRC = path.join(ROOT, 'test')
 
 const CHECK_ONLY = process.argv.includes('--check')
+const WITH_TESTS = process.argv.includes('--with-tests')
 
-// 要同步的 [源文件, 技能包内相对路径]（代码 / 启动脚本 / 参考文档；数据与密钥类刻意不在列）
+// 要同步的 [源, 技能包内相对路径]；源以 `/` 结尾表示整目录递归
 const TARGETS = [
   ['server.mjs', 'assets/gateway/server.mjs'],
   ['dashboard.html', 'assets/gateway/dashboard.html'],
   ['xiaoji-launcher.vbs', 'assets/gateway/xiaoji-launcher.vbs'],
   ['小鸡开关.bat', 'assets/gateway/小鸡开关.bat'],
   ['free_whitelist.json', 'assets/gateway/free_whitelist.json'],
-  ['README.md', 'references/README.md'],
+  ['config.example.json', 'assets/gateway/config.example.json'],
+  ['assets/logos/', 'assets/gateway/assets/logos/'],
 ]
 
-// 文本类才做改写（JSON 数据只做自检，不动内容）
-const TEXT_EXT = /\.(mjs|html|md|cjs|bat|vbs|txt)$/i
+// 文本类才做改写（JSON 数据与图片只做自检，不动内容）
+const TEXT_EXT = /\.(mjs|html|md|cjs|bat|vbs|txt|json)$/i
+
+// package.json 只带这些键 —— 上游那份含 private/test 脚本，对部署者没意义
+const PKG_KEYS = ['name', 'version', 'description', 'type', 'license', 'engines', 'main']
 
 // ═══════════════ 路径自适应（只对测试脚本）═══════════════
 // 测试脚本用**自适应**方式定位项目根：从父目录逐级上找含 server.mjs 的目录。
-// 于是同一份脚本在 <项目根>/test/ 与 <gateway>/test/ 下都能找对根目录，无需按包内外改写。
-// PATH_FIX 只作兜底 —— 万一某脚本又写成 `__dirname/../..` 的老式两层上跳，这里能救回来。
 // ⚠ 必须从 `path.dirname(__dirname)` 起步，不能从 __dirname 起步 ——
 //    protocol-test 会把 server.mjs 拷进自己目录，从 __dirname 起步会在第二次运行时认错根目录。
 const ROOT_AUTO =
@@ -66,71 +71,8 @@ const PATH_FIX = [
   [/path\.join\(HERE, '\.\.', '\.\.', '\.\.', 'dashboard\.html'\)/g, `path.join(${ROOT_AUTO}, 'dashboard.html')`],
 ]
 
-// ═══════════════ 去个人信息（对所有文本）═══════════════
-// 只动"能定位到人"和"个人化归属"的部分；泛指网关使用者的「用户」一词保持不变。
-// 本机用户名**动态取**（写死某个名字只对一台机器有效，换人/换机就形同虚设）。
-const USER_NAME = os.userInfo().username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const SANITIZE = [
-  // ① 本机用户名与路径
-  [new RegExp('C:\\\\+Users\\\\+' + USER_NAME, 'g'), 'C:\\Users\\<用户名>'],
-  [new RegExp(USER_NAME, 'g'), '<用户名>'],
-  // ② 内部工作目录名
-  [/\.workbuddy-ai[\\/]testinst/g, 'test'],
-  // ③ 个人化归属措辞 → 中性设计说明
-  // ⚠ **只换名词短语、不插冒号** —— 原文的标点与语法照旧，否则会出现
-  //    「设计约定：是"重复了吧"」「按设计约束：**不进正式名单**」这类读着别扭的句子。
-  // ⚠ 长词必须排在短词前面（`用户明确反感过` 要在 `用户明确` 之前）。
-  [/用户明确反感过/g, '曾被否过'],
-  [/用户明确问过/g, '曾确认过'],
-  [/用户明确否掉过/g, '已明确否掉过'],
-  [/用户明确要求/g, '既定约束'],
-  [/用户明确提出的/g, '既定原则'],
-  [/用户明确/g, '既定要求'],
-  [/用户原话/g, '设计约定'],
-  [/用户反馈/g, '设计反馈'],
-  [/用户要求/g, '设计约束'],
-  [/用户说过/g, '反馈过'],
-  [/用户认可/g, '既定认可'],
-  [/用户说/g, '约定'],
-  [/用户报障时/g, '排查故障时'],
-  // ④ 含第一人称的引用整句改写
-  // ⚠ 引文常**跨行**（中间夹着 `//   ` 续行注释），所以分隔符要用 `[\s\S]{0,n}?` 而不是 `\s*`。
-  [/新增的怎么都是英文api,?[\s\S]{0,40}?我作为普通用户都不知道[\s\S]{0,40}?是干嘛的/g, '新增的全是英文 api，看不出是哪家'],
-  [/我作为普通用户都不知道\s*那几个是干嘛的/g, '裸域名看不出是哪家'],
-  [/我不信每次都是那18家,?[\s\S]{0,30}?总有新的大厂给到免费模型,?[\s\S]{0,20}?比如阶跃星辰/g, '免费厂商名单长期不变'],
-  [/你实测通过的怎么没往上面加？[\s\S]{0,20}?上面的列表没变过/g, '实测通过的厂商没进下拉'],
-  [/不能它写什么我们就信什么/g, '不能源写什么就信什么'],
-  // ⑤ 全包扫描补出的漏网变体（归因词不是"用户原话"那种标准写法）
-  [/候选的厂家为什么你不测试呢,?\s*必须得我提供 ?key\?/g, '候选厂商能不能不接 Key 就给出结论'],
-  [/候选的厂家为什么你不测试/g, '候选厂商能不能不接 Key 就测'],
-  [/起因\(用户\)[:：]?\s*/g, '起因：'],
-  [/这正是用户问/g, '这正是回答'],
-  [/用户问过/g, '曾有过一问'],
-  [/用户问/g, '曾有一问'],
-  [/按你的要求/g, '按既定约束'],
-]
-
-// ═══════════════ 自检规则 ═══════════════
-const SECRET_RES = [
-  ['网关统一 Key', /freegw-[0-9a-f]{32}/],
-  ['Groq Key', /gsk_[A-Za-z0-9]{20,}/],
-  ['OpenRouter Key', /sk-or-v1-[A-Za-z0-9]{20,}/],
-  ['Anthropic Key', /sk-ant-[A-Za-z0-9_-]{20,}/],
-  ['Google Key', /AIza[A-Za-z0-9_-]{30,}/],
-  ['OpenAI Key', /sk-(?:proj-)?[A-Za-z0-9_-]{40,}/],
-  ['HuggingFace Key', /hf_[A-Za-z0-9]{30,}/],
-  ['NVIDIA Key', /nvapi-[A-Za-z0-9_-]{30,}/],
-  ['Cerebras Key', /csk-[A-Za-z0-9]{30,}/],
-]
-
-const PERSONAL_RES = [
-  ['本机用户名', new RegExp(USER_NAME, 'i')],
-  ['个人化归属措辞', /用户原话|用户明确要求|用户说|用户反馈|用户要求|用户问|起因\(用户\)|按你的要求/],
-  ['旧测试目录名', /\.workbuddy-ai[\\/]testinst/],
-]
-
 const problems = []
-const blobs = []
+const blobs = [] // [相对路径, 内容字符串]
 
 function audit(label, text) {
   for (const [name, re] of SECRET_RES) if (re.test(text)) problems.push(`${label} 命中密钥特征「${name}」`)
@@ -144,32 +86,70 @@ function transform(text, isTest) {
   return s
 }
 
-// ── 收集：网关源码 ──
-for (const [src, rel] of TARGETS) {
+// ── 收集：文件 ──
+function collectFile(src, rel) {
   const from = path.join(ROOT, src)
-  if (!fs.existsSync(from)) { problems.push(`缺源文件：${src}`); continue }
+  if (!fs.existsSync(from)) { problems.push(`缺源文件：${src}`); return }
   const raw = fs.readFileSync(from, 'utf8')
   const s = TEXT_EXT.test(src) ? transform(raw, false) : raw
   audit(src, s)
   blobs.push([rel, s])
 }
 
-// ── 收集：测试台（只拷 .cjs，数据/残留一律不带）──
-const TEST_SKIP = /\.(json|pid|log|png|prev)$/i
-for (const sub of ['', 'hedge']) {
-  const dir = path.join(TEST_SRC, sub)
-  if (!fs.existsSync(dir)) continue
-  for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
-    if (!e.isFile() || !e.name.endsWith('.cjs') || TEST_SKIP.test(e.name)) continue
-    const rel = sub ? `${sub}/${e.name}` : e.name
-    const s = transform(fs.readFileSync(path.join(dir, e.name), 'utf8'), true)
-    audit(`test/${rel}`, s)
-    blobs.push([`assets/gateway/test/${rel}`, s])
+// ── 收集：目录（递归，跳过日志/截图/备份）──
+const DIR_SKIP = /\.(log|pid|tmp|prev)$|^\.DS_Store$/i
+function collectDir(src, rel) {
+  const base = path.join(ROOT, src)
+  if (!fs.existsSync(base)) { problems.push(`缺源目录：${src}`); return }
+  for (const e of fs.readdirSync(base, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+    if (DIR_SKIP.test(e.name)) continue
+    const child = path.join(base, e.name)
+    if (e.isDirectory()) collectDir(`${src}${e.name}/`, `${rel}${e.name}/`)
+    else if (e.isFile()) {
+      const buf = fs.readFileSync(child)
+      if (buf.includes(0)) { blobs.push([`${rel}${e.name}`, buf]); continue } // 二进制原样带
+      const s = transform(buf.toString('utf8'), false)
+      audit(`${src}${e.name}`, s)
+      blobs.push([`${rel}${e.name}`, s])
+    }
   }
 }
 
-// ── 收集：技能包内已有文档（源即产物，只自检不改写）──
-for (const rel of ['SKILL.md']) {
+for (const [src, rel] of TARGETS) {
+  if (src.endsWith('/')) collectDir(src, rel)
+  else collectFile(src, rel)
+}
+
+// ── 收集：package.json（只取白名单字段）──
+try {
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
+  const slim = {}
+  for (const k of PKG_KEYS) if (pkg[k] !== undefined) slim[k] = pkg[k]
+  const text = JSON.stringify(slim, null, 2) + '\n'
+  audit('package.json', text)
+  blobs.push(['assets/gateway/package.json', text])
+} catch (e) {
+  problems.push('读不到 package.json：' + e.message)
+}
+
+// ── 收集：测试台（可选）──
+if (WITH_TESTS) {
+  const TEST_SKIP = /\.(json|pid|log|png|prev)$/i
+  for (const sub of ['', 'hedge']) {
+    const dir = path.join(ROOT, 'test', sub)
+    if (!fs.existsSync(dir)) continue
+    for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      if (!e.isFile() || !e.name.endsWith('.cjs') || TEST_SKIP.test(e.name)) continue
+      const rel = sub ? `${sub}/${e.name}` : e.name
+      const s = transform(fs.readFileSync(path.join(dir, e.name), 'utf8'), true)
+      audit(`test/${rel}`, s)
+      blobs.push([`assets/gateway/test/${rel}`, s])
+    }
+  }
+}
+
+// ── 收集：技能包内文档（源即产物，只自检不改写）──
+for (const rel of ['SKILL.md', 'README.md']) {
   const p = path.join(SKILL, rel)
   if (fs.existsSync(p)) audit(rel, fs.readFileSync(p, 'utf8'))
 }
@@ -178,6 +158,13 @@ if (fs.existsSync(refDir)) {
   for (const f of fs.readdirSync(refDir).sort()) {
     if (!f.endsWith('.md') || f.endsWith('.prev')) continue
     audit(`references/${f}`, fs.readFileSync(path.join(refDir, f), 'utf8'))
+  }
+}
+const ownScripts = path.join(SKILL, 'scripts')
+if (fs.existsSync(ownScripts)) {
+  for (const f of fs.readdirSync(ownScripts).sort()) {
+    if (!/\.(cjs|mjs|js)$/.test(f)) continue
+    audit(`scripts/${f}`, fs.readFileSync(path.join(ownScripts, f), 'utf8'))
   }
 }
 
@@ -196,12 +183,15 @@ if (CHECK_ONLY) {
 // ── 写入 ──
 if (!fs.existsSync(GATEWAY_DST)) {
   console.error('✗ 目标目录不存在：' + GATEWAY_DST)
+  console.error('  先建好技能包骨架（SKILL.md + assets/gateway/），再跑本脚本。')
   process.exit(1)
 }
+let bytes = 0
 for (const [rel, s] of blobs) {
   const to = path.join(SKILL, rel)
   fs.mkdirSync(path.dirname(to), { recursive: true })
-  fs.writeFileSync(to, s, 'utf8')
-  console.log(`✓ ${rel}  ${s.length} chars`)
+  if (Buffer.isBuffer(s)) { fs.writeFileSync(to, s); bytes += s.length }
+  else { fs.writeFileSync(to, s, 'utf8'); bytes += Buffer.byteLength(s) }
+  console.log(`✓ ${rel}  ${Buffer.isBuffer(s) ? s.length + ' bytes' : s.length + ' chars'}`)
 }
-console.log('同步完成 → ' + SKILL)
+console.log(`同步完成 → ${SKILL}（${blobs.length} 文件，${(bytes / 1024).toFixed(0)} KB）`)
