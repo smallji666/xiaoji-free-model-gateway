@@ -81,6 +81,10 @@ node test/run-all.cjs protocol   # 只跑文件名含关键词的套件
 > ⚠ 测试脚本会先把**当前**的 `server.mjs` 拷进自己的目录再启动 —— 因为 `server.mjs` 里所有路径都按 `__dirname` 解析（不是 cwd），必须用同目录副本才不会误读写生产文件。
 >
 > ⚠ 沙箱**不删目录**，只重置状态文件（见 `sb-util.cjs`）。要彻底清理跑一次 `node test/sb-util.cjs --clean`。
+> **这条只能手动跑**：评估过让 `run-all` 自动清理，结论是**不可行** —— 本机 safe-delete 守卫按"单轮 unlink 计数"，
+> 一次删几百个文件会直接拒绝（实测删到第 49 个就 `SAFE_DELETE_BULK_GUARD_ERROR`，整个 `run-all` 被 SIGTERM）；
+> 放在"跑完之后"更糟：网关子进程刚被 kill 时句柄未释放，`unlink` 的 EPERM 被逐文件 `catch {}` 吞掉，
+> 于是它报"删了 452 个"而实际还剩 313 个 —— 一个报着漂亮数字、其实没生效的闸门，比没有更糟。
 >
 > ⚠ **端口分配表**（加新套件前先看 `run-all.cjs` 顶部注释，别再撞车）：
 > `8788/8790` protocol · `8791/8792` gate · `8793/8794` batch1 与 batch4(A) · `8795/8796` batch2 与 batch4(B) ·

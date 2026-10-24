@@ -30,6 +30,11 @@
   现在改成**动态扫描** `test/` 下所有 `sb-*` 目录（过滤 `isDirectory`，避免误伤 `sb-util.cjs` /
   `sb-build.cjs`），`CLEAN_DIRS` 降级为兜底。本轮实测清掉 452 个文件 / 17.28 MB（`test/` 从
   23 MB 降到 544 KB）。
+  ⚠ 顺带评估了"让 `run-all` 自动清理"，**结论是不做**：本机 safe-delete 守卫按"单轮 unlink 计数"，
+  一次删几百个文件会直接拒绝（实测删到第 49 个就 `SAFE_DELETE_BULK_GUARD_ERROR: state lock timeout`，
+  整个 `run-all` 被 SIGTERM 掉）；而放在"跑完之后"更糟 —— 网关子进程刚被 kill 时句柄未释放，
+  `unlink` 会 EPERM 并被逐文件 `catch {}` 吞掉，它报"删了 452 个"而实际还剩 313 个。
+  这条只能手动跑 `node test/sb-util.cjs --clean`。
 
 ## [1.2.0] - 2026-10-23
 
