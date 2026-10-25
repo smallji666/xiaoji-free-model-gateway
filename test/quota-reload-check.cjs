@@ -35,6 +35,8 @@ const ok = (c, m) => {
 // 按**请求里的模型名**决定回不回配额头 —— 这样才能测出"没回的时候不能乱写"。
 //   q-model   : 回一整套配额头(含 reset 的时长写法 "2m59.56s")
 //   noq-model : 一个配额头都不回
+// 沙箱供应商的全部模型 —— 假上游的 /models 与配置里的 models 共用这一份, 免得两处漂移。
+const MODELS = ['q-model', 'noq-model', 'zero-model', 'tokzero-model', 'noreq-model']
 let upHits = 0
 const up = http.createServer((req, res) => {
   let body = ''
@@ -42,7 +44,11 @@ const up = http.createServer((req, res) => {
   req.on('end', () => {
     if (req.url.includes('/models')) {
       res.writeHead(200, { 'content-type': 'application/json' })
-      return res.end(JSON.stringify({ object: 'list', data: [] }))
+      // ⚠ 这里**必须回非空列表**: 回空列表会让网关的目录扫描判定"该 Key 看不到任何模型"
+      //   (accountIssue kind=no_models), 把整家踢出候选链 —— 一旦触发, 本套件后面的所有调用
+      //   都会报 "模型不在可用池里"。原来本套件在启动后 6 秒内就跑完了, 所以一直没暴露;
+      //   2026-10-25 加了【三】把总时长推到扫描之后, 当场踩到。
+      return res.end(JSON.stringify({ object: 'list', data: MODELS.map((id) => ({ id, object: 'model' })) }))
     }
     upHits++
     const headers = { 'content-type': 'application/json' }
@@ -51,6 +57,19 @@ const up = http.createServer((req, res) => {
       headers['x-ratelimit-limit-requests'] = '100'
       headers['x-ratelimit-reset-requests'] = '2m59.56s'   // 上游回的是**时长**不是秒数
       headers['x-ratelimit-remaining-tokens'] = '5000'
+    } else if (/"model"\s*:\s*"zero-model"/.test(body)) {
+      // 今天用完了: 剩 0 / 1000
+      headers['x-ratelimit-remaining-requests'] = '0'
+      headers['x-ratelimit-limit-requests'] = '1000'
+    } else if (/"model"\s*:\s*"tokzero-model"/.test(body)) {
+      // token 维度用完了, 请求数还很充裕 —— 用来证明两个维度都会看
+      headers['x-ratelimit-remaining-requests'] = '900'
+      headers['x-ratelimit-limit-requests'] = '1000'
+      headers['x-ratelimit-remaining-tokens'] = '0'
+      headers['x-ratelimit-limit-tokens'] = '100000'
+    } else if (/"model"\s*:\s*"noreq-model"/.test(body)) {
+      // 只回"剩几次"、不回上限 —— 分母未知, 不许瞎猜比例
+      headers['x-ratelimit-remaining-requests'] = '5'
     }
     res.writeHead(200, headers)
     res.end(JSON.stringify({
@@ -110,13 +129,22 @@ async function main() {
     port: GW_PORT, proxy: '', gatewayKey: GW_KEY, maxConcurrent: 0,
     providers: [{
       id: 'q1', name: 'qco', label: 'QuotaCo', base_url: `http://127.0.0.1:${UP_PORT}/v1`,
-      api_key: 'sk-x', keys: ['sk-x'], model: 'q-model', models: ['q-model', 'noq-model'],
+      api_key: 'sk-x', keys: ['sk-x'], model: 'q-model', models: MODELS,
       needs_proxy: false, enabled: true, ok: 0, err: 0, cooldownUntil: 0, lastError: '', lastSweepAt: now,
     }],
   }
   writeCfg(base)
   fs.writeFileSync(path.join(SB, '.sandbox'), '')
-  fs.writeFileSync(path.join(SB, 'free_whitelist.json'), JSON.stringify({ list_date: now.slice(0, 10), fetched_at: now, sources: { local: now.slice(0, 10) }, hosts: {} }, null, 2))
+  // ⚠ hosts 里必须**收录这 5 个模型**: 启动 3 秒后网关会跑一次目录扫描(refreshCatalog),
+  //   而 judgeFree 对"没有白名单条目的厂商"只认名字里带 free 的模型 —— 于是这些沙箱模型
+  //   会被判收费 -> 全部进 quarantine -> 后面每次调用都报"模型不在可用池里"。
+  //   写进白名单(走 whitelist 层判定)才是它们"确实是免费模型"的正常表达。
+  fs.writeFileSync(path.join(SB, 'free_whitelist.json'), JSON.stringify({
+    list_date: now.slice(0, 10),
+    fetched_at: now,
+    sources: { local: now.slice(0, 10) },
+    hosts: { '127.0.0.1': { source: 'local', models: MODELS } },
+  }, null, 2))
   // ⚠ server.mjs 的路径全按 __dirname 解析(不是 cwd) —— 必须放同目录副本, 否则它会去读写生产那套文件。
   fs.copyFileSync(path.join(ROOT, 'server.mjs'), path.join(SB, 'server.mjs'))
   fs.copyFileSync(path.join(ROOT, 'dashboard.html'), path.join(SB, 'dashboard.html'))
@@ -203,6 +231,42 @@ async function main() {
   const reloadsAfter = (gwLog.match(/已热重载/g) || []).length
   ok(reloadsAfter === reloadsBefore,
     `网关自己写盘**不会**触发重载（自激保护: 请求前后都是 ${reloadsBefore} 次）—— 否则会形成"写→重载→写"死循环`)
+
+  // ══ 三、上游自报的额度要参与排序 ══
+  // 背景: recordQuota 采下来的 p.quota 长期只喂仪表盘("今天还剩多少"), 排序时**完全不用** ——
+  // 于是"今天还剩 3 次"的家和"剩 900 次"的家在 load 项上同分, 路由照样把这一轮送过去撞 429。
+  // 采了不用等于没采。这里从**排序真正用过的**分项反查(见 pickChain 的 partsW)。
+  // ⚠ parts.load 是**加权后**的值(W.load = 0.10), 所以"不降权"对应 0.10、"保底"对应 0.02。
+  console.log('\n【三】上游额度参与排序')
+  const loadOf = async (model) => {
+    const r = await fetch(`http://127.0.0.1:${GW_PORT}/api/route?model=${encodeURIComponent(model)}&n=8`)
+    const j = await r.json()
+    const t = (j.top || []).find((x) => x.model === model)
+    return t ? t.parts.load : null
+  }
+  const near = (a, b) => a != null && Math.abs(a - b) < 0.005
+
+  await chat('q-model')
+  await sleep(400)
+  const lNormal = await loadOf('q-model')
+  ok(near(lNormal, 0.1), `额度充裕(42/100)不降权（load 分项 ${lNormal} ≈ 0.10）—— 按分钟限流的家长期停在高位, 不能因此吃亏`)
+
+  await chat('zero-model')
+  await sleep(400)
+  const lZero = await loadOf('zero-model')
+  ok(near(lZero, 0.02), `今天用尽(0/1000)被降权（load 分项 ${lZero} ≈ 0.02, 保底 0.2 而不是直接判死）`)
+  ok(near(await loadOf('q-model'), 0.02),
+    '额度是**供应商级**口径: 同一家换个模型, 该家仍按"已用尽"排序（这是正确的, 配额本来就归整家所有）')
+
+  await chat('tokzero-model')
+  await sleep(400)
+  const lTok = await loadOf('tokzero-model')
+  ok(near(lTok, 0.02), `token 维度用尽也降权（load 分项 ${lTok} ≈ 0.02）—— 请求数还充裕但 token 见底, 一样要让位`)
+
+  await chat('noreq-model')
+  await sleep(400)
+  const lNoLim = await loadOf('noreq-model')
+  ok(near(lNoLim, 0.1), `只回"剩 5 次"、不回上限时不猜比例（load 分项 ${lNoLim} ≈ 0.10）—— 分母未知就编数据比不判断更糟`)
 
   try { gw.kill() } catch {}
   console.log(`\n  ${pass} 通过 / ${fail} 失败`)

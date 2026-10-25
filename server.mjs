@@ -3789,11 +3789,45 @@ function pickChain(model, payload) {
   const Q_CONF = (s) => (s.model ? 1 : 0.4)
   const qualityScore = (s) => (s.n ? 1 - s.hard / s.n : 0.5)
   const availScore = (s) => (s.n ? 1 - s.any / s.n : 0.5)
-  // 负载余量: 距 rpmCap 还有多少空间。
+  // ── 上游自报的额度余量（见 recordQuota）──
+  // 这是**唯一由厂商亲口告诉我们**的余量信号: 比任何静态限额表都准, 而且厂商改限额它会自动跟着变。
+  // 以前它只喂仪表盘("今天还剩多少"), 排序时完全不用 —— 于是"剩 3 次"和"剩 900 次"的家同分,
+  // 路由可能把这一轮送去一家马上就要用尽的家, 撞 429 再回头。采了不用等于没采。
+  // ⚠ 只做**排序微调**, 不做准入判断: 各家口径完全不同(按分钟 / 按天 / 按美元, 有的还是 token 维度),
+  //   拿它决定"能不能用"必然误伤。真的用完了由 429 -> quota 冷却(quotaCooldownMs)处理。
+  // ⚠ 只在**濒临耗尽**时降权(剩 <=20% 才开始衰减, 保底 0.2): 按分钟限流的家 remain/limit 长期停在
+  //   900/1000, 线性映射对它们几乎无感(无害); 反过来, 若拿它当主信号, 一次读到 "3/1000" 就会把一家
+  //   按天限流的家直接踢出候选 —— 而它可能刚好重置。
+  // ⚠ 超 10 分钟的数据不认: 仪表盘可以展示 24 小时内的(那是"参照"), 路由要的是"此刻"。
+  const QUOTA_FRESH_MS = 10 * 60 * 1000
+  const quotaRatioScore = (remain, limit) => {
+    // 没有上限字段 = 不知道分母, 不猜比例(猜就是编数据): 只有真的剩 0 才表态。
+    if (limit == null || !(limit > 0)) return (remain != null && remain <= 0) ? 0.2 : 1
+    const r = Math.max(0, Math.min(1, remain / limit))
+    return r > 0.2 ? 1 : 0.2 + (r / 0.2) * 0.8
+  }
+  const quotaScore = (p) => {
+    const q = p.quota
+    if (!q || !q.at) return 1
+    const age = now - Date.parse(q.at)
+    if (!(age >= 0 && age < QUOTA_FRESH_MS)) return 1
+    const byReq = q.remainreq != null ? quotaRatioScore(q.remainreq, q.limitreq) : 1
+    const byTok = q.remaintok != null ? quotaRatioScore(q.remaintok, q.limittok) : 1
+    return Math.min(byReq, byTok)
+  }
+  // 同一家会被多个模型候选重复引用 —— 与 reqsById 同一理由, 每家只算一次。
+  const quotaById = {}
+  for (const p of active) quotaById[p.id] = quotaScore(p)
+  // 负载余量 = RPM 余量 × 上游自报的额度余量。两个都管"还能吃多少", 取乘而不是取小:
+  // 一个管"这一分钟挤不挤", 一个管"今天还剩多少", 两样都紧才是真的紧。
   // rpmCap 未知时给**满分(1.0)而不是中性值** —— rpmCap 只在撞到 429 时才被学到,
   // "没有这个值"恰恰说明"我们从没被它限流过", 那是好事, 不该倒扣分。
   // (给 0.5 会让 gemini 这种"额度大到从没触发限流"的家平白吃亏, 实测就是这样被压下去的。)
-  const loadScore = (p) => p.rpmCap ? 1 - Math.min(1, (reqsById[p.id] || 0) / p.rpmCap) : 1
+  const loadScore = (p) => {
+    const rpm = p.rpmCap ? 1 - Math.min(1, (reqsById[p.id] || 0) / p.rpmCap) : 1
+    const q = quotaById[p.id]
+    return rpm * (q == null ? 1 : q)
+  }
   const blend = (v, n, k) => 0.5 + (v - 0.5) * Math.min(1, n / k)   // 样本量置信度
   // 带置信度上限的版本: 证据来源越弱, 越不能左右排名(见 Q_CONF)。
   const blendConf = (v, n, k, conf) => 0.5 + (v - 0.5) * Math.min(1, n / k) * conf
