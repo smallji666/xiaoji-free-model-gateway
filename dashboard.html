@@ -793,11 +793,14 @@
          语义上也顺：左列是"厂商维度"（已接入 7 家 → 还没接入的 17 家），右列是"模型/配置维度"。
          ⚠ 移动前已确认 JS 只按 id 取元素（$('discovcard')），无 DOM 位置依赖。 -->
     <div class="card reveal" id="discovcard" style="display:none">
-      <h2>发现更多免费厂商<span class="spacer"></span><span class="meta" id="discovmeta"></span><a id="discov-t" class="meta" data-act="toggle-box" data-key="discov" role="button" tabindex="0" style="color:var(--accent);cursor:pointer;margin-left:10px">展开</a></h2>
-      <!-- 默认收起（2026-09-25）：展开态 421px，会把所在列顶得比另一列高一截；
-           而且用户点名过"文字太多太杂太丑"。收起态标题行已写明里面有 17 家 / 47 家，
-           想知道有什么不必点开也能看到。展开后内容一件不少。 -->
-      <div id="discov-b" style="display:none">
+      <h2>发现更多免费厂商<span class="spacer"></span><span class="meta" id="discovmeta"></span><a id="discov-t" class="meta" data-act="toggle-box" data-key="discov" role="button" tabindex="0" style="color:var(--accent);cursor:pointer;margin-left:10px">收起</a></h2>
+      <!-- 默认展开（2026-10-25）：2026-09-25 曾改成默认收起，理由是"展开态 421px 会把所在列顶得
+           比另一列高一截"。但那条理由的前提已经不存在了 —— 当时它在**右列**，而且目录只有 28 个模型；
+           现在它在左列（左列是"厂商维度"：已接入 → 还没接入），目录已长到 70 个模型、右列比左列
+           高 276~293px（2026-10-25 用真数据量：1200px 下 1499/1775、1440px 下 1517/1810）。
+           展开后两列差 48~56px，反而**补齐了**那个缺口 —— 收起态才是让左列空出一大块的原因。
+           内容量本身有硬上限（未接入 12 家 + 「+N 家」chip、候选 5 行 + 搜索框），不会随数据无限长。 -->
+      <div id="discov-b">
         <div id="availbox" style="display:none"></div>
         <div id="candbox" style="display:none"></div>
       </div>
@@ -1326,7 +1329,10 @@ function renderAvailable(w){
 // 新厂商主要靠发现源(models.dev)捞 —— 它捞到的又只进 candidates。所以正式名单的厂商行数结构性地
 // 不会变, 变的只是各家的模型清单。(2026-09-25 前还多一个已停更的社区源 mnfst, 现已移除。)
 // 这里把候选摊开给用户自己挑。三条设计约束:
-//   ① **不污染主列表**: 独立区块、默认收起、视觉弱化(不抢正式名单的位置)。
+//   ① **不污染主列表**: 独立区块、视觉弱化(不抢正式名单的位置)。
+//      2026-10-25 起整块**默认展开**（用户要求"改成默认展开"），所以这里不再靠"收起"来隔离，
+//      靠的是三条：独立卡片、卡头写明"未接入 N 家 / 候选 M 家"、内容量有硬上限
+//      （未接入 12 家 + 「+N 家」、候选 5 行 + 搜索框）。
 //   ② **必须能认出来**: 候选里大量是 `api.xyz.ai` 裸域名, 用户原话"不知道那几个是干嘛的" ——
 //      所以服务端给已知厂商配了中文名(CANDIDATE_LABELS), 有名字的排前面。
 //   ③ **不能假装已核实**: 统一标注"只标明标价 0、未实测", 并说清接入后会走全池实测、不免费会自动拉黑。
@@ -1730,7 +1736,11 @@ function renderProviders(){  const el = $('plist'); el.innerHTML = ''
 // 用在两处：「不在免费池的模型」和「已结束的限时活动」—— 这类明细铺开会把卡片撑爆。
 // ⚠ 展开态必须记在模块级 OPEN_BOX 里: refresh 每 8 秒全量重绘, 不记的话用户刚点开的
 // 明细会在下一次刷新时自己合上 —— 这是被反复抱怨过的点。
-const OPEN_BOX = new Set()
+// 「发现更多免费厂商」默认展开（2026-10-25 用户要求），所以初始就带 'discov'。
+// ⚠ 这里和 #discov-b 的初始 display 必须一致：只改一边，文案就和内容相反
+//   （`syncDiscovCard` 的文案读的就是这个 Set）。实测过只改 Set 不改 DOM ——
+//   页面照样收起，而文案已经写成"收起"，layout-check 也不会报错。
+const OPEN_BOX = new Set(['discov'])
 function toggleBox(key){
   const b = $(key + '-b'), a = $(key + '-t')
   if (!b) return

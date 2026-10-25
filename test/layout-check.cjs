@@ -35,8 +35,18 @@ const ALLOWED_FS = ['10.5px', '11.5px', '14px', '21px']
 // 上游代理没开时 7 家里 6 家是失败态，整卡 351px；有数据时 578px（差 227px）。
 // 于是同一次改动，代理开着判 PASS、关着判 FAIL（实测 09-26 基线 11/13，两列差 65/94px）。
 // **一个会随用户 VPN 开关翻脸的版面指标，两个方向都不可信。** 固定成一份有代表性的样本
-// （7 家、有长模型名、有失败家、有 0 模型家、有 +N 折叠）之后，这个数字才真正可比。
+// 之后，这个数字才真正可比。
 // ⚠ 代价：不再覆盖"真实数据里出现极端长名"的情况，样本里已尽量放长名兜住。
+//
+// ⚠ 2026-10-25 重做样本（旧样本偏差已达 347px = 60px 红线的 5.8 倍）：
+//   旧样本是 09-26 的目录 —— 7 家里 **2 家 0 模型**（empero / sensenova），等于 5 个满块；
+//   而现在真实目录是 8 家全部有模型（groq 1 / gemini 17 / mistral 6 / amd 3 / openrouter 17 /
+//   sensenova 7 / OVHcloud 3 / Kilo Code 16 = 70 个）。目录卡实测 **831px（旧样本）vs 1178px（真实）**。
+//   后果是它把两个方向都判错：真实页面两列差 56px（齐平）被它报成 403px FAIL，
+//   而"左列空出 300px"这种真问题它反而不一定抓得到。**基准本身偏了，断言就没有意义**。
+//   现在按真实结构重做（8 家、每家都 ≥1 模型、保留长名/失败家/限时活动/失效模型/`+N` 折叠）。
+//   ⚠ 同时**删掉了 0 模型家**：现实里已经不存在这种厂商，留着会让基准偏高约 40px。
+//     那条渲染分支由 `renderCatalog` 自己的单测覆盖，不该靠版面基准兜。
 const INJECT = `(function(){
   if (typeof renderCatalog !== 'function') return 'no-fn';
   var mk=function(label,ids,total,excl,dead){
@@ -47,14 +57,17 @@ const INJECT = `(function(){
           type:'文字对话',dead:(dead&&i===5)?'blocked':null,dead_reason:(dead&&i===5)?'HTTP 404 model is not found':null};
       })};
   };
-  renderCatalog({updated_at:'2026-09-26T05:00:00.000Z',providers:[
+  // 补齐到真实模型数用的填充名。前几个仍写真实长名（宽度/截断要靠它们兜住）。
+  var seq=function(prefix,n){var a=[];for(var i=1;i<=n;i++)a.push(prefix+'-'+i);return a};
+  renderCatalog({updated_at:'2026-10-25T05:00:00.000Z',providers:[
     mk('groq',['allam-2-7b'],11,7),
-    mk('gemini',['models/gemini-3.5-flash','models/gemini-3.1-flash-lite','models/gemini-3-flash-preview','models/gemini-3.1-flash-live-preview','models/gemini-3.5-pro','models/gemini-3.1-pro','models/gemini-3.5-flash-lite','models/gemini-3-pro-preview','models/gemini-3.1-flash'],61,26,true),
-    mk('mistral',['codestral-2508','ministral-3b','magistral-small','mistral-medium-3','pixtral-large','devstral-small'],46,15),
-    mk('amd',['DeepSeek-V4-Flash','DeepSeek-V4-Flash-Vision-Exp','MiniCPM5-2B','Qwen3.8-Flash-Next'],8,1),
-    mk('openrouter',['z-ai/glm-4.6:free','qwen/qwen3-235b-a22b:free','deepseek/deepseek-chat-v3:free','meta-llama/llama-4-scout:free','google/gemma-3-27b-it:free','mistralai/mistral-nemo:free','moonshotai/kimi-k2:free','x-ai/grok-4-fast:free'],458,17,true),
-    mk('empero',[],0,0),
-    mk('sensenova',[],0,0)
+    mk('gemini',['models/gemini-2.5-flash','models/gemini-2.5-flash-lite','models/gemini-3-flash-preview','models/gemini-3.1-flash-lite','models/gemini-3.1-flash-live-preview','models/gemini-3.1-pro','models/gemini-3.5-flash','models/gemini-3.5-flash-lite','models/gemini-3-pro-preview'].concat(seq('models/gemini-x',8)),60,23,true),
+    mk('mistral',['codestral-2508','ministral-14b-2512','ministral-3b-2512','ministral-8b-2512','magistral-small','mistral-medium-3'],53,22),
+    mk('amd',['DeepSeek-V4-Flash','MiniCPM5-2B','Qwen3.8-Flash-Next'],15,5),
+    mk('openrouter',['cohere/north-mini-code:free','dots-studio/dots-3-note-preview:free','google/gemma-4-26b-a4b-it:free','google/gemma-4-31b-it:free','z-ai/glm-4.6:free','qwen/qwen3-235b-a22b:free','deepseek/deepseek-chat-v3:free','meta-llama/llama-4-scout:free'].concat(seq('vendor-x/model-y',9)),467,17,true),
+    mk('sensenova',['deepseek-flash','deepseek-v4-flash','deepseek-v4.1-flash','glm-5.2'].concat(seq('sensenova-x',3)),7,0),
+    mk('OVHcloud AI Endpoints',['Meta-Llama-3_3-70B-Instruct','Qwen3.5-397B-A17B','Qwen3.8-27B'],22,10),
+    mk('Kilo Code',['cohere/north-mini-code:free','dots-studio/dots-3-note-preview:free','kilo-auto/free','liquid/lfm-2.5-2.6b:free'].concat(seq('kilo-x/model-y',12)),401,17)
   ]});
   return 'injected';
 })()`
@@ -77,6 +90,21 @@ const PROBE = `JSON.stringify((() => {
     var c = document.getElementById('changes'); if (c) c.innerHTML = b;
     var w = document.getElementById('promowarn'); if (w) w.innerHTML = '';
     var k = document.getElementById('chgcard'); if (k) k.style.display = 'block';
+  })();
+  // 「发现更多免费厂商」的内容也必须钉死（2026-10-25 补）—— 它 2026-10-25 起**默认展开**，
+  // 高度直接进左列：今天 15 家未接入 + 49 家候选 = 406px，而这个数字随白名单同步与候选巡检浮动。
+  // 不钉的话又会回到"源数据会飘，每次调参都在掷骰子"的老路上。
+  // 取样尺度就按 2026-10-25 的真实值（15 / 49），但**只取数量不取内容** —— 内容全是假厂商名，
+  // 因为这里量的是版面，不是"名单里到底有谁"。
+  (function(){
+    var hosts = [];
+    for (var i = 0; i < 15; i++) hosts.push({ host: 'avail' + i + '.example.com', source: '厂商' + i, models: 20 - i, anon: i === 0, anonModel: i === 0 ? 'demo-model' : '' });
+    var cands = [];
+    for (var j = 0; j < 49; j++) cands.push({ label: j < 40 ? '候选厂商' + (j + 1) : '', source: 'models.dev', host: 'cand' + j + '.example.com', sample: ['m-one', 'm-two'], probe: { state: j < 10 ? 'listed' : 'exists' } });
+    var wl = { fetched_at: new Date().toISOString(), list_date: '2026-10-25', sources: { openrouter: '2026-10-25' }, hostList: hosts, candidateList: cands, probe: {} };
+    if (typeof renderAvailable === 'function') renderAvailable(wl);
+    if (typeof renderCandidates === 'function') renderCandidates(wl);
+    if (typeof syncDiscovCard === 'function') syncDiscovCard();
   })();
   const grid = document.querySelector('.grid');
   out.cols = grid ? [...grid.children].filter(c => c.nodeType === 1).map(c => Math.round(c.getBoundingClientRect().height)) : null;

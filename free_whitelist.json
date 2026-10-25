@@ -1,10 +1,10 @@
 {
-  "fetched_at": "2026-10-25T00:10:35.561Z",
+  "fetched_at": "2026-10-25T06:19:45.294Z",
   "list_date": "2026-10-25",
   "sources": {
     "openrouter": "实时",
     "freellm": "2026-10-25",
-    "modelsdev": "缓存(10h 前)"
+    "modelsdev": "缓存(16h 前)"
   },
   "hosts": {
     "openrouter.ai": {
@@ -36,8 +36,7 @@
         "moonshotai/kimi-k2.6"
       ],
       "openFree": false,
-      "hybrid": false,
-      "trimmed": 2
+      "hybrid": false
     },
     "api-inference.modelscope.cn": {
       "source": "ModelScope",
@@ -176,8 +175,7 @@
         "deepseek-v3-1"
       ],
       "openFree": false,
-      "hybrid": false,
-      "trimmed": 2
+      "hybrid": false
     },
     "glhf.chat": {
       "source": "Glhf.chat",
@@ -272,8 +270,7 @@
       ],
       "hybrid": false,
       "source": "Hugging Face",
-      "openFree": false,
-      "trimmed": 1
+      "openFree": false
     }
   },
   "candidates": {
@@ -968,22 +965,27 @@
     }
   },
   "sourceFetchedAt": {
-    "openrouter": 1792887040024,
+    "openrouter": 1792909187637,
     "modelsdev": 1792849830358,
-    "freellm": 1792887040024
+    "freellm": 1792909187637
   },
   "probe": {
     "api.aionlabs.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
-      "state": "unreachable",
-      "detail": "read ECONNRESET",
-      "listedCount": 0,
+      "at": "2026-10-25T06:19:50.626Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 6,
       "missing": [],
       "missingCount": 0,
-      "unverifiable": false
+      "unverifiable": false,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
     },
     "api.cohere.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 403",
       "listedCount": 0,
@@ -992,7 +994,7 @@
       "unverifiable": false
     },
     "open.bigmodel.cn": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "listedCount": 0,
@@ -1001,17 +1003,19 @@
       "unverifiable": false
     },
     "api.cloudflare.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "skip",
       "detail": "接入点含占位符, 无法探测"
     },
     "router.huggingface.co": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
-      "listedCount": 135,
-      "missing": [],
-      "missingCount": 0,
+      "listedCount": 133,
+      "missing": [
+        "Qwen/Qwen2.5-7B-Instruct"
+      ],
+      "missingCount": 1,
       "unverifiable": false,
       "anon": {
         "ok": false,
@@ -1031,7 +1035,7 @@
       "candidate": true
     },
     "api.llm7.io": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "listedCount": 67,
@@ -1045,7 +1049,7 @@
       }
     },
     "api-inference.modelscope.cn": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "listedCount": 37,
@@ -1059,12 +1063,15 @@
       }
     },
     "integrate.api.nvidia.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "listedCount": 85,
-      "missing": [],
-      "missingCount": 0,
+      "missing": [
+        "z-ai/glm-5.1",
+        "z-ai/glm-5.2"
+      ],
+      "missingCount": 2,
       "unverifiable": false,
       "anon": {
         "ok": false,
@@ -1073,7 +1080,7 @@
       }
     },
     "ollama.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "listedCount": 0,
@@ -1098,7 +1105,7 @@
       }
     },
     "api.siliconflow.cn": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.siliconflow.cn/v1",
@@ -1109,7 +1116,7 @@
       "candidate": true
     },
     "apihub.agnes-ai.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "listedCount": 0,
@@ -1118,12 +1125,15 @@
       "unverifiable": false
     },
     "api.sambanova.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "listedCount": 6,
-      "missing": [],
-      "missingCount": 0,
+      "missing": [
+        "deepseek-v3-2-preview",
+        "minimax-m2-7"
+      ],
+      "missingCount": 2,
       "unverifiable": false,
       "anon": {
         "ok": false,
@@ -1132,7 +1142,7 @@
       }
     },
     "glhf.chat": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "no_list",
       "detail": "HTTP 526",
       "listedCount": 0,
@@ -1141,7 +1151,7 @@
       "unverifiable": false
     },
     "api.ai21.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 200 但无模型列表",
       "listedCount": 0,
@@ -1150,7 +1160,7 @@
       "unverifiable": false
     },
     "inference.api.nscale.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "listedCount": 0,
@@ -1159,7 +1169,7 @@
       "unverifiable": false
     },
     "token-plan-cn.xiaomimimo.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan-cn.xiaomimimo.com/v1",
@@ -1181,7 +1191,7 @@
       "candidate": true
     },
     "openai.bothub.ru": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://openai.bothub.ru/v1",
@@ -1192,11 +1202,11 @@
       "candidate": true
     },
     "nano-gpt.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://nano-gpt.com/v1",
-      "listedCount": 679,
+      "listedCount": 670,
       "missing": [],
       "missingCount": 0,
       "unverifiable": false,
@@ -1208,7 +1218,7 @@
       }
     },
     "token-plan.ap-southeast-1.maas.aliyuncs.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
@@ -1219,7 +1229,7 @@
       "candidate": true
     },
     "api.z.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 200 但无模型列表",
       "apiBase": "https://api.z.ai/api/v1",
@@ -1230,7 +1240,7 @@
       "candidate": true
     },
     "api.nova.amazon.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "exists",
       "detail": "HTTP 500（同轮其它路径返 404, 说明该服务认得路径）",
       "apiBase": "https://api.nova.amazon.com/v1",
@@ -1241,7 +1251,7 @@
       "candidate": true
     },
     "coding.dashscope.aliyuncs.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://coding.dashscope.aliyuncs.com/v1",
@@ -1273,7 +1283,7 @@
       }
     },
     "api.regolo.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.regolo.ai/v1",
@@ -1289,7 +1299,7 @@
       }
     },
     "kenari.id": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://kenari.id/v1",
@@ -1309,7 +1319,7 @@
       }
     },
     "dashscope.aliyuncs.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://dashscope.aliyuncs.com/api/v1",
@@ -1320,7 +1330,7 @@
       "candidate": true
     },
     "api.pendra.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.pendra.ai/v1",
@@ -1331,7 +1341,7 @@
       "candidate": true
     },
     "inference.poolside.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://inference.poolside.ai/v1",
@@ -1342,7 +1352,7 @@
       "candidate": true
     },
     "api.minimax.cn": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.minimax.cn/v1",
@@ -1353,7 +1363,7 @@
       "candidate": true
     },
     "token-plan-ams.xiaomimimo.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan-ams.xiaomimimo.com/v1",
@@ -1364,7 +1374,7 @@
       "candidate": true
     },
     "api.zeldoc.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.zeldoc.ai/v1",
@@ -1375,7 +1385,7 @@
       "candidate": true
     },
     "api.unorouter.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.unorouter.com/v1",
@@ -1386,7 +1396,7 @@
       "candidate": true
     },
     "router.requesty.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://router.requesty.ai/v1",
@@ -1425,7 +1435,7 @@
       "candidate": true
     },
     "llmtr.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://llmtr.com/v1",
@@ -1441,7 +1451,7 @@
       }
     },
     "api.tokenrouter.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.tokenrouter.com/v1",
@@ -1463,7 +1473,7 @@
       "candidate": true
     },
     "api.infomaniak.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1474,7 +1484,7 @@
       "candidate": true
     },
     "api.poe.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.poe.com/v1",
@@ -1494,7 +1504,7 @@
       }
     },
     "api.minimax.io": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.minimax.io/v1",
@@ -1505,7 +1515,7 @@
       "candidate": true
     },
     "api.empiriolabs.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.empiriolabs.ai/v1",
@@ -1521,7 +1531,7 @@
       }
     },
     "model.inferx.net": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://model.inferx.net/v1",
@@ -1532,7 +1542,7 @@
       "candidate": true
     },
     "api.code.umans.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.code.umans.ai/v1",
@@ -1548,7 +1558,7 @@
       }
     },
     "coding-intl.dashscope.aliyuncs.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://coding-intl.dashscope.aliyuncs.com/v1",
@@ -1564,7 +1574,7 @@
       }
     },
     "api-gateway.merge.dev": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 403",
       "apiBase": "https://api-gateway.merge.dev/v1",
@@ -1575,7 +1585,7 @@
       "candidate": true
     },
     "api.kimi.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.kimi.com/coding/v1",
@@ -1586,7 +1596,7 @@
       "candidate": true
     },
     "api.orcarouter.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.orcarouter.ai/v1",
@@ -1604,7 +1614,7 @@
       }
     },
     "api.kimi.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.kimi.ai/coding/v1",
@@ -1615,7 +1625,7 @@
       "candidate": true
     },
     "coding-plan-endpoint.kuaecloud.net": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1626,7 +1636,7 @@
       "candidate": true
     },
     "api.scnet.cn": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1637,7 +1647,7 @@
       "candidate": true
     },
     "opencode.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1648,7 +1658,7 @@
       "candidate": true
     },
     "token-plan-sgp.xiaomimimo.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan-sgp.xiaomimimo.com/v1",
@@ -1659,7 +1669,7 @@
       "candidate": true
     },
     "ark.cn-beijing.volces.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://ark.cn-beijing.volces.com/v1",
@@ -1670,7 +1680,7 @@
       "candidate": true
     },
     "tokenhub.tencentmaas.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://tokenhub.tencentmaas.com/v1",
@@ -1681,7 +1691,7 @@
       "candidate": true
     },
     "inference.hetzner.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://inference.hetzner.com/api/v1",
@@ -1692,7 +1702,7 @@
       "candidate": true
     },
     "api.lkeap.cloud.tencent.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.lkeap.cloud.tencent.com/v1",
@@ -1703,7 +1713,7 @@
       "candidate": true
     },
     "api.nan.builders": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.nan.builders/v1",
@@ -1714,7 +1724,7 @@
       "candidate": true
     },
     "token-plan.cn-beijing.maas.aliyuncs.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
@@ -1725,7 +1735,7 @@
       "candidate": true
     },
     "api.meganova.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.meganova.ai/v1",
@@ -1741,7 +1751,7 @@
       }
     },
     "zenmux.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://zenmux.ai/api/v1",
@@ -1773,7 +1783,7 @@
       }
     },
     "api.temprhq.io": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.temprhq.io/v1",
@@ -1795,7 +1805,7 @@
       "candidate": true
     },
     "api.novita.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.novita.ai/openai/v1",
@@ -1811,7 +1821,7 @@
       }
     },
     "api.commandcode.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1822,7 +1832,7 @@
       "candidate": true
     },
     "api.reflection.ai": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "needs_key",
       "detail": "HTTP 403",
       "apiBase": "https://api.reflection.ai/v1",
@@ -1833,18 +1843,23 @@
       "candidate": true
     },
     "api.iteracompute.com": {
-      "at": "2026-10-25T00:10:42.575Z",
-      "state": "exists",
-      "detail": "HTTP 405（/chat/completions 路径存在, 但不收 GET）",
+      "at": "2026-10-25T06:19:50.626Z",
+      "state": "listed",
+      "detail": "",
       "apiBase": "https://api.iteracompute.com/v1",
-      "listedCount": 0,
+      "listedCount": 28,
       "missing": [],
       "missingCount": 0,
       "unverifiable": false,
-      "candidate": true
+      "candidate": true,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
     },
     "proxy.gonkabroker.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "listedCount": 4,
@@ -1858,7 +1873,7 @@
       }
     },
     "api.qnaigc.com": {
-      "at": "2026-10-25T00:10:42.575Z",
+      "at": "2026-10-25T06:19:50.626Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.qnaigc.com/v1",
