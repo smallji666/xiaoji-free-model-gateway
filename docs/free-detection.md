@@ -9,8 +9,8 @@
 **判定优先级（四层）**：
 
 1. **上游价格元数据** —— OpenRouter/硅基流动等的 `/models` 直接带 `pricing` 字段，全 0=免费、>0=收费，最可靠，新模型自动发现。
-2. **每 6 小时同步的免费白名单**（`free_whitelist.json`）—— 启动即拉一次，之后每 6 小时再拉（一天 4 次）。**多源合并**：① **OpenRouter 官方 `/api/v1/models`**（官方实时维护，取 `:free` 硬标记 + `pricing` 全 0 双校验，**没有版本日期、每次同步即当下状态**）② **[freellm.net](https://freellm.net/) 的开源清单**（`open-free-llm-api/awesome-freellm-apis` 仓库 README，**每天自动从各厂商 API 重拉并对模型发真实请求验证**，38KB 比 models.dev 的 4.7MB 便宜两个数量级）③ **[awesome-free-llm-apis](https://github.com/bhardwajRahul/awesome-free-llm-apis) 的结构化清单**（`data.json`，GitHub Action 每晚刷新；走 jsdelivr 镜像，**本机可直连、不依赖代理**）④ **models.dev**（只作**厂商发现源**，见下）。各源模型取并集，一律过 `DENY_FREE`（名字含独立词 pro 一律拒）+ 非聊天模型排除。
-   **awesome-free-llm-apis 补的是"厂商自有免费层"这一格**（Aion Labs / Cohere / 智谱 / Ollama Cloud / OVHcloud —— 这些既不在 freellm 的速率表里，OpenRouter 也不中转，所以过去只能躺在候选区，而候选转正的唯一通道是"被权威源交叉印证"，结构性永远转不了正）。代价是它是**清单型、不是实测型**，所以过滤条件自己收紧：接入点不含 `<占位符>`、`description` 自述免费、`modality` 含文字、**必须写明具体速率/额度**（`Varies` / `—` / 空 一律不收，与 freellm 同一条口径）。它的 `models[]` 里有 `id: null` 的占位条目（"+ 72 more models"），必须跳过 —— 否则会写进一个名叫 `null` 的模型，让该家永远 404 空转。
+2. **每 30 分钟检查的免费白名单**（`free_whitelist.json`）—— 启动即拉一次，之后每 30 分钟检查一轮。**带条件请求**：源没变就只回一次 304（或正文指纹与上轮相同），既不重建名单、也不触发目录扫描 —— 所以高频轮询的实际流量是几百字节，而不是几十 MB。**多源合并**：① **OpenRouter 官方 `/api/v1/models`**（官方实时维护，取 `:free` 硬标记 + `pricing` 全 0 双校验，**没有版本日期、每次同步即当下状态**）② **[freellm.net](https://freellm.net/) 的开源清单**（`open-free-llm-api/awesome-freellm-apis` 仓库 README，**每天自动从各厂商 API 重拉并对模型发真实请求验证**，38KB 比 models.dev 的 5.9MB 便宜两个数量级）③ **models.dev**（只作**厂商发现源**，按 4 小时一轮检查，见下）。各源模型取并集，一律过 `DENY_FREE`（名字含独立词 pro 一律拒）+ 非聊天模型排除。
+   **曾收录的 awesome-free-llm-apis 已于 2026-10-06 移除**：它自 2026-08-21 起停更（GitHub Action 停了），却仍把 `gemini-2.5-pro`（早已收费，靠 `DENY_FREE` 硬挡才没进池）和 5 个早已下架的 OpenRouter 模型当作免费。停更源的代价不是"少给了什么"，而是**持续给错的东西** —— 调用必 404 空转，还会误导人以为"这家还有免费档"。移除前实测对照：厂商数 26 → 26、候选 50 → 50，一家没少；唯一失去的是 75 个"源独有、无任何活源背书"的模型名，按"宁可漏判不可错判"不收。停更熔断（`SOURCE_STALE_DAYS`）就是为这件事设的第二道闸。
    **freellm 也不能照抄**（2026-09-19 逐行核对）：它的 PERMANENT_FREE 表里，判据其实藏在「速率限制」列——DeepSeek 标 `Dynamic`、xAI 标 `Credit-based`、阿里标 `Tiered by region`，这些只是"列在目录里"，不是免费档。所以**只收写明具体免费速率的条目**（`10 RPM` / `2 RPM (anonymous)` / `200 req/day (free tier)` 这类），且 `credit` / `dynamic` / `tiered` 等计费口径一律拒。另外它的「无需信用卡」列**不等于**我们的 `openFree`（后者语义是"免费 Key 只能看到免费模型"）—— LLM7 实测仍要 Key，所以 freellm 源一律不下 openFree 结论。
    **models.dev 是发现源、不是判定源**：它收录 222 家 provider，按 `cost 全 0` + 能输出文字能筛出不少陌生厂商，但实测会把「买套餐/token plan」（小米、阿里、MiniMax 的 Token Plan 端点）和可疑数据（某家标了 52 个"免费"含 claude-sonnet-4-6）误标成免费。所以**它只补"白名单里还没有的新厂商"，且写进 `candidates` 不进正式名单**（页面只报"候选 N 家未收录"）；已配置供应商和 `MANUAL_WHITELIST` 里的厂商一律不碰，从源头杜绝它污染已启用厂商的池子。等权威源也收录某家，下一轮它会自动转正。
    **封闭名单厂商（智谱 / Mistral / Cohere / ModelScope / Cloudflare 等）：名单内=免费，名单外一律不进池**，哪怕名字再像免费的。任一源挂掉不影响其它源，全挂才沿用本地缓存。
@@ -60,7 +60,7 @@
 | | 存在哪 | 描述什么 | 谁负责更新 |
 |---|---|---|---|
 | **怎么连上这家** | `server.mjs` 的 `VENDOR_DIR`（26 条） | 短名 / base_url / 是否走代理 / 一句备注。**只讲连接方式，不讲免费与否** | 人工（新增一家才需要加） |
-| **这家现在免不免费** | `free_whitelist.json` | 每 6 小时同步的真实免费模型清单 | 自动（每 6 小时） |
+| **这家现在免不免费** | `free_whitelist.json` | 每 30 分钟检查的真实免费模型清单（源没变不重拉） | 自动（每 30 分钟） |
 
 仪表盘「添加供应商」里的厂商列表由 `computePresets()` **每次请求都拿当前白名单重新推导**，只展示**当前有免费档**的两档（已核实厂商排在前）：
 
@@ -76,7 +76,7 @@
 没有中文名和接入说明就只能显示裸域名（`api.sambanova.ai`、`glhf.chat` 这种），既看不懂也没经过核实。
 想让某家出现，先在 `VENDOR_DIR` 里补一条人工核实过的中文条目。
 
-**白名单长不等于能用**：真正"跑过"的只有配了 Key 的那几家（每 6 小时 `sweepPool` 全池实测）；
+**白名单长不等于能用**：真正"跑过"的只有配了 Key 的那几家（每 5 小时 `sweepPool` 全池实测）；
 其余厂商只是"名单上写着有免费档"，配 Key 之前无法验证。这个区分留在诊断字段里（`presets[].configured`），
 不上界面 —— 界面只回答"这家有没有免费档"，不替用户判断"我要不要去注册"。
 

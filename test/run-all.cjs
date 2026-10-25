@@ -42,6 +42,7 @@
  *   8825 gw / 8826 up   fail-scope-check
  *   8827 gw / 8828 up   fail-path-check（8829/8830 是它**故意不监听**的死端口）
  *   8831 gw / 8832 up   key-rotate-check
+ *   8833 gw             wl-freshness-check（无假上游，全靠桩源）
  *   9300+ 随机          shotseg
  *   ⚠ 历史上这批端口有 5 处冲突（hedge 的 8792/8793/8794 撞 gate-check 与 batch1/batch4，
  *     以及 why/probe 共用 8799、stale 撞 batch3、sb-build 撞 protocol 的假上游）。
@@ -87,6 +88,7 @@ const GROUPS = {
     ['fail-scope-check.cjs', '失败归类范围 + 连续失败退避'],
     ['fail-path-check.cjs', '额度重置时区 / 代理不通 / 首字节超时'],
     ['key-rotate-check.cjs', '多 Key 轮转（LRU）'],
+    ['wl-freshness-check.cjs', '白名单变没变的判据（304 / 指纹 / 真变了）'],
     ['startup-files-check.cjs', '启动入口不变式（CRLF/ASCII/gitattributes）'],
   ],
   local: [

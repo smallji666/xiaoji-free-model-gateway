@@ -207,6 +207,14 @@ const PROMO_STATE_PATH = path.join(__dirname, 'promo_state.json')
 //   停更的仓库照样每天 HTTP 200 拉得下来, 内容却停在几个月前。这正是下面两条移除记录的共同原因,
 //   也是 SOURCE_STALE_DAYS 熔断要解决的问题(见 syncUpstreamWhitelist): 光把日期显示在仪表盘上
 //   没用, 必须真的不给它合并 —— 否则一份 08-21 的名单会一直往池子里塞"早就收费了"的模型。
+// 清单正文的指纹 —— 用来判断"源到底变没变"。
+// ⚠ 为什么需要它, 而不是只靠 304: 实测(2026-10-25) OpenRouter 的 `Last-Modified` 大约每
+//   2 分钟就变一次(Cache-Control: max-age=120, CDN 每 120s 回源刷新), 所以 30 分钟后带着
+//   If-Modified-Since 去问, 几乎必然拿到 200 —— 但**正文可能一个字节都没变**(连采三次
+//   md5 完全相同)。只靠 304 的话, 每一轮都会被判成"源变了", 于是每 30 分钟重建一次 hosts
+//   并连带扫一遍上游, 实时机制反而变成"每半小时打一遍所有已接入厂商"。
+//   所以判据是: 304 **或** 正文指纹与上一轮相同 -> 视为没变。
+const textHash = (t) => crypto.createHash('sha256').update(String(t || '')).digest('hex')
 const WHITELIST_SOURCES = [
   // ⚠ 2026-09-25 移除了 mnfst(awesome-free-llm-apis 社区) 源。用户原话："它早就停更了还用它干嘛？留着误导人"。
   //   该源自 2026-08-21 起停更，却一直挂在源列表里，仪表盘上顶着"社区 08-21⚠停更"。
@@ -230,8 +238,16 @@ const WHITELIST_SOURCES = [
   //   唯一代价是名单里少 75 个"源独有、无任何活源背书"的模型名 —— 按"宁可漏判不可错判", 不收。
   {
     id: 'openrouter', name: 'OpenRouter 官方 :free',
-    async fetch() {
-      const r = await fetchTextAuto('https://openrouter.ai/api/v1/models', { accept: 'application/json', 'user-agent': 'xiaoji-free-gateway' })
+    async fetch(cond) {
+      // ── 条件请求 ──
+      // 这份清单实测 791KB(未压缩), 而它是**实时源**: 内容随时会变, 不能靠"最小间隔"降频。
+      // 每 30 分钟轮询一次 = 一天 38MB —— 必须靠 304 把"没变"的轮次压成几百字节。
+      // 实测(2026-10-25): 带 If-Modified-Since 稳定返回 304 Not Modified, 正文零字节。
+      // ⚠ 它**没有 ETag**, 只有 Last-Modified —— 所以这里认 lastModified 而不是 etag。
+      const h = { accept: 'application/json', 'user-agent': 'xiaoji-free-gateway' }
+      if (cond && cond.lastModified) h['if-modified-since'] = cond.lastModified
+      const r = await fetchTextAuto('https://openrouter.ai/api/v1/models', h)
+      if (r.status === 304) return { notModified: true, cond: { lastModified: cond.lastModified } }
       if (r.status !== 200) throw new Error(`HTTP ${r.status}`)
       const data = JSON.parse(r.text)
       const list = data.data || data.models || []
@@ -250,7 +266,7 @@ const WHITELIST_SOURCES = [
       // 于是仪表盘上永远写着"名单 09-10"—— 而白名单其实每天都同步成功(实测: OR 当天照常返回
       // 22 个 :free, 最新那个就是 09-10 上新的)。那个日期只是"最后一个免费模型出现的时间",
       // 不是名单版本。OpenRouter 是实时接口, 每次拉到的都是当下状态, 没有版本日期可言。
-      return { date: '', live: true, hosts: models.length ? { 'openrouter.ai': { source: 'OpenRouter', models } } : {} }
+      return { date: '', live: true, cond: { lastModified: r.headers['last-modified'] || '' }, hash: textHash(r.text), hosts: models.length ? { 'openrouter.ai': { source: 'OpenRouter', models } } : {} }
     },
   },
   {
@@ -273,9 +289,17 @@ const WHITELIST_SOURCES = [
     //   才拿到 794KB 截断体, 耗尽 60s 超时后才回退代理), 整轮同步因此固定在 ~63s。
     //   20h 降频(DISCOVERY_MIN_MS)的注释写得很清楚, 但被这个漏标记架空了。
     id: 'modelsdev', name: 'models.dev(厂商发现)', discovery: true,
-    async fetch() {
+    async fetch(cond) {
+      // ── 条件请求 ──
+      // 实测 5,936,378 字节(≈5.9MB)。虽然它按 DISCOVERY_MIN_MS 降到约一天一次,
+      // 但"发现源"的价值全在"市面上新冒出哪家免费厂商"—— 用 ETag 让"没变"的轮次
+      // 只回一个 304(实测稳定), 才有底气把发现间隔从 20h 往下调。
+      // ⚠ 它有 ETag 但**没有**可用的 Last-Modified, 所以认 etag。
+      const h = { accept: 'application/json', 'user-agent': 'xiaoji-free-gateway' }
+      if (cond && cond.etag) h['if-none-match'] = cond.etag
       // 4.7MB 的大清单, 默认 20s 不够(实测需 20~40s) —— 必须单独放宽到 60s
-      const r = await fetchTextAuto('https://models.dev/api.json', { accept: 'application/json', 'user-agent': 'xiaoji-free-gateway' }, 60000)
+      const r = await fetchTextAuto('https://models.dev/api.json', h, 60000)
+      if (r.status === 304) return { notModified: true, cond: { etag: cond.etag } }
       if (r.status !== 200) throw new Error(`HTTP ${r.status}`)
       const data = JSON.parse(r.text)
       const hosts = {}
@@ -300,7 +324,7 @@ const WHITELIST_SOURCES = [
         if (models.length) hosts[host] = { source: p.name || host, models }
       }
       if (!Object.keys(hosts).length) throw new Error('未筛出任何免费厂商')
-      return { date: '', live: true, discovery: true, hosts }
+      return { date: '', live: true, discovery: true, cond: { etag: r.headers.etag || '' }, hash: textHash(r.text), hosts }
     },
   },
   {
@@ -315,8 +339,15 @@ const WHITELIST_SOURCES = [
     // ⚠ 它的「无需信用卡」列**不等于**我们的 openFree: openFree 语义是"免费 key 只能看到免费模型",
     //   而 freellm 的"No"只是不用绑卡(LLM7 实测仍要 key)。所以本源一律不下 openFree 结论。
     id: 'freellm', name: 'freellm.net(每日实测)',
-    async fetch() {
-      const r = await fetchTextAuto(FREELLM_URL, { accept: 'text/plain', 'user-agent': 'xiaoji-free-gateway' }, 30000)
+    async fetch(cond) {
+      // ── 条件请求 ──
+      // GitHub raw 支持 ETag(且不消耗 API 配额)。它只有 38KB, 省不了多少流量,
+      // 但 304 能让"没变"的轮次连正文解析都跳过 —— 高频轮询时这才是主要开销。
+      // ⚠ 拿不到 etag(某些代理会剥掉响应头)就退回无条件请求, 不影响功能。
+      const h = { accept: 'text/plain', 'user-agent': 'xiaoji-free-gateway' }
+      if (cond && cond.etag) h['if-none-match'] = cond.etag
+      const r = await fetchTextAuto(FREELLM_URL, h, 30000)
+      if (r.status === 304) return { notModified: true, cond: { etag: cond.etag } }
       if (r.status !== 200) throw new Error(`HTTP ${r.status}`)
       const md = r.text
       const sec = (n) => { const m = md.match(new RegExp(`<!-- BEGIN_${n} -->([\\s\\S]*?)<!-- END_${n} -->`)); return m ? m[1] : '' }
@@ -361,7 +392,7 @@ const WHITELIST_SOURCES = [
       if (!Object.keys(hosts).length) throw new Error('未筛出任何免费厂商')
       // 取 README 里自动写的刷新日期(形如 "Last updated: 2026-09-19")当清单版本
       const dm = md.match(/Last updated:\s*(\d{4}-\d{2}-\d{2})/)
-      return { date: dm ? dm[1] : '', hosts }
+      return { date: dm ? dm[1] : '', cond: { etag: r.headers.etag || '' }, hash: textHash(r.text), hosts }
     },
   },
 ]
@@ -495,6 +526,21 @@ function saveWhitelist(w) {
 //   变一轮 —— 巡检比它慢 4 倍, 候选池就永远在追上一轮的旧账。改成与白名单同步同频(6h)。
 //   代价实测可接受: 53 家候选一轮约 4 分钟(mapLimit 4 并发), 一天 4 轮。
 const PATROL_INTERVAL_H = 6
+
+// ── 实时采集的节奏（2026-10-25）──
+// 目标: "新免费厂商 / 新免费模型"最多半小时内被发现, 而**打上游的请求量不增**。
+// 做到这一点的关键不是"扫得更勤", 而是分层 ——
+//   · 源层(OpenRouter / models.dev / freellm)是静态 JSON, 支持条件请求: 没变就回 304(几百字节),
+//     所以可以 30 分钟一轮;
+//   · 上游厂商层(/v1/models)会被限流, 只在"源真的变了"或到了兜底周期才扫。
+// 反过来说: 若去掉条件请求, 30 分钟一轮就是一天 38MB(OpenRouter 单次 791KB) + 每半小时把
+// 已接入厂商全打一遍 —— 那是"看起来实时, 实际在被厂商限流"。
+const WHITELIST_SYNC_MS = 30 * 60 * 1000
+// 目录扫描(打上游 /v1/models)的兜底周期。白名单有实质变动时会立刻提前触发(见同步末尾),
+// 这个定时器只负责"源一直没变、但厂商自己上新了模型"这种情况 —— 那种变化源里根本看不到。
+// 30 分钟是有意的: 它扫的是**已接入**的几家(通常 5~15 家), /v1/models 是很轻的请求。
+// 若某家对 /v1/models 也限流, 把这里调大即可: 这条独立于白名单同步, 改它不影响实时性主路径。
+const CATALOG_REFRESH_MS = 30 * 60 * 1000
 
 // 免 Key 端点转正时, 单家最多收多少个模型。
 // 为什么需要上限: 聚合器(实测 nano-gpt 列出 622 个、llmgateway 296 个)一旦免 Key 可调用,
@@ -980,10 +1026,12 @@ async function fetchTextAuto(urlStr, headers, timeoutMs) {
 // 填的收费模型就被放行 → gate-check 5b "新填的手动模型被隔离 -> []" 假失败
 // （2026-09-19 真踩：sync 在 600ms 启动窗口内有时赶上、有时没赶上，测试就成了间歇性 flake）。
 // 发现源(models.dev)单独降频用的最小间隔。
-// 它一次 4.7MB、实测拉完要 20s~3min, 而"市面上有哪些免费厂商"不会 6 小时变一次；
-// 跟着白名单每 6 小时跑 = 约 18.8MB/天, 还会周期性把整轮同步拖慢几分钟。约一天一次就够。
-// 跳过的轮次沿用上一轮候选 —— `candidates` 本身就是缓存, 不需要再存一份。
-const DISCOVERY_MIN_MS = 20 * 3600 * 1000
+// 它一次 5.9MB、实测拉完要 20s~3min, 而"市面上有哪些免费厂商"不会半小时变一次。
+// ⚠ 2026-10-25 由 20h 降到 4h: 加上 ETag 条件请求之后, "没变"的轮次只回一个 304,
+//   真正的下载次数等于**源真实变化的次数**, 与轮询间隔无关。所以间隔可以缩短, 代价可控;
+//   而 20h 意味着"今天新冒出来的免费厂商要等到明天才进候选区"。
+// ⚠ 跳过该源的轮次沿用上一轮候选 —— `candidates` 本身就是缓存, 不需要再存一份。
+const DISCOVERY_MIN_MS = 4 * 3600 * 1000
 
 // 源清单的**停更熔断**: 源自己声明的清单日期超过这个天数, 整源不参与本轮合并。
 // 起因(用户原话, 2026-10-06): "那些早已停更的免费模型如果现在收费了, 那不就被坑了"。
@@ -1006,6 +1054,10 @@ function sourceStaleDays(dateStr, nowMs) {
 }
 
 let _wlSyncing = false   // 白名单同步进行中(巡检要等它跑完, 否则读到旧表、剔除被冲掉)
+// 上次"因白名单变动而触发目录扫描"的时刻。用途只有一个: 防抖(见同步末尾)。
+// 源在短时间内连着变两次是常态(实测 OpenRouter 批量上架时会这样), 而一次目录扫描要打
+// 十几家上游、约 4 分钟 —— 重复扫只是白烧请求, 不会让结果更准。
+let _lastWlCatalogAt = 0
 
 async function syncUpstreamWhitelist() {
   // 沙箱短路：cwd 或 __dirname 里有 .sandbox 就认作测试沙箱，绝不去碰测试准备的 free_whitelist.json
@@ -1034,8 +1086,69 @@ async function syncUpstreamWhitelist() {
     const srcFetchedAt = Object.assign({}, prevWl0 && prevWl0.sourceFetchedAt)
     const skipDiscovery = (Date.now() - (srcFetchedAt.modelsdev || 0)) < DISCOVERY_MIN_MS
     const activeSources = WHITELIST_SOURCES.filter((s) => !(s.discovery && skipDiscovery))
-    // 并行拉取所有源; 单源失败不影响其它源(记 perSource 失败), 全挂才抛错沿用本地缓存
-    const results = await Promise.allSettled(activeSources.map((s) => s.fetch()))
+    // 条件请求: 把上一轮各源的 etag / last-modified 带上, 源没变就回 304(正文零字节)。
+    const prevCond = Object.assign({}, prevWl0 && prevWl0.sourceCond)
+    // 并行拉取所有源; 单源失败不影响其它源(记 perSource 失败), 全挂才抛错沿用本地缓存。
+    // srcId 在调用处注入, 而不是让每个源自己在返回值里写 —— 那要求三个源都记得加一行,
+    // 漏一个就会让 304 短路时丢掉该源的 cond(下次白拉一次全量)。
+    const results = await Promise.allSettled(activeSources.map((s) =>
+      s.fetch(prevCond[s.id] || null).then((v) => (v ? Object.assign(v, { srcId: s.id }) : v))))
+    // ── 全部 304: 白名单一个字节都没变 ──
+    // 这条路径是"高频轮询"能成立的前提。同步间隔从 6h 降到 30min 之后, 如果每轮都重建 hosts,
+    // 就会连带触发 1170 行那次目录扫描 —— 等于每 30 分钟把已接入的厂商全打一遍。
+    // 有了这条短路: 源没变就只更新"我们刚确认过", 既不重建也不扫上游; 源真变了才走完整流程。
+    // 实测(2026-10-25): OpenRouter(791KB, If-Modified-Since) 与 models.dev(5.9MB, If-None-Match)
+    // 都稳定回 304 —— 高频轮询的实际流量因此是几百字节, 而不是几十 MB。
+    // ⚠ 只在**上一轮名单非空**时短路: 首次运行 / 上轮失败留下空名单时, 必须走完整重建,
+    //   否则会"确认没变"地把自己永久锁死在一个空名单上。
+    // ⚠ 判据是"**成功的源**都没变", 不是"所有源都成功且没变"。
+    //   后者只要有一个源长期挂掉(实测: 本机 raw.githubusercontent.com 解析不了, freellm 常年
+    //   ENOENT)就永远走不到短路 —— 于是每 30 分钟全量重建一次 hosts 并连带扫一遍上游,
+    //   等于把"某个源坏了"放大成"整个实时机制失效"。失败的源沿用上一轮贡献, 与"全挂沿用
+    //   本地缓存"是同一条原则。
+    const prevHash = Object.assign({}, prevWl0 && prevWl0.sourceHash)
+    // "没变" = 304 **或** 正文指纹与上一轮相同(见 textHash 的说明)。
+    const isUnchanged = (v) => !!(v.notModified || (v.hash && v.srcId && v.hash === prevHash[v.srcId]))
+    const okResults = results.filter((r) => r.status === 'fulfilled' && r.value)
+    const allOkUnchanged = okResults.length > 0 && okResults.every((r) => isUnchanged(r.value))
+    if (allOkUnchanged && prevWl0 && prevWl0.hosts && Object.keys(prevWl0.hosts).length) {
+      const newCond304 = Object.assign({}, prevCond)
+      for (const r of okResults) {
+        const id = r.value.srcId
+        if (id && r.value.cond) newCond304[id] = r.value.cond
+      }
+      // ⚠ sourceFetchedAt 也必须更新: 它记的是"上次去拉的时刻", 而降频判据是
+      //   `now - sourceFetchedAt.modelsdev < DISCOVERY_MIN_MS`。这里不更新的话, 那个源
+      //   从"超过间隔"那一刻起会被**每一轮**都拉一次(虽然回 304, 但请求本身有成本,
+      //   而且 5.9MB 的源要占住 60s 超时窗口)。
+      const srcAt304 = Object.assign({}, prevWl0.sourceFetchedAt)
+      for (const r of okResults) if (r.value.srcId) srcAt304[r.value.srcId] = Date.now()
+      const newHash304 = Object.assign({}, prevHash)
+      for (const r of okResults) if (r.value.srcId && r.value.hash) newHash304[r.value.srcId] = r.value.hash
+      // sources 文案**不动**: 它描述的是"每个源上次拉到了什么", 而这一轮什么都没变。
+      // 把 openrouter 改写成"未变(304)"反而让仪表盘冒出一句用户看不懂的技术黑话。
+      saveWhitelist(Object.assign({}, prevWl0, {
+        fetched_at: at, checked_at: at, sourceCond: newCond304, sourceFetchedAt: srcAt304, sourceHash: newHash304,
+      }))
+      const failed = results.length - okResults.length
+      const how = okResults.map((r) => (r.value.notModified ? '304' : '指纹相同')).join('/')
+      console.log(`[whitelist] ${at} 源未变化（${okResults.length} 个源：${how}${failed ? `，${failed} 个源本轮失败沿用缓存` : ''}），沿用现有名单 ${Object.keys(prevWl0.hosts).length} 家 —— 不重建、不触发目录扫描`)
+      return true
+    }
+    // ── 有源变了: 304 的那些必须重拉全量 ──
+    // hosts 每轮都是从零重建的, "没变"的源也得交出完整数据, 不能拿 304 空转。
+    // 这一步只在"至少一个源有新内容"时才发生, 频率远低于轮询次数。
+    for (let i = 0; i < activeSources.length; i++) {
+      const v = results[i]
+      if (v.status === 'fulfilled' && v.value && v.value.notModified) {
+        try {
+          const v = await activeSources[i].fetch(null)
+          results[i] = { status: 'fulfilled', value: v ? Object.assign(v, { srcId: activeSources[i].id }) : v }
+        } catch (e) {
+          results[i] = { status: 'rejected', reason: e }
+        }
+      }
+    }
     const merged = {}    // host -> { source, models:Set }  多源取并集
     // 发现源(models.dev)不能碰的 host: 已配置供应商 + 手工名单里的厂商。
     // 它的数据含"赠送额度/token plan"类误判(实测把 dashscope 标成免费), 让它给这些厂商加模型
@@ -1125,10 +1238,10 @@ async function syncUpstreamWhitelist() {
     const dateStr = dates.length ? dates[dates.length - 1] : ''
     // 跳过发现源的轮次: 候选**沿用上一轮**(写成空会让候选凭空消失), 源状态也沿用 ——
     // ⚠ 但**不能照搬上一轮的失败状态**：那会让仪表盘一直顶着"modelsdev✗"，而这一轮根本没去拉
-    //   (DISCOVERY_MIN_MS = 20h)。只有上轮拿到正常值才沿用，失败一律降级成"缓存(未到间隔)"，
+    //   (DISCOVERY_MIN_MS = 4h)。只有上轮拿到正常值才沿用，失败一律降级成"缓存(未到间隔)"，
     //   否则用户会以为源挂了 —— 这正是上面那句"别显示成失败"的本意，原实现漏了这层判断。
     if (skipDiscovery) {
-      // ⚠ 沿用上一轮状态时**不能连"实时"一起沿用**（2026-09-25 修）：models.dev 是 20h 降频的发现源，
+      // ⚠ 沿用上一轮状态时**不能连"实时"一起沿用**（2026-09-25 修）：models.dev 是降频的发现源，
       //   跳过这一轮时界面仍写着"实时"，等于在说一件不准确的事 —— 实测距上次拉取已 11.3 小时，
       //   而仪表盘顶着"modelsdev 实时"。改成把真实年龄说出来，用户一眼能看出这份名单是多久前的。
       //   （失败状态仍然一律降级成"缓存(未到间隔)"，见上一条注释。）
@@ -1151,13 +1264,33 @@ async function syncUpstreamWhitelist() {
     const newSrcFetchedAt = {}
     for (const [k, v] of Object.entries(srcFetchedAt)) if (knownSrcIds.has(k)) newSrcFetchedAt[k] = v
     for (const s of activeSources) newSrcFetchedAt[s.id] = Date.now()
+    // 各源的 etag / last-modified 一并落盘, 下一轮拿它做条件请求。
+    // 本轮没去拉的源(发现源被 DISCOVERY_MIN_MS 降频跳过)沿用上一轮的 cond —— 否则下次
+    // 真去拉时会因为丢了 etag 而白拉一次 5.9MB。
+    const newCond = {}
+    for (let i = 0; i < activeSources.length; i++) {
+      const v = results[i]
+      if (v.status === 'fulfilled' && v.value && v.value.cond) newCond[activeSources[i].id] = v.value.cond
+    }
+    for (const [k, v] of Object.entries(prevCond)) if (knownSrcIds.has(k) && !newCond[k]) newCond[k] = v
+    // 正文指纹同理落盘: 下一轮靠它判断"源虽然回了 200, 但内容其实没变"(见 textHash)。
+    const newHash = Object.assign({}, prevHash)
+    for (let i = 0; i < activeSources.length; i++) {
+      const v = results[i]
+      if (v.status === 'fulfilled' && v.value && v.value.hash) newHash[activeSources[i].id] = v.value.hash
+    }
     // ⚠ probe(名单巡检结论)必须跟着一起存回去: 每轮同步都是重建 hosts, 不带上它
     // 就会把"端点查无此模型"的剔除记录冲掉, 下一轮源的原话又被原样加回来。
-    saveWhitelist({ fetched_at: at, list_date: dateStr, sources: perSource, hosts, candidates: finalCand, sourceFetchedAt: newSrcFetchedAt, probe: ((prevWl0 && prevWl0.probe) || {}) })
+    saveWhitelist({ fetched_at: at, list_date: dateStr, sources: perSource, hosts, candidates: finalCand, sourceFetchedAt: newSrcFetchedAt, sourceCond: newCond, sourceHash: newHash, probe: ((prevWl0 && prevWl0.probe) || {}) })
     // 白名单变了 => 免费池口径变了, 立刻重扫目录同步路由
     console.log(`[whitelist] ${at} 同步完成, ${Object.keys(hosts).length} 家厂商进入封闭名单/开放名单`
       + `（另有 ${Object.keys(finalCand).length} 家发现源候选未收录${(skipDiscovery || discoveryFailed) ? '，本轮沿用缓存' : ''}） | 源状态: ${JSON.stringify(perSource)}`)
-    if (CFG.providers.length) refreshCatalogSafe().catch((e) => console.error('[catalog]', e.message))
+    if (CFG.providers.length && Date.now() - _lastWlCatalogAt > 10 * 60 * 1000) {
+      _lastWlCatalogAt = Date.now()
+      refreshCatalogSafe().catch((e) => console.error('[catalog]', e.message))
+    } else if (CFG.providers.length) {
+      console.log('[whitelist] 10 分钟内刚因白名单变动扫过目录，本轮跳过（防抖）')
+    }
     return true
   } catch (e) {
     console.error('[whitelist] 同步失败(沿用本地缓存):', e.message)
@@ -2192,7 +2325,7 @@ async function refreshCatalog() {
   }
   saveCatalog(cat)
   console.log(`[catalog] ${at} 更新完成, ${results.filter((r) => !r.error).length}/${results.length} 家成功, 变动 ${changes.length} 条`)
-  scheduleCatalogRetry(results)   // 有失败则安排 5 分钟后自动补扫, 不让用户干等 6 小时
+  scheduleCatalogRetry(results)   // 有失败则安排 5 分钟后自动补扫, 不让用户干等到下一轮定时扫描
   return cat
 }
 
@@ -2334,7 +2467,7 @@ async function refreshCatalogSafe() {
   try { return await refreshCatalog() } finally { catalogRefreshing = false }
 }
 // 扫描出现失败(尤其"全挂")通常是瞬时网络中断 —— 实测 2026-09-17 20:38 一次断网导致 4/4 全失败,
-// 页面就一直是"拉取失败", 要干等 6 小时才重扫。这里安排短期自动补扫。
+// 页面就一直是"拉取失败", 要干等到下一轮定时扫描。这里安排短期自动补扫。
 //
 // ⚠ 2026-10-18 重做, 起因: 用户"自动补扫不要被暂停, 尝试数量应该自动增加"。
 //   原来按**轮数**熔断(连续 3 轮有失败就永久停手), 只要有 1 家常驻失败就会把计数顶满并卡死 ——
@@ -2361,7 +2494,7 @@ function scheduleCatalogRetry(results) {
   const sig = names.slice().sort().join(',')
   if (sig !== catalogRetry.sig) { catalogRetry.n = 0; catalogRetry.sig = sig }  // 换人失败 -> 重新计数
   if (catalogRetry.n >= RETRY_MAX) {
-    console.error(`[catalog] ${sig} 连续 ${catalogRetry.n} 轮补扫仍失败(持续性故障), 这批暂停补扫, 等下一轮 6 小时定时`)
+    console.error(`[catalog] ${sig} 连续 ${catalogRetry.n} 轮补扫仍失败(持续性故障), 这批暂停补扫, 等下一轮定时扫描`)
     return
   }
   const now = Date.now()
@@ -6623,7 +6756,17 @@ async function handleAdmin(req, res, url, bodyStr) {
   // 聚合目录
   if (url.pathname === '/api/catalog') {
     if (url.searchParams.get('refresh') === '1') {
-      refreshCatalogSafe().catch((e) => console.error('[catalog]', e.message))
+      // 手动刷新 = 用户明确要"最新的"，所以走**完整链路**: 先同步源, 再扫上游。
+      // 顺序不能反: 白名单是目录扫描的判定依据(判"这个模型免不免费"), 先扫后同步等于
+      // 用旧口径判一遍, 然后立刻还要再判一遍。
+      // ⚠ 白名单没变时同步会走 304 短路、**不会**自己触发扫描, 所以这里必须显式再调一次 ——
+      //   用户点"刷新"要的是"重新看一遍上游", 而不是"确认源没变"。
+      //   (若同步内部已因"源有变化"触发过扫描, refreshCatalogSafe 的 catalogRefreshing 旗标
+      //    会让这一次直接返回, 不会扫两遍。)
+      ;(async () => {
+        try { await syncUpstreamWhitelist() } catch (e) { console.warn('[whitelist] 手动刷新同步失败:', (e && e.message) || e) }
+        refreshCatalogSafe().catch((e) => console.error('[catalog]', e.message))
+      })()
       return json(res, 200, { ok: true, refreshing: true, catalog: loadCatalog() })
     }
     return json(res, 200, { ok: true, catalog: loadCatalog() || (catalogRefreshing ? { refreshing: true } : null) })
@@ -7250,17 +7393,22 @@ server.listen(CFG.port, HOST, () => {
   else if (CFG.auth && CFG.auth.mode === 'token') console.log('  ⚠ auth.mode 写了 token 但 auth.token 缺失或短于 16 位 —— 已忽略，仍按 local 运行（本机即可信）')
   if (Number(CFG.maxConcurrent) > 0) console.log(`  入站并发上限: ${CFG.maxConcurrent}（超出的请求排队，队满或排队超时回 503）`)
   console.log('==================================================')
-  // 免费白名单: 启动即同步一次(多源), 之后每 6 小时自动同步一次(一天 4 次, 跟上游源更新节奏对齐)
+  // 免费白名单: 启动即同步一次(多源), 之后每 30 分钟一次。
+  // ⚠ 30 分钟能成立的前提是**条件请求**(见 syncUpstreamWhitelist 的 allNotModified 短路):
+  //   源没变就是一次 304(几百字节) + 一次日志, 不重建 hosts、不触发目录扫描。
+  //   2026-10-25 之前是固定 6 小时 —— 那时没有条件请求, 每轮都要把 791KB + 5.9MB 全拉一遍。
   syncUpstreamWhitelist().catch((e) => console.warn('[whitelist] 启动同步失败:', (e && e.message) || e))
   // ⚠ 所有定时器都要 unref(): 否则它们会阻止进程自然退出(手动 Ctrl+C 之外的退出路径全被吊住)。
-  setInterval(() => syncUpstreamWhitelist().catch((e) => console.warn('[whitelist] 同步失败:', (e && e.message) || e)), 6 * 3600 * 1000).unref()
-  // 启动后自动扫描一次目录; 之后每 6 小时刷新
+  setInterval(() => syncUpstreamWhitelist().catch((e) => console.warn('[whitelist] 同步失败:', (e && e.message) || e)), WHITELIST_SYNC_MS).unref()
+  // 启动后自动扫描一次目录; 之后按 CATALOG_REFRESH_MS 兜底刷新(白名单有变动时会提前触发)
   if (CFG.providers.length) setTimeout(() => refreshCatalogSafe().catch((e) => console.error('[catalog]', e.message)), 3000).unref()
-  setInterval(() => { if (CFG.providers.length) refreshCatalogSafe().catch((e) => console.error('[catalog]', e.message)) }, 6 * 3600 * 1000).unref()
-  // 限时活动公告页巡检: 启动 10s 后跑一次(等白名单/目录先就位), 之后每 6 小时一次
-  // 它是"活动型免费"的唯一自动发现途径 —— 白名单源覆盖不到 B.AI / SenseNova 这类厂商
+  setInterval(() => { if (CFG.providers.length) refreshCatalogSafe().catch((e) => console.error('[catalog]', e.message)) }, CATALOG_REFRESH_MS).unref()
+  // 限时活动公告页巡检: 启动 10s 后跑一次(等白名单/目录先就位), 之后每 2 小时一次。
+  // 它是"活动型免费"的唯一自动发现途径 —— 白名单源覆盖不到 B.AI / SenseNova 这类厂商。
+  // ⚠ 2026-10-25 由 6h 提到 2h: 活动型免费是**最有时效性**的信息(开始晚了等于没赶上, 结束
+  //   晚了等于在拿已收费的模型打请求), 而它只打 6 个公告页, 2 小时一轮完全在礼貌范围内。
   setTimeout(() => watchPromoPages().catch((e) => console.warn('[promo]', e.message)), 10000).unref()
-  setInterval(() => watchPromoPages().catch((e) => console.warn('[promo]', e.message)), 6 * 3600 * 1000).unref()
+  setInterval(() => watchPromoPages().catch((e) => console.warn('[promo]', e.message)), 2 * 3600 * 1000).unref()
   // 名单巡检: 启动 20s 后跑一次(等白名单同步先落盘), 之后每天一次。
   // 上游源写的"这家免费"只是声称, 巡检负责给出我们自己的旁证(端点通不通 / 模型存不存在)。
   setTimeout(() => patrolWhitelist().catch((e) => console.warn('[patrol]', (e && e.message) || e)), 20000).unref()
