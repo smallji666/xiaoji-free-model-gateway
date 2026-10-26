@@ -1348,6 +1348,16 @@ function isRouterModel(x) {
   return /^(openrouter|kilo-auto)\/(auto|free)/i.test(String(x.id || ''))
 }
 
+// 聚合器自带的「免费路由」模型 —— 一个 id 就覆盖它家**全部**免费模型, 所以"默认开"只需要它一个。
+// openrouter/free = 官方的 Free Models Router(元数据 pricing 0/0): 从在架的免费模型里随机挑一个。
+// 为什么不是"只枚举它一个": 用户明确要**保留枚举**(点名某个具体 :free 模型是合法需求,
+// 比如"就用 gemma 写代码"), 收窄的只是**默认启用**那一层 —— 枚举照旧, 新模型默认关。
+// 为什么不逐个默认开(2026-10-26 实测): 上游 :free 模型 17 个且每天都在增删, 全默认开等于
+// 每次刷新都往池子里塞新面孔, 其中 `thinkingmachines/inkling*:free` 还会吃
+// `403 is only available on agentic harnesses` —— 除了制造失败记录没有任何用处。
+// ⚠ 只影响**新出现**的模型: 老模型的开关是用户自己拨的, 每轮重设等于跟用户打架。
+const DEFAULT_ON_MODEL = { openrouter: /^openrouter\/free$/i }
+
 // 兜底启发式规则(现在只用于"白名单里没有的自定义厂商")。返回 true 表示该模型在免费池内。
 // ⚠ 封闭名单厂商(智谱/mistral 等)不走这里, 直接查每日白名单 —— 避免"flash≠免费"类误判。
 const FREE_RULES = {
@@ -2297,6 +2307,20 @@ async function refreshCatalog() {
     const free = r.models.map((m) => m.id).filter((id) => !isBlocked(p, id) && !(p.quarantine && p.quarantine[id]))
     if (!free.length) continue // 全被拉黑/隔离 -> 不动池(保留原模型, 靠复审/人工恢复), 避免掏空后残留 undefined
     const cur = (p.models && p.models.length) ? p.models : [p.model]
+    // 默认启用策略(见 DEFAULT_ON_MODEL): 新面孔一律默认关, 只默认开路由器那一个。
+    // 判据是"上一轮池子里有没有它" —— 有 = 用户已经对它做过选择(开或关), 这一轮不许重设。
+    const defOn = DEFAULT_ON_MODEL[p.name]
+    let disableDirty = false
+    if (defOn) {
+      p.disabledModels = p.disabledModels || {}
+      const known = new Set(cur.filter(Boolean))
+      const defOnId = free.find((id) => defOn.test(id)) || '路由模型'
+      for (const id of free) {
+        if (known.has(id) || defOn.test(id) || p.disabledModels[id]) continue
+        p.disabledModels[id] = { at, reason: `默认关闭（${p.name} 只默认启用 ${defOnId}）` }
+        disableDirty = true
+      }
+    }
     if (free.join('|') !== cur.filter(Boolean).join('|')) {
       p.models = free
       p.model = free[0]
@@ -2319,6 +2343,10 @@ async function refreshCatalog() {
         })
         console.log(`[pool] ${p.name}: 免费模型数量大幅变化 ${prevN} -> ${free.length}`)
       }
+    } else if (disableDirty) {
+      // 池子没变、只是"新面孔默认关"这件事变了 —— 也要落盘, 否则下一轮重启又算一遍。
+      saveConfig()
+      console.log(`[pool] ${p.name}: 新增模型已按默认策略关闭（只默认启用路由模型）`)
     }
   }
 
