@@ -3634,6 +3634,12 @@ function quotaCooldownMs(text, retryAfterSec, p) {
   return 3600000 // 无法判断周期 -> 默认 1 小时
 }
 function isBlocked(p, modelId) { return !!(p.blocked && p.blocked[modelId]) }
+// 用户手动取消勾选(disabledModels) —— 与 isBlocked 刻意分开: 后者是"实测计费/下架"的自动判定,
+// 每天会自动复审并可能自己解除; 这一条是用户的明确意愿, 只能由用户自己勾回来。
+// ⚠ 单独有这个函数是因为 isBlocked **不覆盖** disabledModels(2026-10-27 踩到):
+//   expandExplicit 里拿 isBlocked 判"整串是否被关掉"永远为假, 于是被关掉的模型照样被拼成
+//   半个 id 发往上游 —— 用户明明关了它还产生调用, 直接违反"关了就是关了"。
+function modelOff(p, modelId) { return !!(p.disabledModels && p.disabledModels[modelId]) }
 
 // ── 账号级无模型权限 / 接入点路径不对（2026-09-21 加）──
 // 起因: 用户问"没找到不就是已下架吗？区别是什么？" —— 区别在**处置完全相反**:
@@ -3810,7 +3816,23 @@ function expandExplicit(target, active) {
     }
     // 显式写了厂商名时, 解析不到也要照原名发给上游 —— 这是用户尝鲜"池里还没有的新模型"的唯一入口,
     // 而且上游的 400/404 比我们一句"不在池里"有用得多(顺带保住 stream 400 fast-fail 那条回归测试)。
-    const hit = active.filter((p) => p.name === pname && !isBlocked(p, m)).map((p) => ({ ref: p, model: resolveModelId(p, m) || m }))
+    // ⚠ 但必须**先判"整串就是这家池里的模型 id"**: 聚合器的免费路由器 id 恰好以厂商名开头
+    //   (`openrouter/free`), 按"厂商/模型"拆会拆成 model="free" —— 上游收到 `free` 直接回
+    //   `404 No endpoints available for openrouter/free`(2026-10-27 实测: 直连同一个 id 能通,
+    //   路由到 nvidia/nemotron-3.5-lightning:free)。这条 bug 让 `openrouter/free` 从来没真正生效过,
+    //   统计里只有 3 个样本、延迟 6340ms 就是它的痕迹。
+    // ⚠ 顺序: ①先用**整串**判"能不能用" —— 模型一旦被用户关掉就不在 providerModels 里了,
+    //   `resolveModelId(p, t)` 会返回 null, 那时再判就晚了, 会掉回 `free` 照发(2026-10-27 实测踩到)。
+    //   ②再解析出"最终要发给上游的 id", 拿这个 id 再判一次(覆盖 m 那一层)。
+    // ⚠ 必须同时用 isBlocked 和 modelOff: isBlocked 只看自动拉黑, 不看用户取消勾选。
+    const hit = active
+      .filter((p) => p.name === pname && !isBlocked(p, t) && !modelOff(p, t))
+      .map((p) => {
+        const whole = resolveModelId(p, t)
+        if (whole) return { ref: p, model: whole }
+        return { ref: p, model: resolveModelId(p, m) || m }
+      })
+      .filter((c) => !isBlocked(c.ref, c.model) && !modelOff(c.ref, c.model))
     if (hit.length) return hit
     return active.flatMap((p) => { const id = resolveModelId(p, t); return (id && !isBlocked(p, id)) ? [{ ref: p, model: id }] : [] })
   }

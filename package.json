@@ -1,6 +1,6 @@
 {
   "name": "xiaoji-free-model-gateway",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "private": true,
   "description": "本地免费大模型聚合网关：把各家免费大模型 API 聚合成一个 OpenAI 兼容端点 + 一个统一 Key，支持 auto 自动路由与失败回退。零依赖，单文件。",
   "type": "module",

@@ -10,15 +10,33 @@ const GK = 'freegw-test-key-0000000000000000000000'
 // ── 1. 写测试配置(单供应商指向假上游, 无需代理) ──
 fs.writeFileSync(path.join(DIR, 'config.json'), JSON.stringify({
   port: 8788, proxy: '', gatewayKey: GK,
-  providers: [{ id: 'testp', name: 'testp', label: 'TestP', base_url: 'http://127.0.0.1:8790/v1', api_key: 'sk-up', keys: ['sk-up'], model: 'test-model', models: ['test-model', 'tool-model'], needs_proxy: false, enabled: true, ok: 0, err: 0, cooldownUntil: 0, lastError: '' }],
+  providers: [
+    { id: 'testp', name: 'testp', label: 'TestP', base_url: 'http://127.0.0.1:8790/v1', api_key: 'sk-up', keys: ['sk-up'], model: 'test-model', models: ['test-model', 'tool-model'], needs_proxy: false, enabled: true, ok: 0, err: 0, cooldownUntil: 0, lastError: '' },
+    // 2026-10-27 加: 专供"模型 id 以厂商名开头"的回归 —— 聚合器的免费路由器 id 就是这种形态
+    // (openrouter/free), 被 expandExplicit 按"厂商/模型"拆成 model="free" 后上游永远 404。
+    // 单独一家(而不是往 testp 里塞第三个模型)是为了不动"testp 共 2 个模型"那条去重断言。
+    { id: 'routerx', name: 'routerx', label: 'RouterX', base_url: 'http://127.0.0.1:8790/v1', api_key: 'sk-rx', keys: ['sk-rx'], model: 'routerx/free', models: ['routerx/free'], needs_proxy: false, enabled: true, ok: 0, err: 0, cooldownUntil: 0, lastError: '' },
+  ],
 }, null, 2))
 
 // ── 2. 假上游: OpenAI 格式, 支持流式/非流式 ──
+// 记录上游真实收到的 model —— "拆错 id" 这类 bug 的唯一直接指纹就是上游收到的字符串,
+// 光看网关返回码看不出来(拆错之后上游照样可能 200)。
+const seenModels = []
 const fake = http.createServer((req, res) => {
   let b = ''
   req.on('data', (c) => (b += c))
   req.on('end', () => {
     const p = JSON.parse(b || '{}')
+    if (p.model) seenModels.push(String(p.model))
+    // ⚠ 顺序要紧: 按 Key 区分的分支必须排在通用分支之前, 否则永远走不到(第一版就是这么废的)。
+    // routerx 走另一把 Key: 它只列一个"以厂商名开头"的模型 id。必须列出来 ——
+    // 否则启动后的目录扫描会把它的池子覆盖成通用那两个, `routerx/free` 直接被踢出池,
+    // 回归用例就变成在测"池里没有的模型"了(表现为上游收到 model=free)。
+    if (req.url === '/v1/models' && /sk-rx/.test(String(req.headers.authorization || ''))) {
+      res.setHeader('content-type', 'application/json')
+      return res.end(JSON.stringify({ data: [{ id: 'routerx/free', pricing: { prompt: '0', completion: '0' } }] }))
+    }
     if (req.url === '/v1/models') {
       res.setHeader('content-type', 'application/json')
       // ⚠ 必须把 config 里声明的两个模型都列出来：启动同步完成后会触发一次目录重扫，
@@ -31,6 +49,12 @@ const fake = http.createServer((req, res) => {
     }
     // 夹具: 工具调用(2026-10-17 加, 给 /v1/responses 用) —— OpenAI 形态, 网关要把它
     // 翻成 Responses 的独立 output_item(function_call), 而不是塞进 message.content。
+    // 夹具: 模型 id 以厂商名开头(routerx/free)。网关若把它拆成 "厂商=routerx + 模型=free",
+    // 上游收到的就是 free —— 这里靠"内容不同"把这个错误暴露出来(默认分支回的是"你好世界")。
+    if (p.model === 'routerx/free') {
+      res.setHeader('content-type', 'application/json')
+      return res.end(JSON.stringify({ id: 'c1', model: p.model, choices: [{ message: { role: 'assistant', content: 'ROUTER-OK' }, finish_reason: 'stop' }] }))
+    }
     if (p.model === 'tool-model') {
       res.setHeader('content-type', 'application/json')
       return res.end(JSON.stringify({
@@ -348,6 +372,40 @@ async function main() {
 
   // ── 边界: 上游行为异常的五种形态 ──
   // 刻意放在最后: 这些用例会让被测供应商吃到模型级冷却(见 markFail), 不打扰上面的正常路径。
+  // ── 模型 id 以厂商名开头时, 不能被拆成"厂商/模型" ──
+  // openrouter/free(官方 Free Models Router) 就是这个形态: 拆完上游收到 `free` -> 永远 404
+  // "No endpoints available for openrouter/free", 而直连同一个 id 是通的(2026-10-27 实测)。
+  {
+    const r = await fetch('http://127.0.0.1:8788/v1/chat/completions', {
+      method: 'POST', headers: { 'content-type': 'application/json', ...A },
+      body: JSON.stringify({ model: 'routerx/free', messages: [{ role: 'user', content: 'hi' }] }),
+    })
+    const j = await r.json().catch(() => null)
+    const txt = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content
+    check('模型 id 以厂商名开头不被拆开（routerx/free）', r.status === 200 && txt === 'ROUTER-OK', `${r.status} | 内容=${JSON.stringify(txt)}`)
+  }
+  // 反例: 整串被用户关掉之后必须**彻底不调用**, 不能回落到拆开的 `free` 把请求发出去。
+  // 第一版修复就踩了这个: filter 里判 `m`(=free, 没被禁用) 、map 里判整串(被禁用) ->
+  // 掉进 `resolveModelId(p, 'free') || 'free'`, 于是"用户明明关了它还照样被调用"。
+  // 断言直接盯上游收到的字符串, 因为这种情况网关可能回 200, 看状态码抓不住。
+  {
+    const tog = (enabled) => fetch('http://127.0.0.1:8788/api/providers/routerx/modeltoggle', {
+      method: 'POST', headers: { 'content-type': 'application/json', ...A },
+      body: JSON.stringify({ model: 'routerx/free', enabled }),
+    })
+    await tog(false)
+    const before = seenModels.length
+    const r = await fetch('http://127.0.0.1:8788/v1/chat/completions', {
+      method: 'POST', headers: { 'content-type': 'application/json', ...A },
+      body: JSON.stringify({ model: 'routerx/free', messages: [{ role: 'user', content: 'hi' }] }),
+    })
+    const hitUpstream = seenModels.slice(before)
+    await tog(true)
+    check('routerx/free 被禁用后不再调用上游（不回落成 free）',
+      r.status !== 200 && !hitUpstream.includes('free'),
+      `状态=${r.status} | 上游收到=${JSON.stringify(hitUpstream)}`)
+  }
+
   console.log('-- 边界用例 --')
   const H = { 'content-type': 'application/json', ...A }
   const ask = async (model, extra) => {
@@ -473,6 +531,28 @@ async function main() {
     check('停更熔断: 已接进同步循环(过期即 continue, 不参与合并)',
       /sourceStaleDays\(_sd\)/.test(src) && /_ageDays > SOURCE_STALE_DAYS/.test(src) && /本轮不参与合并/.test(src),
       `调用=${/sourceStaleDays\(_sd\)/.test(src)} 比较=${/_ageDays > SOURCE_STALE_DAYS/.test(src)} 文案=${/本轮不参与合并/.test(src)}`)
+  }
+
+  // ── 用户取消勾选 = 不参与路由, 显式点名也不行 ──
+  // 这条放最后: 它会改 testp 的默认模型(toggle 里"默认模型被停用就换第一个启用的"),
+  // 放前面会污染 boundary 用例。这里断言的是**普通 id**(不是以厂商名开头的), 补上
+  // 上一条只覆盖 "routerx/free" 的空白 —— 同一个 `.filter(modelOff)` 闸门。
+  {
+    const tog = (enabled) => fetch('http://127.0.0.1:8788/api/providers/testp/modeltoggle', {
+      method: 'POST', headers: { 'content-type': 'application/json', ...A },
+      body: JSON.stringify({ model: 'test-model', enabled }),
+    })
+    await tog(false)
+    const before = seenModels.length
+    const r = await fetch('http://127.0.0.1:8788/v1/chat/completions', {
+      method: 'POST', headers: { 'content-type': 'application/json', ...A },
+      body: JSON.stringify({ model: 'testp/test-model', messages: [{ role: 'user', content: 'hi' }] }),
+    })
+    const hitUpstream = seenModels.slice(before)
+    await tog(true)
+    check('取消勾选的模型显式点名也不调用（testp/test-model）',
+      r.status !== 200 && !hitUpstream.includes('test-model'),
+      `状态=${r.status} | 上游收到=${JSON.stringify(hitUpstream)}`)
   }
 
   console.log(`\n== ${pass} passed, ${fail} failed ==`)

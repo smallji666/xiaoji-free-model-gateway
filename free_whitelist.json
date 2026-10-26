@@ -1,10 +1,10 @@
 {
-  "fetched_at": "2026-10-25T06:19:45.294Z",
-  "list_date": "2026-10-25",
+  "fetched_at": "2026-10-26T18:27:54.100Z",
+  "list_date": "2026-10-26",
   "sources": {
     "openrouter": "实时",
-    "freellm": "2026-10-25",
-    "modelsdev": "缓存(16h 前)"
+    "freellm": "2026-10-26",
+    "modelsdev": "缓存(刚刚)"
   },
   "hosts": {
     "openrouter.ai": {
@@ -58,9 +58,8 @@
     "api.kilo.ai": {
       "source": "Kilo Code",
       "models": [
-        "nvidia/nemotron-3-nano-omni-30b-a3b-re..",
-        "nvidia/nemotron-3-super-120b-a12b:free",
-        "nvidia/nemotron-3-ultra-550b-a55b:free"
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "poolside/laguna-s-2.1:free"
       ],
       "openFree": false,
       "hybrid": false
@@ -89,8 +88,8 @@
     "ollama.com": {
       "source": "Ollama Cloud",
       "models": [
-        "deepseek-v4-flash",
-        "minimax-m3"
+        "gpt-oss:120b",
+        "nemotron-3-ultra"
       ],
       "openFree": false,
       "hybrid": false
@@ -136,7 +135,6 @@
     "open.bigmodel.cn": {
       "source": "Z AI (Zhipu AI)",
       "models": [
-        "glm-4-5-flash-retirement-announced",
         "glm-4.6v-flash",
         "glm-4.7-flash"
       ],
@@ -274,34 +272,103 @@
     }
   },
   "candidates": {
-    "coding-intl.dashscope.aliyuncs.com": {
-      "source": "Alibaba Coding Plan",
+    "api.minimax.io": {
+      "source": "MiniMax Token Plan (minimax.io)",
       "models": [
+        "MiniMax-M2",
+        "MiniMax-M2.1",
         "MiniMax-M2.5",
-        "glm-4.7",
-        "glm-5",
-        "kimi-k2.5",
-        "qwen3-coder-next",
-        "qwen3-coder-plus",
-        "qwen3-max-2026-01-23",
-        "qwen3.5-plus",
-        "qwen3.6-plus",
-        "qwen3.7-plus"
+        "MiniMax-M2.5-highspeed",
+        "MiniMax-M2.7",
+        "MiniMax-M2.7-highspeed",
+        "MiniMax-M3",
+        "MiniMax-M3.1-Flash",
+        "MiniMax-M3.1-Flash-Preview"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.z.ai": {
-      "source": "Z.AI Coding Plan",
+    "api.empiriolabs.ai": {
+      "source": "EmpirioLabs AI",
       "models": [
-        "glm-4.7",
-        "glm-5-turbo",
-        "glm-5.2",
-        "glm-5.2-highspeed",
-        "glm-5.3",
-        "glm-5.3-flash",
-        "glm-5.3-highspeed"
+        "gemma-3-27b",
+        "glm-4-5-flash",
+        "glm-4-6v-flash",
+        "glm-4-7-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.nan.builders": {
+      "source": "NaN",
+      "models": [
+        "deepseek-v4-flash",
+        "gemma4",
+        "glm5.3",
+        "glm5.3-flash",
+        "mimo-v2.6-flash",
+        "qwen3.6",
+        "qwen3.8-flash"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.kimi.com": {
+      "source": "Kimi For Coding (kimi.com)",
+      "models": [
+        "k3",
+        "k3-256k",
+        "kimi-for-coding",
+        "kimi-for-coding-highspeed"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "model.inferx.net": {
+      "source": "InferX",
+      "models": [
+        "Agents-A1",
+        "Devstral-2-123B-Instruct-2512-int4-AutoRound",
+        "Ornith-1.0-35B-FP8",
+        "Qwen3-Coder-Next-FP8",
+        "Qwen3-Coder-Next-FP8-no-thinking",
+        "Qwen3.6-27B-FP8",
+        "Qwen3.6-35B-A3B-FP8",
+        "Qwen3.6-35B-A3B-fp8-no-thinking",
+        "deepseek-v4-flash",
+        "gemma-4-31B-it-fp8",
+        "mimo-v25"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.code.umans.ai": {
+      "source": "Umans AI Coding Plan",
+      "models": [
+        "umans-coder",
+        "umans-deepseek-v4-flash-0731",
+        "umans-deepseek-v4.1-flash",
+        "umans-deepseek-v4.1-flash-1017",
+        "umans-flash",
+        "umans-glm-5.3",
+        "umans-glm-5.3-flash",
+        "umans-kimi-k3",
+        "umans-qwen3.6-35b-a3b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "nano-gpt.com": {
+      "source": "NanoGPT",
+      "models": [
+        "auto-model",
+        "nano-gpt-help"
       ],
       "openFree": false,
       "hybrid": false,
@@ -325,36 +392,51 @@
       "hybrid": false,
       "provisional": true
     },
-    "tokenhub.tencentmaas.com": {
-      "source": "Tencent TokenHub",
+    "coding-intl.dashscope.aliyuncs.com": {
+      "source": "Alibaba Coding Plan",
       "models": [
-        "hy3",
-        "hy3-preview"
+        "MiniMax-M2.5",
+        "glm-4.7",
+        "glm-5",
+        "kimi-k2.5",
+        "qwen3-coder-next",
+        "qwen3-coder-plus",
+        "qwen3-max-2026-01-23",
+        "qwen3.5-plus",
+        "qwen3.6-plus",
+        "qwen3.7-plus"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.iteracompute.com": {
-      "source": "IteraCompute",
+    "api.lkeap.cloud.tencent.com": {
+      "source": "Tencent Token Plan",
       "models": [
-        "qwen/qwen3.8-27b"
+        "hy3"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.llmgateway.io": {
-      "source": "LLM Gateway",
-      "models": [],
+    "opencode.ai": {
+      "source": "OpenCode Go",
+      "models": [
+        "beam-free",
+        "cat-jam-free",
+        "iceman-contributor-free",
+        "longcat-2.5-preview-free",
+        "minimax-m3.1-flash-free",
+        "step-5-preview-free"
+      ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.nova.amazon.com": {
-      "source": "Nova",
+    "api.meganova.ai": {
+      "source": "Meganova",
       "models": [
-        "nova-2-lite-v1"
+        "mistralai/Mistral-Small-3.2-24B-Instruct-2506"
       ],
       "openFree": false,
       "hybrid": false,
@@ -370,111 +452,77 @@
       "hybrid": false,
       "provisional": true
     },
-    "api.kimi.ai": {
-      "source": "Kimi For Coding (kimi.ai)",
+    "token-plan-cn.xiaomimimo.com": {
+      "source": "Xiaomi Token Plan (China)",
       "models": [
-        "k3",
-        "k3-256k",
-        "kimi-for-coding",
-        "kimi-for-coding-highspeed"
+        "mimo-v2.5",
+        "mimo-v2.6-flash"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.commandcode.ai": {
-      "source": "CommandCode",
+    "api.llmgateway.io": {
+      "source": "DevPass (LLM Gateway)",
       "models": [
-        "inclusionai/ling-3.1-flash:free"
+        "auto",
+        "custom"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.code.umans.ai": {
-      "source": "Umans AI Coding Plan",
+    "api.unorouter.com": {
+      "source": "UnoRouter",
       "models": [
-        "umans-coder",
-        "umans-deepseek-v4-flash-0731",
-        "umans-deepseek-v4.1-flash",
-        "umans-deepseek-v4.1-flash-1017",
-        "umans-flash",
-        "umans-glm-5.3",
-        "umans-glm-5.3-flash",
-        "umans-kimi-k3",
-        "umans-qwen3.6-35b-a3b"
+        "deepseek-v4-flash:free",
+        "gemma-4-31b-it:free",
+        "glm-4.5-flash:free",
+        "glm-5.2:free",
+        "gpt-5.4:free",
+        "gpt-5.5:free",
+        "minimax-m2.7:free",
+        "nemotron-3-ultra-550b-a55b:free",
+        "qwen3.5-397b-a17b:free",
+        "step-3.7-flash:free"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.pendra.ai": {
-      "source": "Pendra",
+    "api.zeldoc.ai": {
+      "source": "Zeldoc",
       "models": [
-        "deepseek-v4-flash",
-        "glm-4.7-flash",
-        "gpt-oss:120b",
-        "llama3.3:70b",
-        "qwen3-coder:30b",
-        "qwen3.6:27b"
+        "zdev"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.regolo.ai": {
-      "source": "Regolo AI",
+    "token-plan-sgp.xiaomimimo.com": {
+      "source": "Xiaomi Token Plan (Singapore)",
       "models": [
-        "brick-v1-beta"
+        "mimo-v2.5",
+        "mimo-v2.6-flash"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "llmtr.com": {
-      "source": "LLMTR",
+    "dashscope.aliyuncs.com": {
+      "source": "Alibaba (China)",
       "models": [
-        "poolside/laguna-xs-2.1"
+        "deepseek-r1-distill-llama-8b",
+        "deepseek-r1-distill-qwen-1-5b"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "nano-gpt.com": {
-      "source": "NanoGPT",
+    "api.reflection.ai": {
+      "source": "Reflection",
       "models": [
-        "auto-model",
-        "nano-gpt-help"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.orcarouter.ai": {
-      "source": "OrcaRouter",
-      "models": [
-        "deepseek/deepseek-v4-flash-free",
-        "orcarouter/auto",
-        "orcarouter/free",
-        "tencent/hy3-free",
-        "z-ai/glm-5.3-flash-free"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.minimax.io": {
-      "source": "MiniMax Token Plan (minimax.io)",
-      "models": [
-        "MiniMax-M2",
-        "MiniMax-M2.1",
-        "MiniMax-M2.5",
-        "MiniMax-M2.5-highspeed",
-        "MiniMax-M2.7",
-        "MiniMax-M2.7-highspeed",
-        "MiniMax-M3",
-        "MiniMax-M3.1-Flash",
-        "MiniMax-M3.1-Flash-Preview"
+        "Beam-1.0-501B-A23B"
       ],
       "openFree": false,
       "hybrid": false,
@@ -497,64 +545,64 @@
       "hybrid": false,
       "provisional": true
     },
-    "opencode.ai": {
-      "source": "OpenCode",
+    "api.nova.amazon.com": {
+      "source": "Nova",
       "models": [
-        "beam-free",
-        "big-pickle",
-        "cat-jam-free",
-        "deepseek-v4-flash-free",
-        "deepseek-v4.1-flash-free",
-        "exo-free",
-        "fledge-alpha-free",
-        "flint-40b-free",
-        "glm-4.7-free",
-        "glm-5-free",
-        "glm-5.3-flash-free",
-        "grok-code",
-        "hy3-free",
-        "hy3-preview-free",
-        "kimi-k2.5-free",
-        "laguna-s-2.1-free",
-        "ling-2.6-flash-free",
-        "ling-3.0-flash-fin-free",
-        "ling-3.0-flash-free",
-        "ling-3.0-tiny-free",
-        "ling-3.1-flash-free",
-        "ll-alpha-free",
-        "longcat-2.0-free",
-        "longcat-2.5-preview-free",
-        "mimo-v2-flash-free",
-        "mimo-v2-omni-free",
-        "mimo-v2.5-free",
-        "mimo-v2.6-flash-free",
-        "minimax-m2.1-free",
-        "minimax-m2.5-free",
-        "minimax-m3-free",
-        "minimax-m3.1-flash-free",
-        "muse-spark-1.2-contributor-free",
-        "muse-spark-1.3-contributor-free",
-        "nemotron-3-super-free",
-        "nemotron-3-ultra-free",
-        "nemotron-3.5-lightning-free",
-        "nemotron-3.5-super-vl-free",
-        "north-mini-code-free",
-        "qwen3.6-plus-free",
-        "ring-2.6-1t-free",
-        "space-bunny-free",
-        "step-5-preview-free",
-        "trinity-large-preview-free",
-        "x-preview-f-free"
+        "nova-2-lite-v1"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "dashscope.aliyuncs.com": {
-      "source": "Alibaba (China)",
+    "ark.cn-beijing.volces.com": {
+      "source": "Volcengine Ark Coding Plan",
       "models": [
-        "deepseek-r1-distill-llama-8b",
-        "deepseek-r1-distill-qwen-1-5b"
+        "deepseek-v4-flash",
+        "doubao-seed-2.0-lite",
+        "doubao-seed-2.1-turbo",
+        "doubao-seed-evolving",
+        "glm-5.3",
+        "glm-5.3-flash",
+        "kimi-k2.7-code",
+        "kimi-k3",
+        "minimax-m3"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api-gateway.merge.dev": {
+      "source": "Merge Gateway",
+      "models": [
+        "nvidia/nemotron-3.5-lightning-30b-a3b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "kenari.id": {
+      "source": "Kenari",
+      "models": [
+        "deepseek-v4-flash:free",
+        "glm-4-7-flash:free",
+        "hy3:free",
+        "kimi-k2-6:free",
+        "kimi-k2-7-code:free",
+        "mimo-v2-5:free",
+        "mistral-large:free",
+        "mistral-medium-3-5:free",
+        "nemotron-3-super-120b-a12b:free",
+        "step-3-7-flash:free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "inference.hetzner.com": {
+      "source": "Hetzner",
+      "models": [
+        "Qwen/Qwen3.6-35B-A3B-FP8",
+        "Qwen3.8-27B"
       ],
       "openFree": false,
       "hybrid": false,
@@ -588,50 +636,159 @@
       "hybrid": false,
       "provisional": true
     },
-    "api.meganova.ai": {
-      "source": "Meganova",
+    "api.scnet.cn": {
+      "source": "SCNet Token Plan",
       "models": [
-        "mistralai/Mistral-Small-3.2-24B-Instruct-2506"
+        "DeepSeek-V4-Flash",
+        "DeepSeek-V4-Flash-0731",
+        "DeepSeek-V4.1-Flash",
+        "GLM-5",
+        "GLM-5.1",
+        "GLM-5.2",
+        "GLM-5.3",
+        "GLM-5.3-Flash",
+        "Kimi-K2.5",
+        "Kimi-K2.6",
+        "Kimi-K2.7-Code",
+        "Kimi-K3",
+        "MiniMax-M2.5",
+        "MiniMax-M2.7",
+        "MiniMax-M3",
+        "Qwen3.8-Flash",
+        "Qwen3.8-Max"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.poe.com": {
-      "source": "Poe",
+    "api.regolo.ai": {
+      "source": "Regolo AI",
       "models": [
-        "fireworks-ai/kimi-k2.5-fw",
-        "google/gemma-4-31b",
-        "openai/gpt-5.3-codex-spark"
+        "brick-v1-beta"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "api.empiriolabs.ai": {
-      "source": "EmpirioLabs AI",
+    "inference.poolside.ai": {
+      "source": "Poolside",
       "models": [
-        "gemma-3-27b",
-        "glm-4-5-flash",
-        "glm-4-6v-flash",
-        "glm-4-7-flash"
+        "poolside/laguna-m.1",
+        "poolside/laguna-s-2.1",
+        "poolside/laguna-xs-2.1"
       ],
       "openFree": false,
       "hybrid": false,
       "provisional": true
     },
-    "ark.cn-beijing.volces.com": {
-      "source": "Volcengine Ark Coding Plan",
+    "api.siliconflow.cn": {
+      "source": "SiliconFlow (China)",
       "models": [
-        "deepseek-v4-flash",
-        "doubao-seed-2.0-lite",
-        "doubao-seed-2.1-turbo",
-        "doubao-seed-evolving",
+        "Qwen/Qwen2.5-7B-Instruct",
+        "Qwen/Qwen3-8B",
+        "Qwen/Qwen3.5-4B"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "zenmux.ai": {
+      "source": "ZenMux",
+      "models": [
+        "z-ai/glm-4.6v-flash-free",
+        "z-ai/glm-4.7-flash-free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.orcarouter.ai": {
+      "source": "OrcaRouter",
+      "models": [
+        "deepseek/deepseek-v4-flash-free",
+        "orcarouter/auto",
+        "orcarouter/free",
+        "tencent/hy3-free",
+        "z-ai/glm-5.3-flash-free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "openai.bothub.ru": {
+      "source": "Bothub",
+      "models": [
+        "gemma-4-31b-it:free",
+        "nemotron-3-ultra-550b-a55b:free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "tokenhub.tencentmaas.com": {
+      "source": "Tencent TokenHub",
+      "models": [
+        "hy3",
+        "hy3-preview"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.z.ai": {
+      "source": "Z.AI Coding Plan",
+      "models": [
+        "glm-4.7",
+        "glm-5-turbo",
+        "glm-5.2",
+        "glm-5.2-highspeed",
         "glm-5.3",
         "glm-5.3-flash",
-        "kimi-k2.7-code",
-        "kimi-k3",
-        "minimax-m3"
+        "glm-5.3-highspeed"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "coding-plan-endpoint.kuaecloud.net": {
+      "source": "KUAE Cloud Coding Plan",
+      "models": [
+        "GLM-4.7"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.infomaniak.com": {
+      "source": "Infomaniak",
+      "models": [
+        "mini_lm_l12_v2"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.pendra.ai": {
+      "source": "Pendra",
+      "models": [
+        "deepseek-v4-flash",
+        "glm-4.7-flash",
+        "gpt-oss:120b",
+        "llama3.3:70b",
+        "qwen3-coder:30b",
+        "qwen3.6:27b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.kimi.ai": {
+      "source": "Kimi For Coding (kimi.ai)",
+      "models": [
+        "k3",
+        "k3-256k",
+        "kimi-for-coding",
+        "kimi-for-coding-highspeed"
       ],
       "openFree": false,
       "hybrid": false,
@@ -656,20 +813,76 @@
       "hybrid": false,
       "provisional": true
     },
-    "model.inferx.net": {
-      "source": "InferX",
+    "llmtr.com": {
+      "source": "LLMTR",
       "models": [
-        "Agents-A1",
-        "Devstral-2-123B-Instruct-2512-int4-AutoRound",
-        "Ornith-1.0-35B-FP8",
-        "Qwen3-Coder-Next-FP8",
-        "Qwen3-Coder-Next-FP8-no-thinking",
-        "Qwen3.6-27B-FP8",
-        "Qwen3.6-35B-A3B-FP8",
-        "Qwen3.6-35B-A3B-fp8-no-thinking",
-        "deepseek-v4-flash",
-        "gemma-4-31B-it-fp8",
-        "mimo-v25"
+        "poolside/laguna-xs-2.1"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.commandcode.ai": {
+      "source": "CommandCode",
+      "models": [
+        "inclusionai/ling-3.1-flash:free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.cortecs.ai": {
+      "source": "Cortecs",
+      "models": [],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.poe.com": {
+      "source": "Poe",
+      "models": [
+        "fireworks-ai/kimi-k2.5-fw",
+        "google/gemma-4-31b",
+        "openai/gpt-5.3-codex-spark"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.novita.ai": {
+      "source": "Novita AI",
+      "models": [
+        "apodex/apodex-1.1-mini"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.iteracompute.com": {
+      "source": "IteraCompute",
+      "models": [
+        "qwen/qwen3.8-27b"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.tokenrouter.com": {
+      "source": "TokenRouter",
+      "models": [
+        "z-ai/glm-5.3-free"
+      ],
+      "openFree": false,
+      "hybrid": false,
+      "provisional": true
+    },
+    "api.temprhq.io": {
+      "source": "Tempr Gateway",
+      "models": [
+        "groq/allam-2-7b",
+        "zai/glm-4.5-flash",
+        "zai/glm-4.6v-flash",
+        "zai/glm-4.7-flash"
       ],
       "openFree": false,
       "hybrid": false,
@@ -711,267 +924,32 @@
       "openFree": false,
       "hybrid": false,
       "provisional": true
-    },
-    "api.reflection.ai": {
-      "source": "Reflection",
-      "models": [
-        "Beam-1.0-501B-A23B"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "openai.bothub.ru": {
-      "source": "Bothub",
-      "models": [
-        "gemma-4-31b-it:free",
-        "nemotron-3-ultra-550b-a55b:free"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api-gateway.merge.dev": {
-      "source": "Merge Gateway",
-      "models": [
-        "nvidia/nemotron-3.5-lightning-30b-a3b"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "inference.poolside.ai": {
-      "source": "Poolside",
-      "models": [
-        "poolside/laguna-m.1",
-        "poolside/laguna-s-2.1",
-        "poolside/laguna-xs-2.1"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "coding-plan-endpoint.kuaecloud.net": {
-      "source": "KUAE Cloud Coding Plan",
-      "models": [
-        "GLM-4.7"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.siliconflow.cn": {
-      "source": "SiliconFlow (China)",
-      "models": [
-        "Qwen/Qwen2.5-7B-Instruct",
-        "Qwen/Qwen3-8B",
-        "Qwen/Qwen3.5-4B"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.unorouter.com": {
-      "source": "UnoRouter",
-      "models": [
-        "deepseek-v4-flash:free",
-        "gemma-4-31b-it:free",
-        "glm-4.5-flash:free",
-        "glm-5.2:free",
-        "gpt-5.4:free",
-        "gpt-5.5:free",
-        "minimax-m2.7:free",
-        "nemotron-3-ultra-550b-a55b:free",
-        "qwen3.5-397b-a17b:free",
-        "step-3.7-flash:free"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.scnet.cn": {
-      "source": "SCNet Token Plan",
-      "models": [
-        "DeepSeek-V4-Flash",
-        "DeepSeek-V4-Flash-0731",
-        "DeepSeek-V4.1-Flash",
-        "GLM-5",
-        "GLM-5.1",
-        "GLM-5.2",
-        "GLM-5.3",
-        "GLM-5.3-Flash",
-        "Kimi-K2.5",
-        "Kimi-K2.6",
-        "Kimi-K2.7-Code",
-        "Kimi-K3",
-        "MiniMax-M2.5",
-        "MiniMax-M2.7",
-        "MiniMax-M3",
-        "Qwen3.8-Flash",
-        "Qwen3.8-Max"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.tokenrouter.com": {
-      "source": "TokenRouter",
-      "models": [
-        "z-ai/glm-5.3-free"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "zenmux.ai": {
-      "source": "ZenMux",
-      "models": [
-        "z-ai/glm-4.6v-flash-free",
-        "z-ai/glm-4.7-flash-free"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.infomaniak.com": {
-      "source": "Infomaniak",
-      "models": [
-        "mini_lm_l12_v2"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.cortecs.ai": {
-      "source": "Cortecs",
-      "models": [],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "inference.hetzner.com": {
-      "source": "Hetzner",
-      "models": [
-        "Qwen/Qwen3.6-35B-A3B-FP8",
-        "Qwen3.8-27B"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "token-plan-cn.xiaomimimo.com": {
-      "source": "Xiaomi Token Plan (China)",
-      "models": [
-        "mimo-v2.5",
-        "mimo-v2.6-flash"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.lkeap.cloud.tencent.com": {
-      "source": "Tencent Token Plan",
-      "models": [
-        "hy3"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.nan.builders": {
-      "source": "NaN",
-      "models": [
-        "deepseek-v4-flash",
-        "gemma4",
-        "glm5.3",
-        "glm5.3-flash",
-        "mimo-v2.6-flash",
-        "qwen3.6",
-        "qwen3.8-flash"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.temprhq.io": {
-      "source": "Tempr Gateway",
-      "models": [
-        "groq/allam-2-7b",
-        "zai/glm-4.5-flash",
-        "zai/glm-4.6v-flash",
-        "zai/glm-4.7-flash"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.kimi.com": {
-      "source": "Kimi For Coding (kimi.com)",
-      "models": [
-        "k3",
-        "k3-256k",
-        "kimi-for-coding",
-        "kimi-for-coding-highspeed"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "token-plan-sgp.xiaomimimo.com": {
-      "source": "Xiaomi Token Plan (Singapore)",
-      "models": [
-        "mimo-v2.5",
-        "mimo-v2.6-flash"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "kenari.id": {
-      "source": "Kenari",
-      "models": [
-        "deepseek-v4-flash:free",
-        "glm-4-7-flash:free",
-        "hy3:free",
-        "kimi-k2-6:free",
-        "kimi-k2-7-code:free",
-        "mimo-v2-5:free",
-        "mistral-large:free",
-        "mistral-medium-3-5:free",
-        "nemotron-3-super-120b-a12b:free",
-        "step-3-7-flash:free"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.zeldoc.ai": {
-      "source": "Zeldoc",
-      "models": [
-        "zdev"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
-    },
-    "api.novita.ai": {
-      "source": "Novita AI",
-      "models": [
-        "apodex/apodex-1.1-mini"
-      ],
-      "openFree": false,
-      "hybrid": false,
-      "provisional": true
     }
   },
   "sourceFetchedAt": {
-    "openrouter": 1792909187637,
-    "modelsdev": 1792849830358,
-    "freellm": 1792909187637
+    "openrouter": 1793039276223,
+    "modelsdev": 1793036640972,
+    "freellm": 1793039276223
+  },
+  "sourceCond": {
+    "openrouter": {
+      "lastModified": ""
+    },
+    "freellm": {
+      "etag": "\"805b3201236fb76b341b042c4385b70da7b166c6fcafa187e417d6d5e541fffd\""
+    },
+    "modelsdev": {
+      "etag": "\"c0e7891a8722f5bb96ee6da168069d88\""
+    }
+  },
+  "sourceHash": {
+    "openrouter": "6d0f3af53313fa3de72d86d1123c35e034e540d5144e5422177f6f052effcb23",
+    "modelsdev": "c0e7891a8722f5bb96ee6da168069d885b5a983ecff9bb9d7940539d3845d755",
+    "freellm": "332549ef261a1e5b1eba66c677af98076c77ca6240db9b2a76931b3a58606c00"
   },
   "probe": {
     "api.aionlabs.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "listedCount": 6,
@@ -985,7 +963,7 @@
       }
     },
     "api.cohere.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 403",
       "listedCount": 0,
@@ -994,7 +972,7 @@
       "unverifiable": false
     },
     "open.bigmodel.cn": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "listedCount": 0,
@@ -1003,15 +981,15 @@
       "unverifiable": false
     },
     "api.cloudflare.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "skip",
       "detail": "接入点含占位符, 无法探测"
     },
     "router.huggingface.co": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
-      "listedCount": 133,
+      "listedCount": 130,
       "missing": [
         "Qwen/Qwen2.5-7B-Instruct"
       ],
@@ -1035,10 +1013,10 @@
       "candidate": true
     },
     "api.llm7.io": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
-      "listedCount": 67,
+      "listedCount": 68,
       "missing": [],
       "missingCount": 0,
       "unverifiable": false,
@@ -1049,7 +1027,7 @@
       }
     },
     "api-inference.modelscope.cn": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "listedCount": 37,
@@ -1063,7 +1041,7 @@
       }
     },
     "integrate.api.nvidia.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "listedCount": 85,
@@ -1080,7 +1058,7 @@
       }
     },
     "ollama.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "listedCount": 0,
@@ -1105,7 +1083,7 @@
       }
     },
     "api.siliconflow.cn": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.siliconflow.cn/v1",
@@ -1116,7 +1094,7 @@
       "candidate": true
     },
     "apihub.agnes-ai.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "listedCount": 0,
@@ -1125,7 +1103,7 @@
       "unverifiable": false
     },
     "api.sambanova.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "listedCount": 6,
@@ -1142,7 +1120,7 @@
       }
     },
     "glhf.chat": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "no_list",
       "detail": "HTTP 526",
       "listedCount": 0,
@@ -1151,7 +1129,7 @@
       "unverifiable": false
     },
     "api.ai21.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 200 但无模型列表",
       "listedCount": 0,
@@ -1160,7 +1138,7 @@
       "unverifiable": false
     },
     "inference.api.nscale.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "listedCount": 0,
@@ -1169,7 +1147,7 @@
       "unverifiable": false
     },
     "token-plan-cn.xiaomimimo.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan-cn.xiaomimimo.com/v1",
@@ -1191,7 +1169,7 @@
       "candidate": true
     },
     "openai.bothub.ru": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://openai.bothub.ru/v1",
@@ -1202,7 +1180,7 @@
       "candidate": true
     },
     "nano-gpt.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://nano-gpt.com/v1",
@@ -1218,7 +1196,7 @@
       }
     },
     "token-plan.ap-southeast-1.maas.aliyuncs.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
@@ -1229,7 +1207,7 @@
       "candidate": true
     },
     "api.z.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 200 但无模型列表",
       "apiBase": "https://api.z.ai/api/v1",
@@ -1240,7 +1218,7 @@
       "candidate": true
     },
     "api.nova.amazon.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "exists",
       "detail": "HTTP 500（同轮其它路径返 404, 说明该服务认得路径）",
       "apiBase": "https://api.nova.amazon.com/v1",
@@ -1251,7 +1229,7 @@
       "candidate": true
     },
     "coding.dashscope.aliyuncs.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://coding.dashscope.aliyuncs.com/v1",
@@ -1267,7 +1245,7 @@
       }
     },
     "api.llmgateway.io": {
-      "at": "2026-10-24T07:27:44.546Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.llmgateway.io/v1",
@@ -1283,7 +1261,7 @@
       }
     },
     "api.regolo.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.regolo.ai/v1",
@@ -1299,11 +1277,11 @@
       }
     },
     "kenari.id": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://kenari.id/v1",
-      "listedCount": 111,
+      "listedCount": 110,
       "missing": [
         "mimo-v2-5:free",
         "mistral-large:free",
@@ -1319,7 +1297,7 @@
       }
     },
     "dashscope.aliyuncs.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://dashscope.aliyuncs.com/api/v1",
@@ -1330,7 +1308,7 @@
       "candidate": true
     },
     "api.pendra.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.pendra.ai/v1",
@@ -1341,7 +1319,7 @@
       "candidate": true
     },
     "inference.poolside.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://inference.poolside.ai/v1",
@@ -1352,7 +1330,7 @@
       "candidate": true
     },
     "api.minimax.cn": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.minimax.cn/v1",
@@ -1363,7 +1341,7 @@
       "candidate": true
     },
     "token-plan-ams.xiaomimimo.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan-ams.xiaomimimo.com/v1",
@@ -1374,7 +1352,7 @@
       "candidate": true
     },
     "api.zeldoc.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.zeldoc.ai/v1",
@@ -1385,7 +1363,7 @@
       "candidate": true
     },
     "api.unorouter.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.unorouter.com/v1",
@@ -1396,11 +1374,11 @@
       "candidate": true
     },
     "router.requesty.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://router.requesty.ai/v1",
-      "listedCount": 799,
+      "listedCount": 802,
       "missing": [
         "gemma-4-31b-it",
         "laguna-m.1",
@@ -1435,11 +1413,11 @@
       "candidate": true
     },
     "llmtr.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://llmtr.com/v1",
-      "listedCount": 383,
+      "listedCount": 384,
       "missing": [],
       "missingCount": 0,
       "unverifiable": false,
@@ -1451,7 +1429,7 @@
       }
     },
     "api.tokenrouter.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.tokenrouter.com/v1",
@@ -1473,7 +1451,7 @@
       "candidate": true
     },
     "api.infomaniak.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1484,7 +1462,7 @@
       "candidate": true
     },
     "api.poe.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.poe.com/v1",
@@ -1504,7 +1482,7 @@
       }
     },
     "api.minimax.io": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.minimax.io/v1",
@@ -1515,7 +1493,7 @@
       "candidate": true
     },
     "api.empiriolabs.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.empiriolabs.ai/v1",
@@ -1531,7 +1509,7 @@
       }
     },
     "model.inferx.net": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://model.inferx.net/v1",
@@ -1542,7 +1520,7 @@
       "candidate": true
     },
     "api.code.umans.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.code.umans.ai/v1",
@@ -1558,7 +1536,7 @@
       }
     },
     "coding-intl.dashscope.aliyuncs.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://coding-intl.dashscope.aliyuncs.com/v1",
@@ -1574,7 +1552,7 @@
       }
     },
     "api-gateway.merge.dev": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 403",
       "apiBase": "https://api-gateway.merge.dev/v1",
@@ -1585,7 +1563,7 @@
       "candidate": true
     },
     "api.kimi.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.kimi.com/coding/v1",
@@ -1596,11 +1574,11 @@
       "candidate": true
     },
     "api.orcarouter.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.orcarouter.ai/v1",
-      "listedCount": 211,
+      "listedCount": 214,
       "missing": [
         "orcarouter/auto"
       ],
@@ -1614,7 +1592,7 @@
       }
     },
     "api.kimi.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.kimi.ai/coding/v1",
@@ -1625,7 +1603,7 @@
       "candidate": true
     },
     "coding-plan-endpoint.kuaecloud.net": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1636,7 +1614,7 @@
       "candidate": true
     },
     "api.scnet.cn": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1647,7 +1625,7 @@
       "candidate": true
     },
     "opencode.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1658,7 +1636,7 @@
       "candidate": true
     },
     "token-plan-sgp.xiaomimimo.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan-sgp.xiaomimimo.com/v1",
@@ -1669,7 +1647,7 @@
       "candidate": true
     },
     "ark.cn-beijing.volces.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://ark.cn-beijing.volces.com/v1",
@@ -1680,7 +1658,7 @@
       "candidate": true
     },
     "tokenhub.tencentmaas.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://tokenhub.tencentmaas.com/v1",
@@ -1691,7 +1669,7 @@
       "candidate": true
     },
     "inference.hetzner.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://inference.hetzner.com/api/v1",
@@ -1702,7 +1680,7 @@
       "candidate": true
     },
     "api.lkeap.cloud.tencent.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.lkeap.cloud.tencent.com/v1",
@@ -1713,7 +1691,7 @@
       "candidate": true
     },
     "api.nan.builders": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.nan.builders/v1",
@@ -1724,7 +1702,7 @@
       "candidate": true
     },
     "token-plan.cn-beijing.maas.aliyuncs.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
@@ -1735,7 +1713,7 @@
       "candidate": true
     },
     "api.meganova.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.meganova.ai/v1",
@@ -1751,11 +1729,11 @@
       }
     },
     "zenmux.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://zenmux.ai/api/v1",
-      "listedCount": 207,
+      "listedCount": 209,
       "missing": [],
       "missingCount": 0,
       "unverifiable": false,
@@ -1783,7 +1761,7 @@
       }
     },
     "api.temprhq.io": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.temprhq.io/v1",
@@ -1805,7 +1783,7 @@
       "candidate": true
     },
     "api.novita.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.novita.ai/openai/v1",
@@ -1821,7 +1799,7 @@
       }
     },
     "api.commandcode.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1832,7 +1810,7 @@
       "candidate": true
     },
     "api.reflection.ai": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "needs_key",
       "detail": "HTTP 403",
       "apiBase": "https://api.reflection.ai/v1",
@@ -1843,7 +1821,7 @@
       "candidate": true
     },
     "api.iteracompute.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.iteracompute.com/v1",
@@ -1859,7 +1837,7 @@
       }
     },
     "proxy.gonkabroker.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "listedCount": 4,
@@ -1873,11 +1851,11 @@
       }
     },
     "api.qnaigc.com": {
-      "at": "2026-10-25T06:19:50.626Z",
+      "at": "2026-10-26T18:28:14.142Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.qnaigc.com/v1",
-      "listedCount": 89,
+      "listedCount": 91,
       "missing": [],
       "missingCount": 0,
       "unverifiable": false,

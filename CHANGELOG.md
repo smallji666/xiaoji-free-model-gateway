@@ -3,6 +3,38 @@
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.2.7] - 2026-10-27
+
+### Fixed
+
+- **`openrouter/free` 从来没真正生效过 —— 被我们自己拆错了模型名。**
+  `expandExplicit()` 把 `厂商/模型` 拆成 `pname` + `m`，而聚合器的免费路由器 id 恰好**以厂商名开头**
+  （`openrouter/free`），于是被拆成 provider=`openrouter` / model=`free`，上游收到的是 `free`，
+  回 `404 No endpoints available for openrouter/free`。
+  **误判成上游故障的过程**：面板显示 404、直连同一个 id 却能通（分别路由到
+  `nvidia/nemotron-3.5-lightning:free` 和 `dots-studio/dots-3-note-preview:free`）——
+  证据只有"网关这条路上是 404"。
+  **怎么发现的**：查 `config.json` 的失败记账，模型 id 写的是 `free` 而不是 `openrouter/free` ——
+  记账的 id 就是发给上游的 id。
+  修法：拆完之后**先判"整串是否就是这家池里的模型 id"**，是就用整串；不是才走原来的
+  "照原名发给上游"（那是尝鲜池外新模型的入口，不能删）。
+  影响面只有"厂商名恰好是某家 provider 名"的路由型 id（`openrouter/free` 这一类）；
+  `kilo-auto/free` 这种拆出来对不上任何厂商的写法，本来就走最后一层整串兜底，不受影响。
+
+- **用户取消勾选的模型，显式点名 `厂商/模型` 时照样会被调用**（顺着上一条挖出来的）。
+  `expandExplicit()` 判"这个模型能不能用"用的是 `isBlocked()`，而它**只看自动拉黑**
+  （实测计费/下架，每天会自动复审、可能自己解除），**不看 `disabledModels`**（用户在仪表盘
+  取消勾选，只能由用户自己勾回来）。于是取消勾选之后 `resolveModelId()` 返回 null，
+  代码掉进 `resolveModelId(p, m) || m` 把裸 id 原样发出去 —— 关了还产生调用。
+  修法：拆出独立的 `modelOff()` 专门判用户勾选，并在**两处**都用上：
+  ①拆之前先用整串判（模型被关掉后已不在 `providerModels` 里，此时再解析就晚了）；
+  ②解析出最终要发的 id 后再判一次（覆盖 `m` 那一层）。
+  回归：`test/protocol-test.cjs` 里两条新断言直接盯**上游真实收到的 model 字符串**
+  （这种情况网关可能回 200，看状态码抓不住），分别覆盖 `routerx/free` 与普通 id。
+  **验证**：`openrouter/free` 经网关 200，三次分别落到 `cohere/north-mini-code:free`、
+  `poolside/laguna-xs-2.1:free`、`dots-studio/dots-3-note-preview:free`，最后一次
+  `finish_reason=stop`、内容 `1+1 等于 2`。
+
 ## [1.2.6] - 2026-10-27
 
 ### Changed
