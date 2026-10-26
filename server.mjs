@@ -373,6 +373,8 @@ const WHITELIST_SOURCES = [
         const prov = lastProv
         const id = (c[3] || '').match(/`([^`]+)`/)
         if (!prov || !id) continue
+        if (FREELLM_TRUNCATED_RE.test(id[1])) continue       // 上游把长 id 截成 "xx.." -> 请求必 404
+        if (FREELLM_STATUS_ID_RE.test(id[1])) continue       // "已弃用/退役公告"是状态标记, 不是模型名
         const rate = c[5] || ''
         if (FREELLM_PAID_RATE_RE.test(rate)) continue      // 计费口径(credit-based/dynamic/tiered)一律不收
         if (!FREELLM_RATE_OK_RE.test(rate)) continue       // 没写具体免费速率 = 信息不足, 不收
@@ -406,6 +408,14 @@ const FREELLM_URL = 'https://raw.githubusercontent.com/open-free-llm-api/awesome
 const FREELLM_PAID_RATE_RE = /(credit|dynamic|tiered|paid|top-?up|purchase|billing|see provider)/i
 // 免费速率证据: 必须写明具体限额(RPM/RPD/每天/每小时)或明说 free/anonymous/fair-use/limit
 const FREELLM_RATE_OK_RE = /(\d.*(rpm|rpd|req|request|day|hour|hr|min|week|token)|free|anonymous|anon|fair[- ]use|limit)/i
+// 上游 README 2026-10-25 起给表格做了"移动端加固", 副作用是**长模型 id 被截断成 `xxx-re..`**
+// (实测 nvidia/nemotron-3-nano-omni-30b-a3b-re..)。这种 id 拿去请求必然 404: 白烧一次回退,
+// 还会以"白名单里的模型"身份出现在面板上 —— 名字本身就是错的。宁可漏收, 也不收确定用不了的名字。
+// ⚠ 截断的是**上游原文**, 不是我们打印时截的; 想补全只能靠 href 里的 slug 反推(不可靠), 所以直接丢。
+const FREELLM_TRUNCATED_RE = /\.\.$/
+// 上游把"退役/弃用"直接写进 id(glm-4-5-flash-retirement-announced、zai-glm-4-7-deprecated-aug-2026)
+// —— 那是状态标记, 不是能调用的模型名。与 RETIRED_RE(运行时错误识别)是同一件事的两个时刻。
+const FREELLM_STATUS_ID_RE = /(deprecated|retirement|retired|sunset|shutdown|decommission)/i
 
 // 本地/内网/回环地址 —— 任何上游清单源给的 host 命中这些一律丢弃, 不能进白名单。
 const LOCAL_HOST_RE = /^(localhost|127\.|0\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[::1\]|::1)/i
@@ -5423,6 +5433,12 @@ const hedgeDelayFor = (p, modelId) => {
 //   与"Ollama done_reason 硬编码 stop"同一类错误: 状态是编的, 不是观察到的。
 // 判定刻意宽松: 只要求"能解析出 choices[0]"。**不检查内容非空** ——
 //   模型在 max_tokens 极小 / finish_reason=length 时返回空字符串是合法的, 那不是上游的错。
+// ⚠ 2026-10-27 收窄补一档: 上面的"不查空"放过了另一种假成功 —— 上游过载时回
+//   200 + {choices:[{message:{content:""},finish_reason:"stop"}]}。它与前两次事故
+//   (200+{error}、200+SSE error)是同一族: **状态是编的, 不是观察到的** —— 客户端拿到空回答,
+//   网关记 ok:true 且不换下一家。所以判据必须同时满足才判失败, 不能只看"空":
+//     finish_reason 必须是 stop(模型自己说完, 不是被 max_tokens 截断、也不是风控拦下),
+//     且既无正文、无工具调用、无思维链 —— 任一存在都说明它确实干活了。
 function chatBodyProblem(text) {
   if (!text || !text.trim()) return '响应体为空'
   let j
@@ -5431,6 +5447,16 @@ function chatBodyProblem(text) {
   // 有些厂商用 200 + {error:{...}} 报错(而非 4xx/5xx), 这种必须换下一家
   if (j.error) return 'HTTP 200 但响应体是错误对象'
   if (!Array.isArray(j.choices) || !j.choices.length) return '响应体里没有 choices'
+  const ch = j.choices[0] || {}
+  const msg = ch.message || ch.delta || {}
+  const content = msg.content
+  const hasText = typeof content === 'string' ? !!content.trim()
+    : Array.isArray(content) ? content.length > 0 : false   // 多模态是 parts 数组, 非空就算答了
+  const hasTool = !!(msg.tool_calls && msg.tool_calls.length) || !!msg.function_call
+  const hasThink = !!(msg.reasoning_content || msg.reasoning) || !!msg.refusal
+  if (!hasText && !hasTool && !hasThink && ch.finish_reason === 'stop') {
+    return 'HTTP 200 但回答为空（finish_reason=stop）'
+  }
   return ''
 }
 
@@ -7034,6 +7060,17 @@ function probeUpstream(p) {
   })
 }
 
+// ── Host 头白名单(防 DNS rebinding)──
+// /api/* 刻意不加 CORS 头(见下面 createServer 里的注释), 但那只挡住"跨域读响应":
+// 攻击者把自己的域名解析到 127.0.0.1, 浏览器就认为请求**同源**, CORS 形同不存在 ——
+// 而 /api/config/export 回的是明文 Key, /api/providers 能改配置。唯一可靠的判据是 Host 头
+// (rebinding 时它是攻击者的域名, 不可能是 127.0.0.1)。
+// ⚠ 只在网关绑环回(默认)时启用: HOST 被显式改成 0.0.0.0/局域网地址, 说明本来就要用别的域名访问,
+//   这时拦 Host 只会把正常用法挡在门外。缺 Host 头(HTTP/1.0 裸客户端)放行 —— 没有 Host 就没有
+//   浏览器, 也就没有 rebinding 这条路。
+const BIND_LOOPBACK = /^(127\.|localhost$|::1$|\[::1\])/i.test(String(process.env.HOST || '127.0.0.1'))
+const LOOPBACK_HOST_RE = /^(127\.|localhost$|::1$|\[::1\])/i
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${CFG.port}`)
   // ⚠ 请求 ID 必须在**进入处理器的第一件事**就定下来并写进响应头。
@@ -7043,6 +7080,13 @@ const server = http.createServer(async (req, res) => {
   const rid = newReqId()
   req.__rid = rid
   try { res.setHeader('x-request-id', rid) } catch {}
+
+  // 防 DNS rebinding(理由见 BIND_LOOPBACK 的注释)。放在最前面: 连 OPTIONS 与静态资源也一起挡,
+  // 因为攻击者页面真正想要的是 /api/config/export, 没有理由给它留任何一条通路。
+  const hostName = String(req.headers.host || '').toLowerCase().replace(/:\d+$/, '')
+  if (BIND_LOOPBACK && hostName && !LOOPBACK_HOST_RE.test(hostName)) {
+    return json(res, 403, { error: `拒绝 Host: ${hostName}（网关默认只服务本机；如需外部访问请用 HOST 环境变量显式放开）` })
+  }
 
   // CORS: 只对 /v1 与 /v1beta 模型端点开放(供浏览器内客户端调用);
   // /api/* 管理接口不加 CORS 头, 浏览器跨域无法读取, 防止恶意网页偷 Key

@@ -103,6 +103,20 @@ const fake = http.createServer((req, res) => {
       res.setHeader('content-type', 'application/json')
       return res.end(JSON.stringify({ error: { message: `Request too large for model \`${p.model}\` in organization org-x on tokens per minute (TPM): Limit 8000, Requested 30000` } }))
     }
+    if (p.model === 'empty-answer') {
+      // ⑨ 200 + 合法 JSON + **回答为空**(2026-10-27 补, 对齐 freellmapi 的 empty-response protection):
+      //    过载时确实有厂商回 choices[0].message.content="" 且 finish_reason="stop"。
+      //    以前 chatBodyProblem 只要求"能解析出 choices", 于是这种响应被当成功转发:
+      //    用户拿到空回答, 网关记 ok:true 且**不换下一家**。
+      res.setHeader('content-type', 'application/json')
+      return res.end(JSON.stringify({ id: 'c1', model: p.model, choices: [{ message: { role: 'assistant', content: '' }, finish_reason: 'stop' }] }))
+    }
+    if (p.model === 'empty-answer-length') {
+      // ⑨ 的反断言: 同一个空回答, 但 finish_reason="length"(被 max_tokens 截断)。
+      //    这是**合法**的空串(模型还没开口就被截了), 判失败会误杀正常模型 -> 必须原样放行。
+      res.setHeader('content-type', 'application/json')
+      return res.end(JSON.stringify({ id: 'c1', model: p.model, choices: [{ message: { role: 'assistant', content: '' }, finish_reason: 'length' }] }))
+    }
     if (p.stream) {
       res.setHeader('content-type', 'text/event-stream')
       res.write(`data: ${JSON.stringify({ id: 'c1', choices: [{ delta: { content: '你好' } }] })}\n\n`)
@@ -353,6 +367,16 @@ async function main() {
   {
     const g = await ask('testp/err200')
     check('上游 200 包着 error 体 -> 502', g.status === 502 && /错误对象/.test(g.text), `${g.ms}ms | ${g.text.slice(0, 220)}`)
+  }
+  // ②b 上游 200 + 合法 JSON 但**回答为空**(finish_reason=stop): 与前两条同族, 必须判失败换下一家
+  {
+    const g = await ask('testp/empty-answer')
+    check('上游 200 空回答(finish_reason=stop) -> 502', g.status === 502 && /回答为空/.test(g.text), `${g.ms}ms | ${g.text.slice(0, 220)}`)
+  }
+  // ②c 反断言: 同样空回答但 finish_reason=length 是**合法**的(max_tokens 太小), 不能被误杀
+  {
+    const g = await ask('testp/empty-answer-length')
+    check('空回答但 finish_reason=length 仍放行(不误杀)', g.status === 200 && !/回答为空/.test(g.text), `${g.ms}ms | ${g.text.slice(0, 220)}`)
   }
   // ③ 流式但不补 [DONE]: 内容照常送达, 不能因为缺结束标记就丢内容或挂死
   {

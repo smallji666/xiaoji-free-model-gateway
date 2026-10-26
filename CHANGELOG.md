@@ -3,6 +3,42 @@
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.2.5] - 2026-10-27
+
+跟着上游两个项目 10-25/10-26 的更新各学一条。三条改动都不新增面板、不新增开关 —— 全是"状态是编的"
+这类问题的收口。
+
+### Fixed
+
+- **freellm 源把"截断的模型 id"收进了白名单。** 上游 README 2026-10-25 做了一轮"移动端加固"，
+  副作用是表格里的长 id 被截成 `xxx-re..`（实测 `nvidia/nemotron-3-nano-omni-30b-a3b-re..`）。
+  这种 id 拿去请求必然 404：白烧一次回退，还会以"白名单里的模型"身份出现在面板上 —— 名字本身就是错的。
+  同时上游把"退役/弃用"写进了 id（`glm-4-5-flash-retirement-announced`、
+  `zai-glm-4-7-deprecated-aug-2026`），那是状态标记，不是能调用的模型名。
+  已在解析处加两条过滤（`FREELLM_TRUNCATED_RE` / `FREELLM_STATUS_ID_RE`），宁可漏收一个。
+  **验证**：沙箱里真跑一轮同步，同一份上游数据下脏 id 从 3 条降到 **0**，厂商仍是 26 家、
+  模型 79 → 87（上游这轮确实新增了 `poolside/laguna-s-2.1:free`、`z-ai/glm-5.2`、
+  `deepseek-v3-2-preview`、`gpt-oss:120b` 等）。
+
+- **200 + 合法 JSON + 空回答，被当成了成功。** 这是"状态是编的"第三次同类事故：
+  前两次是 `200+{error}`（非流式）和 `200+SSE error`（流式），都修了；剩下这一种
+  `{choices:[{message:{content:""},finish_reason:"stop"}]}` 会原样转发给用户 ——
+  用户拿到空回答，网关记 `ok:true` 且**不换下一家**。
+  判据刻意收窄，三个条件同时成立才判失败：`finish_reason=stop`（模型自己说完，不是被
+  `max_tokens` 截断、也不是风控拦下）+ 无正文 + 无工具调用 / 无思维链 / 无 refusal。
+  所以 `finish_reason=length` 的空串照旧放行（那本来就合法，误杀会把正常模型踢出链）。
+  `protocol-test` 里补了一正一反两条断言。
+
+### Security
+
+- **Host 头白名单，堵住 DNS rebinding。** `/api/*` 刻意不加 CORS 头（防跨域偷 Key），
+  但那只挡住"跨域读响应"：攻击者把自己的域名解析到 127.0.0.1，浏览器就认为请求**同源**，
+  CORS 形同不存在 —— 而 `/api/config/export` 回的是**明文 Key**，`/api/providers` 能改配置。
+  rebinding 时 Host 头必然是攻击者的域名，所以它就是唯一可靠的判据。
+  只在网关绑环回（默认）时启用；`HOST` 被显式改成 `0.0.0.0`/局域网地址时不拦（那种部署本来就要
+  用别的域名访问）；缺 Host 头（HTTP/1.0 裸客户端）放行 —— 没有 Host 就没有浏览器，也就没有这条路。
+  **验证**：`Host: 127.0.0.1` / `localhost` → 200，`Host: evil.example.com`（带不带端口）→ 403。
+
 ## [1.2.4] - 2026-10-25
 
 ### Changed

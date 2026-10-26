@@ -6,6 +6,10 @@
 
 - 服务**硬绑** `127.0.0.1`，**不对外网暴露**。
 - 管理接口 `/api/*` **不下发 CORS 头** + 写操作强制 `content-type: application/json`（防本地 CSRF / 恶意网页偷 Key）。
+- **Host 头白名单（防 DNS rebinding）**：绑环回时只接受 `127.*` / `localhost` / `::1` 的 Host，其余一律 403。
+  CORS 只挡得住"跨域读响应"，挡不住"把自己的域名解析到 127.0.0.1 让请求变成同源" —— 而 `/api/config/export`
+  回的是**明文 Key**。rebinding 时 Host 头必然是攻击者的域名，所以它是唯一可靠的判据。
+  用 `HOST=0.0.0.0`（Docker/局域网）时这条**不启用**，那种部署本来就要用别的域名访问。
 - 管理接口回显的 Key 一律**掩码**（只回前 6 后 4）；各家真实 API Key 明文存于 `config.json`，**请勿同步网盘或提交仓库**。
 - 请求 ID 贯通：每个响应都带 `x-request-id`（8 位 hex），**鉴权失败的 401 也有** —— 用户报障时凭它就能在 `usage_log.json` 里定位到具体那次调用。
 - **管理令牌（预留，默认关闭）**：`config.json` 的 `auth` 默认 `{ "mode": "local" }`（本机即可信）。若将来要分享出去（反向代理 / 内网暴露 / 换绑网卡），改成 `{ "mode": "token", "token": "<16 位以上随机串>" }`，此后所有 `/api/*` 都要求 `x-admin-token` 或 `Authorization: Bearer <令牌>`。
