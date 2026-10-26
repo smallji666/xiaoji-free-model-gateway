@@ -1,10 +1,10 @@
 {
-  "fetched_at": "2026-10-26T18:27:54.100Z",
+  "fetched_at": "2026-10-26T18:55:51.049Z",
   "list_date": "2026-10-26",
   "sources": {
     "openrouter": "实时",
     "freellm": "2026-10-26",
-    "modelsdev": "缓存(刚刚)"
+    "modelsdev": "缓存(1h 前)"
   },
   "hosts": {
     "openrouter.ai": {
@@ -36,7 +36,8 @@
         "moonshotai/kimi-k2.6"
       ],
       "openFree": false,
-      "hybrid": false
+      "hybrid": false,
+      "trimmed": 2
     },
     "api-inference.modelscope.cn": {
       "source": "ModelScope",
@@ -150,10 +151,7 @@
     },
     "apihub.agnes-ai.com": {
       "source": "Agnes AI",
-      "models": [
-        "agnes-1.5-flash",
-        "agnes-2.0-flash"
-      ],
+      "models": [],
       "openFree": false,
       "hybrid": false
     },
@@ -173,7 +171,8 @@
         "deepseek-v3-1"
       ],
       "openFree": false,
-      "hybrid": false
+      "hybrid": false,
+      "trimmed": 2
     },
     "glhf.chat": {
       "source": "Glhf.chat",
@@ -268,7 +267,8 @@
       ],
       "hybrid": false,
       "source": "Hugging Face",
-      "openFree": false
+      "openFree": false,
+      "trimmed": 1
     }
   },
   "candidates": {
@@ -927,13 +927,13 @@
     }
   },
   "sourceFetchedAt": {
-    "openrouter": 1793039276223,
+    "openrouter": 1793040953125,
     "modelsdev": 1793036640972,
-    "freellm": 1793039276223
+    "freellm": 1793040953125
   },
   "sourceCond": {
     "openrouter": {
-      "lastModified": ""
+      "lastModified": "Mon, 26 Oct 2026 18:54:48 GMT"
     },
     "freellm": {
       "etag": "\"805b3201236fb76b341b042c4385b70da7b166c6fcafa187e417d6d5e541fffd\""
@@ -943,13 +943,13 @@
     }
   },
   "sourceHash": {
-    "openrouter": "6d0f3af53313fa3de72d86d1123c35e034e540d5144e5422177f6f052effcb23",
+    "openrouter": "568866dfc773a5e8aa3ab227e3eb43d011f9013fd4b80e6c87ae7ca736e7b46b",
     "modelsdev": "c0e7891a8722f5bb96ee6da168069d885b5a983ecff9bb9d7940539d3845d755",
     "freellm": "332549ef261a1e5b1eba66c677af98076c77ca6240db9b2a76931b3a58606c00"
   },
   "probe": {
     "api.aionlabs.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "listedCount": 6,
@@ -963,7 +963,7 @@
       }
     },
     "api.cohere.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 403",
       "listedCount": 0,
@@ -972,7 +972,7 @@
       "unverifiable": false
     },
     "open.bigmodel.cn": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "listedCount": 0,
@@ -981,19 +981,17 @@
       "unverifiable": false
     },
     "api.cloudflare.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "skip",
       "detail": "接入点含占位符, 无法探测"
     },
     "router.huggingface.co": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
-      "listedCount": 130,
-      "missing": [
-        "Qwen/Qwen2.5-7B-Instruct"
-      ],
-      "missingCount": 1,
+      "listedCount": 131,
+      "missing": [],
+      "missingCount": 0,
       "unverifiable": false,
       "anon": {
         "ok": false,
@@ -1013,7 +1011,7 @@
       "candidate": true
     },
     "api.llm7.io": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "listedCount": 68,
@@ -1027,7 +1025,7 @@
       }
     },
     "api-inference.modelscope.cn": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "listedCount": 37,
@@ -1041,15 +1039,12 @@
       }
     },
     "integrate.api.nvidia.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "listedCount": 85,
-      "missing": [
-        "z-ai/glm-5.1",
-        "z-ai/glm-5.2"
-      ],
-      "missingCount": 2,
+      "missing": [],
+      "missingCount": 0,
       "unverifiable": false,
       "anon": {
         "ok": false,
@@ -1058,7 +1053,7 @@
       }
     },
     "ollama.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "listedCount": 0,
@@ -1083,7 +1078,7 @@
       }
     },
     "api.siliconflow.cn": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.siliconflow.cn/v1",
@@ -1094,22 +1089,13 @@
       "candidate": true
     },
     "apihub.agnes-ai.com": {
-      "at": "2026-10-26T18:28:14.142Z",
-      "state": "needs_key",
-      "detail": "HTTP 401",
-      "listedCount": 0,
-      "missing": [],
-      "missingCount": 0,
-      "unverifiable": false
-    },
-    "api.sambanova.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
-      "listedCount": 6,
+      "listedCount": 9,
       "missing": [
-        "deepseek-v3-2-preview",
-        "minimax-m2-7"
+        "agnes-1.5-flash",
+        "agnes-2.0-flash"
       ],
       "missingCount": 2,
       "unverifiable": false,
@@ -1119,8 +1105,22 @@
         "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
       }
     },
+    "api.sambanova.ai": {
+      "at": "2026-10-26T18:56:11.118Z",
+      "state": "listed",
+      "detail": "",
+      "listedCount": 6,
+      "missing": [],
+      "missingCount": 0,
+      "unverifiable": false,
+      "anon": {
+        "ok": false,
+        "model": "",
+        "detail": "HTTP 401（连续 3 个模型都要鉴权，判定端点需 Key，停止后续试探）"
+      }
+    },
     "glhf.chat": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "no_list",
       "detail": "HTTP 526",
       "listedCount": 0,
@@ -1129,7 +1129,7 @@
       "unverifiable": false
     },
     "api.ai21.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 200 但无模型列表",
       "listedCount": 0,
@@ -1138,7 +1138,7 @@
       "unverifiable": false
     },
     "inference.api.nscale.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "listedCount": 0,
@@ -1147,7 +1147,7 @@
       "unverifiable": false
     },
     "token-plan-cn.xiaomimimo.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan-cn.xiaomimimo.com/v1",
@@ -1169,7 +1169,7 @@
       "candidate": true
     },
     "openai.bothub.ru": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://openai.bothub.ru/v1",
@@ -1180,7 +1180,7 @@
       "candidate": true
     },
     "nano-gpt.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://nano-gpt.com/v1",
@@ -1196,7 +1196,7 @@
       }
     },
     "token-plan.ap-southeast-1.maas.aliyuncs.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
@@ -1207,7 +1207,7 @@
       "candidate": true
     },
     "api.z.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 200 但无模型列表",
       "apiBase": "https://api.z.ai/api/v1",
@@ -1218,7 +1218,7 @@
       "candidate": true
     },
     "api.nova.amazon.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "exists",
       "detail": "HTTP 500（同轮其它路径返 404, 说明该服务认得路径）",
       "apiBase": "https://api.nova.amazon.com/v1",
@@ -1229,7 +1229,7 @@
       "candidate": true
     },
     "coding.dashscope.aliyuncs.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://coding.dashscope.aliyuncs.com/v1",
@@ -1245,7 +1245,7 @@
       }
     },
     "api.llmgateway.io": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.llmgateway.io/v1",
@@ -1261,7 +1261,7 @@
       }
     },
     "api.regolo.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.regolo.ai/v1",
@@ -1277,11 +1277,11 @@
       }
     },
     "kenari.id": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://kenari.id/v1",
-      "listedCount": 110,
+      "listedCount": 109,
       "missing": [
         "mimo-v2-5:free",
         "mistral-large:free",
@@ -1297,7 +1297,7 @@
       }
     },
     "dashscope.aliyuncs.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://dashscope.aliyuncs.com/api/v1",
@@ -1308,7 +1308,7 @@
       "candidate": true
     },
     "api.pendra.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.pendra.ai/v1",
@@ -1319,7 +1319,7 @@
       "candidate": true
     },
     "inference.poolside.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://inference.poolside.ai/v1",
@@ -1330,7 +1330,7 @@
       "candidate": true
     },
     "api.minimax.cn": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.minimax.cn/v1",
@@ -1341,7 +1341,7 @@
       "candidate": true
     },
     "token-plan-ams.xiaomimimo.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan-ams.xiaomimimo.com/v1",
@@ -1352,7 +1352,7 @@
       "candidate": true
     },
     "api.zeldoc.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.zeldoc.ai/v1",
@@ -1363,7 +1363,7 @@
       "candidate": true
     },
     "api.unorouter.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.unorouter.com/v1",
@@ -1374,7 +1374,7 @@
       "candidate": true
     },
     "router.requesty.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://router.requesty.ai/v1",
@@ -1413,7 +1413,7 @@
       "candidate": true
     },
     "llmtr.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://llmtr.com/v1",
@@ -1429,7 +1429,7 @@
       }
     },
     "api.tokenrouter.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.tokenrouter.com/v1",
@@ -1451,7 +1451,7 @@
       "candidate": true
     },
     "api.infomaniak.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1462,7 +1462,7 @@
       "candidate": true
     },
     "api.poe.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.poe.com/v1",
@@ -1482,7 +1482,7 @@
       }
     },
     "api.minimax.io": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.minimax.io/v1",
@@ -1493,7 +1493,7 @@
       "candidate": true
     },
     "api.empiriolabs.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.empiriolabs.ai/v1",
@@ -1509,7 +1509,7 @@
       }
     },
     "model.inferx.net": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://model.inferx.net/v1",
@@ -1520,7 +1520,7 @@
       "candidate": true
     },
     "api.code.umans.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.code.umans.ai/v1",
@@ -1536,7 +1536,7 @@
       }
     },
     "coding-intl.dashscope.aliyuncs.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://coding-intl.dashscope.aliyuncs.com/v1",
@@ -1552,7 +1552,7 @@
       }
     },
     "api-gateway.merge.dev": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 403",
       "apiBase": "https://api-gateway.merge.dev/v1",
@@ -1563,7 +1563,7 @@
       "candidate": true
     },
     "api.kimi.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.kimi.com/coding/v1",
@@ -1574,7 +1574,7 @@
       "candidate": true
     },
     "api.orcarouter.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.orcarouter.ai/v1",
@@ -1592,7 +1592,7 @@
       }
     },
     "api.kimi.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.kimi.ai/coding/v1",
@@ -1603,7 +1603,7 @@
       "candidate": true
     },
     "coding-plan-endpoint.kuaecloud.net": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1614,7 +1614,7 @@
       "candidate": true
     },
     "api.scnet.cn": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1625,7 +1625,7 @@
       "candidate": true
     },
     "opencode.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1636,7 +1636,7 @@
       "candidate": true
     },
     "token-plan-sgp.xiaomimimo.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan-sgp.xiaomimimo.com/v1",
@@ -1647,7 +1647,7 @@
       "candidate": true
     },
     "ark.cn-beijing.volces.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://ark.cn-beijing.volces.com/v1",
@@ -1658,7 +1658,7 @@
       "candidate": true
     },
     "tokenhub.tencentmaas.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://tokenhub.tencentmaas.com/v1",
@@ -1669,7 +1669,7 @@
       "candidate": true
     },
     "inference.hetzner.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://inference.hetzner.com/api/v1",
@@ -1680,7 +1680,7 @@
       "candidate": true
     },
     "api.lkeap.cloud.tencent.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.lkeap.cloud.tencent.com/v1",
@@ -1691,7 +1691,7 @@
       "candidate": true
     },
     "api.nan.builders": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.nan.builders/v1",
@@ -1702,7 +1702,7 @@
       "candidate": true
     },
     "token-plan.cn-beijing.maas.aliyuncs.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
@@ -1713,7 +1713,7 @@
       "candidate": true
     },
     "api.meganova.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.meganova.ai/v1",
@@ -1729,7 +1729,7 @@
       }
     },
     "zenmux.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://zenmux.ai/api/v1",
@@ -1761,7 +1761,7 @@
       }
     },
     "api.temprhq.io": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 401",
       "apiBase": "https://api.temprhq.io/v1",
@@ -1783,7 +1783,7 @@
       "candidate": true
     },
     "api.novita.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.novita.ai/openai/v1",
@@ -1799,7 +1799,7 @@
       }
     },
     "api.commandcode.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "no_list",
       "detail": "HTTP 404",
       "apiBase": "",
@@ -1810,7 +1810,7 @@
       "candidate": true
     },
     "api.reflection.ai": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "needs_key",
       "detail": "HTTP 403",
       "apiBase": "https://api.reflection.ai/v1",
@@ -1821,7 +1821,7 @@
       "candidate": true
     },
     "api.iteracompute.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.iteracompute.com/v1",
@@ -1837,7 +1837,7 @@
       }
     },
     "proxy.gonkabroker.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "listedCount": 4,
@@ -1851,7 +1851,7 @@
       }
     },
     "api.qnaigc.com": {
-      "at": "2026-10-26T18:28:14.142Z",
+      "at": "2026-10-26T18:56:11.118Z",
       "state": "listed",
       "detail": "",
       "apiBase": "https://api.qnaigc.com/v1",
