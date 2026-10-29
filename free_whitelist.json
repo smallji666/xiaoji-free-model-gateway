@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-10-29T09:06:34.033Z",
+  "fetched_at": "2026-10-29T09:18:15.335Z",
   "list_date": "2026-10-20",
   "sources": {
     "openrouter": "实时",
@@ -32,7 +32,9 @@
     "integrate.api.nvidia.com": {
       "source": "NVIDIA NIM",
       "models": [
-        "poolside/laguna-xs-2.1"
+        "poolside/laguna-xs-2.1",
+        "z-ai/glm-5.1",
+        "z-ai/glm-5.2"
       ],
       "openFree": false,
       "hybrid": false
@@ -166,7 +168,9 @@
     "api.sambanova.ai": {
       "source": "SambaNova",
       "models": [
-        "deepseek-v3-1"
+        "deepseek-v3-1",
+        "deepseek-v3-2-preview",
+        "minimax-m2-7"
       ],
       "openFree": false,
       "hybrid": false
@@ -258,6 +262,7 @@
     "router.huggingface.co": {
       "models": [
         "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "Qwen/Qwen2.5-7B-Instruct",
         "google/gemma-3-4b-it",
         "meta-llama/Llama-3.1-8B-Instruct",
         "microsoft/phi-4"
@@ -1048,9 +1053,9 @@
   },
   "degradedSources": [],
   "sourceFetchedAt": {
-    "openrouter": 1793264796727,
+    "openrouter": 1793265497290,
     "modelsdev": 1793263638031,
-    "freellm": 1793264796727
+    "freellm": 1793265497290
   },
   "sourceCond": {
     "openrouter": {
@@ -1064,7 +1069,7 @@
     }
   },
   "sourceHash": {
-    "openrouter": "33e7c44dc79cfd7e229d67b7836d9047a16486a49736c4015243a7f84aa110ba",
+    "openrouter": "07772019b13100a6e54f18adb1b00a61b9a9f3f44e5e8bd4d1c7ce3e83bc7cd9",
     "modelsdev": "2da4d36123d3eb4f5a066414db82855bd3ecab72f903d118502c39e9480912e3",
     "freellm": "4ab5e46acffce56f50dc3f1c9a478d46e55b5724471cdd2ad266912c32b8430e"
   },
