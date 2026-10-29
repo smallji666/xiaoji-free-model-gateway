@@ -1023,7 +1023,17 @@ async function fetchTextAuto(urlStr, headers, timeoutMs) {
   try { return await httpGetText(u, headers, t) }
   catch (e1) {
     if (!CFG.proxy) throw e1
-    return httpGetText(u, headers, Math.max(t, 20000), getTunnelAgent(CFG.proxy))
+    try {
+      return await httpGetText(u, headers, Math.max(t, 20000), getTunnelAgent(CFG.proxy))
+    } catch (e2) {
+      // ⚠ 两条路都失败时**必须把两条原因都带上**（2026-10-29 修）。
+      //   原来只抛 e2，于是日志里只有一句 "Client network socket disconnected before secure
+      //   TLS connection was established"，分不清"直连被墙"还是"代理节点坏了" —— 而这两件事
+      //   的处理完全不同（前者正常、后者要换节点）。实测就因此误判过：代理明明是通的
+      //   （curl 与独立脚本都 200），日志却像代理坏了，白查一轮。
+      const m = (e) => (e && (e.code || e.message)) || String(e)
+      throw new Error(`直连失败(${m(e1)})；代理 ${CFG.proxy} 也失败(${m(e2)})`)
+    }
   }
 }
 // 每日同步: 拉多个上游免费清单源(并集), 生成按 hostname 索引的封闭白名单
@@ -1121,7 +1131,21 @@ async function syncUpstreamWhitelist() {
     const isUnchanged = (v) => !!(v.notModified || (v.hash && v.srcId && v.hash === prevHash[v.srcId]))
     const okResults = results.filter((r) => r.status === 'fulfilled' && r.value)
     const allOkUnchanged = okResults.length > 0 && okResults.every((r) => isUnchanged(r.value))
-    if (allOkUnchanged && prevWl0 && prevWl0.hosts && Object.keys(prevWl0.hosts).length) {
+    // ── 短路前必须确认"现有名单不是在源缺失状态下建出来的"（2026-10-29 加，比原 bug 更隐蔽）──
+    // 这条短路的前提是"现有名单 = 各源最新贡献的并集"。但若**上一轮有源没拿到数据**、名单是残缺的，
+    // 而各源这一轮又恰好回 304 / 指纹相同，短路就会把残缺名单当成"最新"一直沿用下去。
+    // 实测踩到：freellm 断连那轮名单 26 → 12 家，之后它稳定回 304（上游 README 自 10-20 未变），
+    // 于是"源未变化，沿用现有名单 12 家"每 30 分钟刷一次 —— **残缺状态永远不会自愈**。
+    // 判据: 上一轮落盘时是否记了"有源缺数据"（degradedSources）。
+    // ⚠ 老格式文件没有这个字段，退回看 sources 文案：出现 `失败:` 且**没有**"沿用上一轮"
+    //   （= 那轮真的没补上）就判定为残缺。只看一次，重建后会写入结构化字段。
+    const prevWasDegraded = Array.isArray(prevWl0 && prevWl0.degradedSources)
+      ? prevWl0.degradedSources.length > 0
+      : Object.values((prevWl0 && prevWl0.sources) || {}).some((v) => /^失败/.test(String(v)) && !/沿用上一轮/.test(String(v)))
+    if (allOkUnchanged && prevWasDegraded && prevWl0 && Object.keys((prevWl0.hosts) || {}).length) {
+      console.log('[whitelist] 各源均未变化，但现有名单是在"有源缺数据"时建的 —— 本轮强制重建，不沿用残缺名单')
+    }
+    if (allOkUnchanged && !prevWasDegraded && prevWl0 && prevWl0.hosts && Object.keys(prevWl0.hosts).length) {
       const newCond304 = Object.assign({}, prevCond)
       for (const r of okResults) {
         const id = r.value.srcId
@@ -1160,6 +1184,13 @@ async function syncUpstreamWhitelist() {
       }
     }
     const merged = {}    // host -> { source, models:Set }  多源取并集
+    // ── 每个 host 是"谁贡献的"（2026-10-29 加）──
+    // 用途只有一个: 某个源**拉取失败**时，把它上一轮贡献过的 host 原样沿用回来。
+    // 为什么必须有归属记录、不能笼统"缺什么补什么": 那样会把"某个源本轮明确删掉的厂商"
+    // 也一起复活 —— 复活一份已经过期的"免费"证据，正是本项目最不能犯的错（会真的扣钱）。
+    // 只认"这个源上次给过它"这一条硬事实。
+    const mergedSrc = {}   // host -> Set(srcId)
+    const failedSrc = []   // 本轮拉取失败的源（只含"拉取失败"，不含"停更熔断"）
     // 发现源(models.dev)不能碰的 host: 已配置供应商 + 手工名单里的厂商。
     // 它的数据含"赠送额度/token plan"类误判(实测把 dashscope 标成免费), 让它给这些厂商加模型
     // 等于把付费模型塞进已启用供应商的池子 = 直接扣费。新厂商只作候选, 用户添加后仍要过实测。
@@ -1173,6 +1204,7 @@ async function syncUpstreamWhitelist() {
       if (res.status === 'rejected' || !res.value) {
         perSource[s.id] = `失败:${res.reason ? res.reason.message : 'unknown'}`
         console.warn(`[whitelist] 源 ${s.id}(${s.name}) 拉取失败: ${res.reason ? res.reason.message : ''}`)
+        failedSrc.push(s)   // 记下来, 稍后用上一轮该源贡献的 host 顶上(见下方"失败源沿用")
         continue
       }
       // 实时源(OpenRouter)没有版本日期, 记成"实时"而不是"未知" —— 否则会被误读成拉取失败或陈旧
@@ -1195,6 +1227,9 @@ async function syncUpstreamWhitelist() {
         // 刻意不叫 unverified —— 那个词已被 gateUnverifiedModels(手动模型隔离)占用, 语义不同。
         if (!merged[host]) merged[host] = { source: info.source || host, models: new Set(), provisional: !!res.value.discovery }
         else if (!res.value.discovery && merged[host].provisional) merged[host].provisional = false
+        // 归属记录: 谁给的都算(发现源也算) —— 沿用时要按源精确取, 不能猜。
+        if (!mergedSrc[host]) mergedSrc[host] = new Set()
+        mergedSrc[host].add(s.id)
         for (const id of info.models || []) {
           if (!id) continue
           if (DENY_FREE.some((re) => re.test(String(id)))) continue        // 硬排除: 名字含 pro 的收费模型
@@ -1204,6 +1239,42 @@ async function syncUpstreamWhitelist() {
       }
     }
     if (!Object.keys(merged).length) throw new Error('所有上游源均未返回数据')
+
+    // ── 失败源沿用上一轮贡献（2026-10-29 修）──
+    // 上面 1104 行那句"失败的源沿用上一轮贡献"原本只写在 304 短路路径里；全量重建路径遇到源失败
+    // 只 continue，于是**该源的 host 一个都不合并**。实测 2026-10-29：freellm 一次 TLS 断连，
+    // hosts 26 → 12，丢的 14 家全是它的（gemini / zhipu / cohere / kilo / ollama …），
+    // free-eval 5 条断言当场变红。一次网络抖动不该让"已知免费"的知识蒸发。
+    // ⚠ 三条边界，缺一条就会变成比原 bug 更坏的 bug：
+    //   ① **只对"拉取失败"生效**，绝不对"停更熔断"生效 —— 后者是主动不用（清单太旧 = 可能已转收费）。
+    //   ② 只沿用**该源上一轮确实贡献过的** host（靠 hostSources 归属），不做"缺什么补什么" ——
+    //      否则会把别的源本轮明确删掉的厂商也复活，等于复活过期的免费证据 = 真的扣钱。
+    //   ③ 只在该 host 本轮**完全没出现**时补；别的源已经给了就以本轮为准。
+    // 上一份没有 hostSources（老文件 / 刚升级）时无法归属 → 不沿用，行为与修之前一致，不会更坏。
+    let carriedHosts = 0
+    const degradedSources = []   // 真的没补上的源（一条 host 都没沿用回来）—— 见短路处 prevWasDegraded
+    const prevHostSrc = (prevWl0 && prevWl0.hostSources) || {}
+    for (const s of failedSrc) {
+      let n = 0
+      for (const [host, srcs] of Object.entries(prevHostSrc)) {
+        if (!Array.isArray(srcs) || !srcs.includes(s.id)) continue
+        if (merged[host]) continue
+        const pe = prevWl0.hosts && prevWl0.hosts[host]
+        if (!pe) continue
+        merged[host] = { source: pe.source, models: new Set(pe.models || []), provisional: !!pe.provisional }
+        mergedSrc[host] = new Set([s.id])
+        n++
+      }
+      if (n) {
+        carriedHosts += n
+        perSource[s.id] = `${perSource[s.id]}（沿用上一轮 ${n} 家）`
+        console.warn(`[whitelist] 源 ${s.id}(${s.name}) 本轮拉取失败，沿用上一轮它贡献的 ${n} 家厂商（不丢知识、也不扩大范围）`)
+      } else {
+        // 一条都没沿用回来（老文件无归属记录 / 该源本来就没贡献过）→ 这份名单对它是缺的。
+        // 记下来，下一轮即使各源都回 304 也要强制重建，否则残缺状态会被短路永久钉住。
+        degradedSources.push(s.id)
+      }
+    }
 
     // 组装最终白名单: models 排序 + 附上本地的 openFree/hybrid 人工口径(覆盖名单)
     const hosts = {}
@@ -1289,12 +1360,17 @@ async function syncUpstreamWhitelist() {
       const v = results[i]
       if (v.status === 'fulfilled' && v.value && v.value.hash) newHash[activeSources[i].id] = v.value.hash
     }
+    // 归属表落盘: 下一轮若有源失败, 靠它精确知道"该源上次贡献了哪些 host"（见上方"失败源沿用"）。
+    // 只存 host -> [srcId]，不存模型 —— 模型本身在 hosts 里，重复存一份会不一致。
+    const hostSources = {}
+    for (const [h, srcs] of Object.entries(mergedSrc)) hostSources[h] = [...srcs].sort()
     // ⚠ probe(名单巡检结论)必须跟着一起存回去: 每轮同步都是重建 hosts, 不带上它
     // 就会把"端点查无此模型"的剔除记录冲掉, 下一轮源的原话又被原样加回来。
-    saveWhitelist({ fetched_at: at, list_date: dateStr, sources: perSource, hosts, candidates: finalCand, sourceFetchedAt: newSrcFetchedAt, sourceCond: newCond, sourceHash: newHash, probe: ((prevWl0 && prevWl0.probe) || {}) })
+    saveWhitelist({ fetched_at: at, list_date: dateStr, sources: perSource, hosts, candidates: finalCand, hostSources, degradedSources, sourceFetchedAt: newSrcFetchedAt, sourceCond: newCond, sourceHash: newHash, probe: ((prevWl0 && prevWl0.probe) || {}) })
     // 白名单变了 => 免费池口径变了, 立刻重扫目录同步路由
     console.log(`[whitelist] ${at} 同步完成, ${Object.keys(hosts).length} 家厂商进入封闭名单/开放名单`
-      + `（另有 ${Object.keys(finalCand).length} 家发现源候选未收录${(skipDiscovery || discoveryFailed) ? '，本轮沿用缓存' : ''}） | 源状态: ${JSON.stringify(perSource)}`)
+      + `（另有 ${Object.keys(finalCand).length} 家发现源候选未收录${(skipDiscovery || discoveryFailed) ? '，本轮沿用缓存' : ''}`
+      + `${carriedHosts ? `，失败源沿用 ${carriedHosts} 家` : ''}） | 源状态: ${JSON.stringify(perSource)}`)
     if (CFG.providers.length && Date.now() - _lastWlCatalogAt > 10 * 60 * 1000) {
       _lastWlCatalogAt = Date.now()
       refreshCatalogSafe().catch((e) => console.error('[catalog]', e.message))

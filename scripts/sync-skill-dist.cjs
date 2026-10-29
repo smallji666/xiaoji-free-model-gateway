@@ -41,6 +41,9 @@ const TARGETS = [
   ['小鸡开关.bat', 'assets/gateway/小鸡开关.bat'],
   ['free_whitelist.json', 'assets/gateway/free_whitelist.json'],
   ['config.example.json', 'assets/gateway/config.example.json'],
+  // 自启脚本必须跟着走：它是**部署侧**的功能，缺了它技能包里就会写"支持开机自启"却没有那个文件。
+  // 落点是 assets/gateway/scripts/，而脚本用 `path.dirname(__dirname)` 找根 —— 正好指回 assets/gateway。
+  ['scripts/autostart.cjs', 'assets/gateway/scripts/autostart.cjs'],
   ['assets/logos/', 'assets/gateway/assets/logos/'],
 ]
 

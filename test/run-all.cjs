@@ -90,6 +90,7 @@ const GROUPS = {
     ['key-rotate-check.cjs', '多 Key 轮转（LRU）'],
     ['wl-freshness-check.cjs', '白名单变没变的判据（304 / 指纹 / 真变了）'],
     ['startup-files-check.cjs', '启动入口不变式（CRLF/ASCII/gitattributes）'],
+    ['autostart-check.cjs', '开机自启生成物（VBS 转义/字节卫生/结构）'],
   ],
   local: [
     ['layout-check.cjs', '双视口布局红线（需 8787 + Edge）'],

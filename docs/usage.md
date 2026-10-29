@@ -17,9 +17,22 @@
 | `5` 查看运行日志 | 记事本打开 `logs\xiaoji.log` |
 | `0` 退出 | 只关菜单窗口，**网关继续在后台运行** |
 
-- 不做开机自启，一切启停都由你手动决定。开关脚本纯 ASCII + CRLF（防 cmd GBK 乱码），隐藏启动由同目录 `xiaoji-launcher.vbs` 完成。
+- 开关脚本纯 ASCII + CRLF（防 cmd GBK 乱码），隐藏启动由同目录 `xiaoji-launcher.vbs` 完成。
 - 日志由**服务端自己持有**（`logs\xiaoji.log`，分级 + 按 1MB 滚动保留 5 份）。启动脚本不做输出重定向 —— Windows 上被 cmd 占用的文件无法改名，服务端就没法滚动日志、只能原地截断丢历史。
 - 也可命令行启动：`node server.mjs`
+
+### 开机自启（可选，默认关闭）
+
+```bat
+node scripts\autostart.cjs install     :: 装上（登录时自动启动）
+node scripts\autostart.cjs status      :: 看现在装没装
+node scripts\autostart.cjs uninstall   :: 卸掉
+```
+
+- 写的是 **启动文件夹**里一个 `xiaoji-free-model.vbs`（`%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`），**不需要管理员权限**，卸载就是删掉它 —— 你可以在资源管理器里亲眼看到自启项长什么样。刻意不用计划任务：那要 `schtasks.exe`（常被杀软拦，而且"装不上"的表现是你以为开了其实没开），还会跑成 SYSTEM 进程，把 `config.json` 写成 SYSTEM 所有 —— 之后你自己双击开关反而写不进去。
+- 启动前先探一次 `/healthz`，**已经活着就什么都不做**（不会重复启动撞端口）。
+- 语义是**登录后**启动，不是"开机就起、登录前可用"。本工具是本机自用网关，没有服务端语义，这个差别不影响使用。
+- 排查"开了自启怎么没起来"：看 `logs\autostart.log`。每次登录它会追加一行 `时间  alive=True/False`，**有这行 = 脚本跑了**，没有 = 脚本压根没被执行（多半是被安全软件拦了，或启动项文件被删）。
 
 仪表盘 http://localhost:8787 ｜ OpenAI 兼容端点 http://localhost:8787/v1 ｜ 统一网关 Key 见仪表盘「统一出口」或 `config.json` 的 `gatewayKey`
 

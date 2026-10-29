@@ -55,13 +55,19 @@ async function main() {
   const anchor = "// freellm.net 的清单仓库(开源, 每日自动刷新)"
   if (!src.includes(anchor)) { console.error('锚点丢失, 无法打补丁'); process.exit(2) }
   const patch = `
-// [E2E 补丁] 真实源换确定性桩, 并追加一个"停更源"(清单日期 2026-08-01)
+// [E2E 补丁] 真实源换确定性桩; 追加一个"停更源"(清单日期 2026-08-01) 与一个"正常源"
+// ok-fake 的存在是为了第二阶段: 它在第一轮**实打实进过 hosts**, 第二轮变成停更 —— 只有这种
+// "上一轮在、这一轮因停更而该消失"的源, 才能证明"沿用逻辑没有越界去救停更源"。
 for (const s of WHITELIST_SOURCES) {
   s.fetch = async () => ({ date: '${FRESH_DATE}', hosts: { ['fresh-' + s.id + '.example.com']: { source: 'fresh-' + s.id, models: ['m1'] } } })
 }
 WHITELIST_SOURCES.push({
   id: 'fakesrc', name: '假停更源',
   async fetch() { return { date: '2026-08-01', hosts: { 'stale-fake.example.com': { source: 'StaleFake', models: ['stale-1', 'stale-2'] } } } },
+})
+WHITELIST_SOURCES.push({
+  id: 'oksrc', name: '假正常源',
+  async fetch() { return { date: '${FRESH_DATE}', hosts: { 'ok-fake.example.com': { source: 'OkFake', models: ['ok-1'] } } } },
 })
 
 `
@@ -116,11 +122,82 @@ WHITELIST_SOURCES.push({
   const ck = (n, ok, extra) => { console.log((ok ? 'PASS ' : 'FAIL ') + n + (ok ? '' : '  << ' + (extra || ''))); ok ? pass++ : fail++ }
 
   ck('新鲜源(2家)进入 hosts', ['fresh-openrouter.example.com', 'fresh-freellm.example.com'].every((h) => hosts.includes(h)), hosts.join(','))
+  // 第二阶段的基线：ok-fake 这一轮必须在名单里，否则"下一轮它变成停更后消失"证明不了任何事。
+  ck('正常源(ok-fake)进入 hosts（第二阶段的基线）', hosts.includes('ok-fake.example.com'), hosts.join(','))
+  ck('第一轮已落盘归属记录 hostSources', Array.isArray((wl.hostSources || {})['ok-fake.example.com'])
+    && (wl.hostSources['ok-fake.example.com'] || []).includes('oksrc'), JSON.stringify((wl.hostSources || {})['ok-fake.example.com']))
   ck('停更源(2026-08-01)的厂商**没有**进入 hosts', !hosts.includes('stale-fake.example.com'), hosts.join(','))
   ck('停更源也没混进候选', !Object.keys(wl.candidates || {}).includes('stale-fake.example.com'), Object.keys(wl.candidates || {}).join(','))
   ck('源状态写明"已忽略"', /^2026-08-01 ⚠停更\d+天, 已忽略$/.test(String(wl.sources.fakesrc || '')), JSON.stringify(wl.sources))
   ck('新鲜源状态照常记日期', wl.sources.freellm === FRESH_DATE, JSON.stringify(wl.sources))
   ck('日志里有一条明确警告', /本轮不参与合并/.test(log), log.slice(-800))
+
+  // ══ 第二阶段：源"拉取失败"必须**沿用上一轮该源的贡献**（2026-10-29 加）══
+  // 与停更熔断刻意相反：停更 = "拉到了但不新" → 主动不用；失败 = "压根没拉到" → 沿用上次的。
+  // 两者的分界线就是这次修复的全部难点，所以必须各有一条端到端断言：
+  // 只测"失败会沿用"而不测"停更仍不沿用"，就会把 ① 那条边界改坏而毫无察觉。
+  const patch2 = `
+// [E2E 补丁·第二阶段] freellm 拉取失败(应沿用) + oksrc 变成停更(不该沿用) + 停更源保持原样
+for (const s of WHITELIST_SOURCES) {
+  s.fetch = async () => {
+    if (s.id === 'freellm') throw new Error('模拟 TLS 断连（E2E）')
+    return { date: '${FRESH_DATE}', hosts: { ['fresh-' + s.id + '.example.com']: { source: 'fresh-' + s.id, models: ['m1'] } } }
+  }
+}
+WHITELIST_SOURCES.push({
+  id: 'fakesrc', name: '假停更源',
+  async fetch() { return { date: '2026-08-01', hosts: { 'stale-fake.example.com': { source: 'StaleFake', models: ['stale-1', 'stale-2'] } } } },
+})
+WHITELIST_SOURCES.push({
+  id: 'oksrc', name: '假正常源(本轮变停更)',
+  async fetch() { return { date: '2026-08-01', hosts: { 'ok-fake.example.com': { source: 'OkFake', models: ['ok-1'] } } } },
+})
+
+`
+  const src2 = src.replace(patch, patch2)
+  if (src2 === src) { console.error('第二阶段补丁未生效（锚点变了）'); process.exit(2) }
+  fs.writeFileSync(path.join(SB, 'server.mjs'), src2)
+
+  const prevAt = wl.fetched_at
+  const gw2 = cp.spawn(process.execPath, ['server.mjs'], { cwd: SB, stdio: ['ignore', 'pipe', 'pipe'] })
+  let log2 = ''
+  let gw2Exit = null
+  gw2.stdout.on('data', (d) => { log2 += d })
+  gw2.stderr.on('data', (d) => { log2 += d })
+  gw2.on('exit', (code, sig) => { gw2Exit = { code, sig } })
+  gw2.on('error', (e) => { gw2Exit = { code: -1, sig: String(e && e.message) } })
+  // 判据必须同时满足三件事，否则会读到**第一阶段**的结果：① freellm 状态是失败 ② fetched_at 变了
+  // ③ 沿用那行日志已经刷出来（沿用发生在落盘之前，日志可能还在管道里）。
+  let wl2 = null
+  for (let i = 0; i < 40; i++) {
+    await sleep(500)
+    if (gw2Exit) break
+    try {
+      const j = JSON.parse(fs.readFileSync(WL, 'utf8'))
+      if (j && j.fetched_at !== prevAt && String((j.sources || {}).freellm || '').startsWith('失败') && /沿用上一轮它贡献的 \d+ 家厂商/.test(log2)) { wl2 = j; break }
+    } catch {}
+  }
+  try { gw2.kill() } catch {}
+  if (process.platform === 'win32') {
+    try { cp.execSync('taskkill /PID ' + gw2.pid + ' /F', { stdio: 'ignore' }) } catch {}
+  }
+  if (!wl2) {
+    ck('第二阶段(源失败沿用)拿到本轮结果', false, (gw2Exit ? `进程提前退出 code=${gw2Exit.code}` : '超时') + '\n' + log2.slice(-1200))
+  } else {
+    const h2 = Object.keys(wl2.hosts || {})
+    ck('失败源的厂商被沿用回来（不丢知识）', h2.includes('fresh-freellm.example.com'), h2.join(','))
+    ck('沿用后源状态写明失败与沿用家数', /^失败:.*（沿用上一轮 1 家）$/.test(String(wl2.sources.freellm || '')), JSON.stringify(wl2.sources))
+    ck('日志说明沿用了几家', /沿用上一轮它贡献的 1 家厂商/.test(log2), log2.slice(-600))
+    ck('失败源的归属记录已落盘', Array.isArray((wl2.hostSources || {})['fresh-freellm.example.com'])
+      && (wl2.hostSources['fresh-freellm.example.com'] || []).includes('freellm'), JSON.stringify((wl2.hostSources || {})['fresh-freellm.example.com']))
+    // ⚠ 这两条是防止"沿用"把边界搞坏的关键：停更源**仍然**不许复活。
+    //   ok-fake 在第一轮是实打实进过 hosts 的，这一轮它只是"变成停更" —— 若沿用逻辑误对停更生效，
+    //   它就会被复活回来，而那条路径正是"用过期清单判定免费"的入口（可能真扣钱）。
+    ck('沿用只对"拉取失败"生效：变停更的源**不**复活', !h2.includes('ok-fake.example.com'), h2.join(','))
+    ck('变停更的源状态写明已忽略', /⚠停更\d+天, 已忽略/.test(String((wl2.sources || {}).oksrc || '')), JSON.stringify(wl2.sources))
+    ck('停更源(从未进过名单)也不复活', !h2.includes('stale-fake.example.com'), h2.join(','))
+  }
+
   console.log(`\n== ${pass} passed, ${fail} failed ==`)
   process.exit(fail ? 1 : 0)
 }

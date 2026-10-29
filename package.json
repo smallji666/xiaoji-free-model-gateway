@@ -1,6 +1,6 @@
 {
   "name": "xiaoji-free-model-gateway",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "private": true,
   "description": "本地免费大模型聚合网关：把各家免费大模型 API 聚合成一个 OpenAI 兼容端点 + 一个统一 Key，支持 auto 自动路由与失败回退。零依赖，单文件。",
   "type": "module",
@@ -23,6 +23,9 @@
     "test:list": "node test/run-all.cjs --list",
     "check": "node --check server.mjs && node test/syncheck.cjs dashboard.html",
     "secrets": "node scripts/check-secrets.cjs",
+    "autostart": "node scripts/autostart.cjs install",
+    "autostart:off": "node scripts/autostart.cjs uninstall",
+    "autostart:status": "node scripts/autostart.cjs status",
     "skill": "node scripts/sync-skill-dist.cjs && node scripts/pack-skill.cjs",
     "dist": "node scripts/make-dist.cjs"
   },

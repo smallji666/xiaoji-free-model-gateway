@@ -248,12 +248,23 @@ async function main() {
   await new Promise((r) => upSrv.listen(UP_PORT, '127.0.0.1', r))
 
   console.log('[0] 前置条件（白名单数据必须仍符合样本假设）')
+  // ⚠ 前置条件失败时**不能只说"请核对"** —— 那句话分不清两种完全不同的原因：
+  //   ① 数据降级（某个源拉取失败 / 清单停更被主动忽略）→ 样本暂时没数据可用
+  //   ② 上游真的变了（gemini 不再 hybrid、智谱改了免费策略）→ 该更新 CASES
+  //   判据就在白名单自己的 sources 里，所以直接打出来。刻意**不自动跳过**：跳过会让
+  //   ② 永久静默 —— 而"一个一直绿的闸门"和"一个一直红的闸门"一样有害（见 ROADMAP 第 6 条）。
+  const WLFULL = JSON.parse(fs.readFileSync(path.join(ROOT, 'free_whitelist.json'), 'utf8'))
+  const srcDegraded = Object.entries(WLFULL.sources || {}).filter(([, v]) => /^失败|停更/.test(String(v)))
+  const wlState = `hosts=${Object.keys(WLFULL.hosts || {}).length} 家 · 源状态 ${JSON.stringify(WLFULL.sources || {})}`
+  const degradeHint = srcDegraded.length
+    ? `｜疑似**数据降级**（${srcDegraded.map(([k, v]) => k + '=' + v).join(' / ')}）：先恢复数据源再跑，别急着改 CASES`
+    : '｜源状态都正常 → 更可能是**上游真的变了**，该更新本文件的 CASES'
   let preOk = true
   for (const [name, fn] of PRE) {
     let ok = false
     try { ok = !!fn() } catch { ok = false }
     if (!ok) preOk = false
-    t(name, ok, ok ? '' : '样本假设已失效，请核对 free_whitelist.json 与本文件的 CASES')
+    t(name, ok, ok ? '' : `样本假设已失效：${wlState}${degradeHint}`)
   }
   if (!preOk) console.log('  ⚠ 前置条件不成立 —— 下面的样本结论不可信，先核对样本再跑')
 
