@@ -1,0 +1,33 @@
+# 构建上下文瘦身。⚠ Dockerfile 里是**白名单式 COPY**（只拷明确列出的文件），
+# 所以这里的作用是"别把几百 MB 的无关文件传给 daemon"，而不是安全边界 ——
+# 明文 Key 靠的是"config.json 从不在 COPY 列表里"这条纪律。
+.git
+.github
+node_modules
+dist
+logs
+.workbuddy-ai
+test
+scripts
+docs
+packaging
+
+# 状态与隐私文件（即使 COPY 列表写错也不该进上下文）
+config.json
+config.json.*
+*.prev
+*.corrupt.*
+*.import-bak.*
+*.backup-*
+gateway.pid
+usage_log.json*
+metrics.json*
+free_catalog.json*
+promo_state.json*
+*.log
+
+# 杂项
+.DS_Store
+Thumbs.db
+*.zip
+*.png

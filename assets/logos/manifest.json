@@ -1,0 +1,32 @@
+{
+  "_comment": "厂商 logo 本地清单。所有 logo 统一为 svg —— 真实 favicon 用 base64 嵌进 SVG <image> (脚本: scripts/imgs-to-svg.py), simple-icons 矢量直接拿 (脚本: scripts/fetch-vendor-logos.mjs)。",
+  "_brand_color_script": "scripts/brand-logos.mjs (给 simple-icons 注入 fill, 防止 <img> 加载时根 fill 不继承到 path)",
+  "vendors": {
+    "groq":        { "file": "groq.svg",        "source": "simple-icons + #F55036 fill" },
+    "gemini":      { "file": "gemini.svg",      "source": "simple-icons + #4285F4 fill" },
+    "mistral":     { "file": "mistral.svg",     "source": "simple-icons + #FA520F fill" },
+    "openrouter":  { "file": "openrouter.svg",  "source": "simple-icons + #4F46E5 fill" },
+    "cohere":      { "file": "cohere.svg",      "source": "cohere.com/favicon.ico embed" },
+    "kilo":        { "file": "kilo.svg",        "source": "kilo.ai favicon embed" },
+    "nvidia":      { "file": "nvidia.svg",      "source": "simple-icons + #76B900 fill" },
+    "ollama":      { "file": "ollama.svg",      "source": "simple-icons + brand fill" },
+    "hf":          { "file": "hf.svg",          "source": "simple-icons + #FFD21E fill" },
+    "ovh":         { "file": "ovh.svg",         "source": "simple-icons + #123F6D fill" },
+    "cloudflare":  { "file": "cloudflare.svg",  "source": "simple-icons + #F38020 fill" },
+    "siliconflow": { "file": "siliconflow.svg", "source": "siliconflow.cn favicon embed" },
+    "zhipu":       { "file": "zhipu.svg",       "source": "zhipuai.cn/logo.svg (real vector)" },
+    "modelscope":  { "file": "modelscope.svg",  "source": "modelscope.cn favicon embed" },
+    "amd":         { "file": "amd.svg",         "source": "simple-icons + #ED1C24 fill" },
+    "sensenova":   { "file": "sensenova.svg",   "source": "platform.sensenova.cn favicon, hand-traced to 4 rects (purple #5B2AD8 + green #06FDB7)" },
+    "empero":      { "file": "empero.svg",      "source": "empero.org/assets/favicon.svg (real vector, but generic menu-style mark)" },
+    "llm7":        { "file": "llm7.svg",        "source": "llm7.io favicon embed" },
+    "aionlabs":    { "file": "aionlabs.svg",    "source": "aionlabs.ai static logo embed" },
+    "longcat":     { "file": "longcat.svg",     "source": "longcat.chat favicon (Meituan mark, product owned by Meituan)" },
+    "cerebras":    { "file": "cerebras.svg",    "source": "cerebras.ai Sanity CDN logo embed" },
+    "deepseek":    { "file": "deepseek.svg",    "source": "simple-icons + brand fill" },
+    "kimi":        { "file": "kimi.svg",        "source": "kimi.com favicon embed" },
+    "bailian":     { "file": "bailian.svg",     "source": "simple-icons alibabacloud + #FF6A00 fill" },
+    "volc":        { "file": "volc.svg",        "source": "volcengine portal CDN favicon embed" },
+    "bai":         { "file": "bai.svg",         "source": "b.ai favicon embed" }
+  }
+}

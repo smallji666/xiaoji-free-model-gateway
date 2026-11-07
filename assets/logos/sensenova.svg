@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 66 66" width="64" height="64">
+  <!-- Purple 2x2 block (top-left) -->
+  <rect x="0" y="0" width="44" height="44" fill="#5B2AD8"/>
+  <!-- Green cell (middle-right) -->
+  <rect x="44" y="22" width="22" height="22" fill="#06FDB7"/>
+  <!-- Green cell (bottom-left) -->
+  <rect x="22" y="44" width="22" height="22" fill="#06FDB7"/>
+  <!-- Purple cell (bottom-right) -->
+  <rect x="44" y="44" width="22" height="22" fill="#5B2AD8"/>
+</svg>

@@ -1,0 +1,28 @@
+# https://editorconfig.org
+# 行尾与编码的统一约定。⚠ 与 .gitattributes 分工不同：
+#   .gitattributes 管"入库时"的行尾，这里管"编辑器里"的行尾 —— 两者都写才能防住
+#   "某人在 Windows 上用默认编辑器打开 bat 又被存成 LF"这类静默漂移。
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Windows 启动脚本必须 CRLF + 纯 ASCII（cmd 用 GBK 代码页解析，混入 UTF-8 会乱码）。
+# 见 README「怎么打开 / 关闭」与 .gitattributes 里的同一约束。
+[*.{bat,vbs}]
+end_of_line = crlf
+charset = ascii
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{json,jsonc}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
